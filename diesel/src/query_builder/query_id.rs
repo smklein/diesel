@@ -1,4 +1,3 @@
-use super::QueryFragment;
 use std::any::{Any, TypeId};
 
 /// Uniquely identifies queries by their type for the purpose of prepared
@@ -84,12 +83,6 @@ impl<'a, T: QueryId + ?Sized> QueryId for &'a T {
     type QueryId = T::QueryId;
 
     const HAS_STATIC_QUERY_ID: bool = T::HAS_STATIC_QUERY_ID;
-}
-
-impl<DB> QueryId for dyn QueryFragment<DB> {
-    type QueryId = ();
-
-    const HAS_STATIC_QUERY_ID: bool = false;
 }
 
 #[cfg(test)]

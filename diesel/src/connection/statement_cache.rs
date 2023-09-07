@@ -181,15 +181,14 @@ where
     #[allow(unreachable_pub)]
     pub fn cached_statement(
         &mut self,
-        maybe_type_id: Option<TypeId>,
-        source: &dyn QueryFragment<DB>,
+        source: &dyn UniqueQueryFragment<DB>,
         backend: &DB,
         bind_types: &[DB::TypeMetadata],
         prepare_fn: &mut dyn FnMut(&str, PrepareForCache) -> QueryResult<Statement>,
     ) -> QueryResult<MaybeCached<'_, Statement>> {
         use std::collections::hash_map::Entry::{Occupied, Vacant};
 
-        let cache_key = StatementCacheKey::for_source(maybe_type_id, source, bind_types, backend)?;
+        let cache_key = StatementCacheKey::for_source(source, bind_types, backend)?;
 
         if !source.is_safe_to_cache_prepared(backend)? {
             let sql = cache_key.sql(source, backend)?;
@@ -289,12 +288,11 @@ where
     // Note: Intentionally monomorphic over source.
     #[allow(unreachable_pub)]
     pub fn for_source(
-        maybe_type_id: Option<TypeId>,
-        source: &dyn QueryFragment<DB>,
+        source: &dyn UniqueQueryFragment<DB>,
         bind_types: &[DB::TypeMetadata],
         backend: &DB,
     ) -> QueryResult<Self> {
-        match maybe_type_id {
+        match source.query_id() {
             Some(id) => Ok(StatementCacheKey::Type(id)),
             None => {
                 let sql = Self::construct_sql(source, backend)?;
@@ -312,7 +310,11 @@ where
     /// twice if it's already part of the current cache key
     // Note: Intentionally monomorphic over source.
     #[allow(unreachable_pub)]
-    pub fn sql(&self, source: &dyn QueryFragment<DB>, backend: &DB) -> QueryResult<Cow<'_, str>> {
+    pub fn sql(
+        &self,
+        source: &dyn UniqueQueryFragment<DB>,
+        backend: &DB,
+    ) -> QueryResult<Cow<'_, str>> {
         match *self {
             StatementCacheKey::Type(_) => Self::construct_sql(source, backend).map(Cow::Owned),
             StatementCacheKey::Sql { ref sql, .. } => Ok(Cow::Borrowed(sql)),
@@ -320,7 +322,7 @@ where
     }
 
     // Note: Intentionally monomorphic over source.
-    fn construct_sql(source: &dyn QueryFragment<DB>, backend: &DB) -> QueryResult<String> {
+    fn construct_sql(source: &dyn UniqueQueryFragment<DB>, backend: &DB) -> QueryResult<String> {
         let mut query_builder = DB::QueryBuilder::default();
         source.to_sql(&mut query_builder, backend)?;
         Ok(query_builder.finish())
