@@ -159,7 +159,7 @@ impl Connection for MysqlConnection {
 
     fn execute_returning_count<T>(&mut self, source: &T) -> QueryResult<usize>
     where
-        T: QueryFragment<Self::Backend> + QueryId,
+        T: UniqueQueryFragment<Self::Backend> + QueryId,
     {
         #[allow(unsafe_code)] // call to unsafe function
         update_transaction_manager_status(
@@ -243,15 +243,14 @@ impl MultiConnectionHelper for MysqlConnection {
     }
 }
 
-fn prepared_query<'a, T: QueryFragment<Mysql> + QueryId>(
+fn prepared_query<'a, T: UniqueQueryFragment<Mysql>>(
     source: &'_ T,
     statement_cache: &'a mut StatementCache<Mysql, Statement>,
     raw_connection: &'a mut RawConnection,
 ) -> QueryResult<MaybeCached<'a, Statement>> {
-    let mut stmt =
-        statement_cache.cached_statement(T::query_id(), source, &Mysql, &[], &mut |sql, _| {
-            raw_connection.prepare(sql)
-        })?;
+    let mut stmt = statement_cache.cached_statement(source, &Mysql, &[], &mut |sql, _| {
+        raw_connection.prepare(sql)
+    })?;
     let mut bind_collector = RawBytesBindCollector::new();
     source.collect_binds(&mut bind_collector, &mut (), &Mysql)?;
     let binds = bind_collector

@@ -3,7 +3,7 @@ use super::bind_collector::{InternalSqliteBindValue, SqliteBindCollector};
 use super::raw::RawConnection;
 use super::sqlite_value::OwnedSqliteValue;
 use crate::connection::statement_cache::{MaybeCached, PrepareForCache};
-use crate::query_builder::{QueryFragment, QueryId};
+use crate::query_builder::{QueryFragment, UniqueQueryFragment};
 use crate::result::Error::DatabaseError;
 use crate::result::*;
 use crate::sqlite::{Sqlite, SqliteType};
@@ -241,7 +241,7 @@ impl<'stmt, 'query> BoundStatement<'stmt, 'query> {
         query: T,
     ) -> QueryResult<BoundStatement<'stmt, 'query>>
     where
-        T: QueryFragment<Sqlite> + QueryId + 'query,
+        T: UniqueQueryFragment<Sqlite> + 'query,
     {
         // Don't use a trait object here to prevent using a virtual function call
         // For sqlite this can introduce a measurable overhead
@@ -373,7 +373,7 @@ impl<'stmt, 'query> StatementUse<'stmt, 'query> {
         query: T,
     ) -> QueryResult<StatementUse<'stmt, 'query>>
     where
-        T: QueryFragment<Sqlite> + QueryId + 'query,
+        T: UniqueQueryFragment<Sqlite> + 'query,
     {
         Ok(Self {
             statement: BoundStatement::bind(statement, query)?,

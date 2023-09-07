@@ -193,6 +193,30 @@ pub trait SelectQuery {
     type SqlType;
 }
 
+/// An untyped fragment of SQL which can be uniquely identified.
+///
+/// All types which implement `QueryFragment` shoudl also implement
+/// `QueryId` -- this trait encapsulates both.
+pub trait UniqueQueryFragment<DB: Backend>: QueryFragment<DB> {
+    /// A pass-through to `QueryId::query_id`.
+    /// Refer to that method for documentation.
+    ///
+    /// Exposing this method allows Diesel internals to act upon a `dyn
+    /// UniqueQueryFragment` to access information about query types, rather
+    /// than monomorphizing on a per-query basis.
+    fn query_id(&self) -> Option<std::any::TypeId>;
+}
+
+impl<T: ?Sized, DB> UniqueQueryFragment<DB> for T
+where
+    DB: Backend,
+    T: QueryFragment<DB> + QueryId,
+{
+    fn query_id(&self) -> Option<std::any::TypeId> {
+        <T as QueryId>::query_id()
+    }
+}
+
 /// An untyped fragment of SQL.
 ///
 /// This may be a complete SQL command (such as an update statement without a

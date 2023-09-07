@@ -176,18 +176,7 @@ impl Connection for PgConnection {
     where
         T: QueryFragment<Pg> + QueryId,
     {
-        update_transaction_manager_status(
-            self.with_prepared_query(source, |query, params, conn| {
-                let res = query
-                    .execute(&mut conn.raw_connection, &params, false)
-                    .map(|r| r.rows_affected());
-                // according to https://www.postgresql.org/docs/current/libpq-async.html
-                // `PQgetResult` needs to be called till a null pointer is returned
-                while conn.raw_connection.get_next_result()?.is_some() {}
-                res
-            }),
-            &mut self.connection_and_transaction_manager,
-        )
+        self.execute_returning_count_inner(source)
     }
 
     fn transaction_state(&mut self) -> &mut AnsiTransactionManager
@@ -339,9 +328,27 @@ impl PgConnection {
         TransactionBuilder::new(self)
     }
 
-    fn with_prepared_query<'conn, T: QueryFragment<Pg> + QueryId, R>(
+    fn execute_returning_count_inner(
+        &mut self,
+        source: &dyn UniqueQueryFragment<Pg>,
+    ) -> QueryResult<usize> {
+        update_transaction_manager_status(
+            self.with_prepared_query(source, |query, params, conn| {
+                let res = query
+                    .execute(&mut conn.raw_connection, &params, false)
+                    .map(|r| r.rows_affected());
+                // according to https://www.postgresql.org/docs/current/libpq-async.html
+                // `PQgetResult` needs to be called till a null pointer is returned
+                while conn.raw_connection.get_next_result()?.is_some() {}
+                res
+            }),
+            &mut self.connection_and_transaction_manager,
+        )
+    }
+
+    fn with_prepared_query<'conn, R>(
         &'conn mut self,
-        source: &'_ T,
+        source: &dyn UniqueQueryFragment<Pg>,
         f: impl FnOnce(
             MaybeCached<'_, Statement>,
             Vec<Option<Vec<u8>>>,
@@ -356,7 +363,7 @@ impl PgConnection {
         let cache_len = self.statement_cache.len();
         let cache = &mut self.statement_cache;
         let conn = &mut self.connection_and_transaction_manager.raw_connection;
-        let query = cache.cached_statement(T::query_id(), source, &Pg, &metadata, &mut |sql, _| {
+        let query = cache.cached_statement(source, &Pg, &metadata, &mut |sql, _| {
             let query_name = if source.is_safe_to_cache_prepared(&Pg)? {
                 Some(format!("__diesel_stmt_{cache_len}"))
             } else {

@@ -162,7 +162,7 @@ impl Connection for SqliteConnection {
 
     fn execute_returning_count<T>(&mut self, source: &T) -> QueryResult<usize>
     where
-        T: QueryFragment<Self::Backend> + QueryId,
+        T: QueryFragment<Sqlite> + QueryId,
     {
         let statement_use = self.prepared_query(source)?;
         statement_use.run()?;
@@ -302,17 +302,13 @@ impl SqliteConnection {
 
     fn prepared_query<'a, 'b, T>(&'a mut self, source: T) -> QueryResult<StatementUse<'a, 'b>>
     where
-        T: QueryFragment<Sqlite> + QueryId + 'b,
+        T: UniqueQueryFragment<Sqlite> + 'b,
     {
         let raw_connection = &self.raw_connection;
         let cache = &mut self.statement_cache;
-        let statement = cache.cached_statement(
-            T::query_id(),
-            &source,
-            &Sqlite,
-            &[],
-            &mut |sql, is_cached| Statement::prepare(raw_connection, sql, is_cached),
-        )?;
+        let statement = cache.cached_statement(&source, &Sqlite, &[], &mut |sql, is_cached| {
+            Statement::prepare(raw_connection, sql, is_cached)
+        })?;
 
         StatementUse::bind(statement, source)
     }
