@@ -292,42 +292,6 @@ pub(crate) fn expand(input: TableDecl) -> TokenStream {
                 type Count = diesel::query_source::Once;
             }
 
-            // impl<S: AliasSource<Table=table>> AppearsInFromClause<table> for Alias<S>
-            impl<S> diesel::internal::table_macro::AliasAppearsInFromClause<S, table> for table
-            where S: diesel::query_source::AliasSource<Target=table>,
-            {
-                type Count = diesel::query_source::Never;
-            }
-
-            // impl<S1: AliasSource<Table=table>, S2: AliasSource<Table=table>> AppearsInFromClause<Alias<S1>> for Alias<S2>
-            // Those are specified by the `alias!` macro, but this impl will allow it to implement this trait even in downstream
-            // crates from the schema
-            impl<S1, S2> diesel::internal::table_macro::AliasAliasAppearsInFromClause<table, S2, S1> for table
-            where S1: diesel::query_source::AliasSource<Target=table>,
-                  S2: diesel::query_source::AliasSource<Target=table>,
-                  S1: diesel::internal::table_macro::AliasAliasAppearsInFromClauseSameTable<S2, table>,
-            {
-                type Count = <S1 as diesel::internal::table_macro::AliasAliasAppearsInFromClauseSameTable<S2, table>>::Count;
-            }
-
-            impl<S> diesel::query_source::AppearsInFromClause<diesel::query_source::Alias<S>> for table
-            where S: diesel::query_source::AliasSource,
-            {
-                type Count = diesel::query_source::Never;
-            }
-
-            impl<S, C> diesel::internal::table_macro::FieldAliasMapperAssociatedTypesDisjointnessTrick<table, S, C> for table
-            where
-                S: diesel::query_source::AliasSource<Target = table> + ::std::clone::Clone,
-                C: diesel::query_source::Column<Table = table>,
-            {
-                type Out = diesel::query_source::AliasedField<S, C>;
-
-                fn map(__diesel_internal_column: C, __diesel_internal_alias: &diesel::query_source::Alias<S>) -> Self::Out {
-                    __diesel_internal_alias.field(__diesel_internal_column)
-                }
-            }
-
             impl diesel::query_source::AppearsInFromClause<table> for diesel::internal::table_macro::NoFromClause {
                 type Count = diesel::query_source::Never;
             }
@@ -342,56 +306,6 @@ pub(crate) fn expand(input: TableDecl) -> TokenStream {
 
                 fn join_target(__diesel_internal_rhs: diesel::internal::table_macro::Join<Left, Right, Kind>) -> (Self::FromClause, Self::OnClause) {
                     let (_, __diesel_internal_on_clause) = diesel::internal::table_macro::Join::join_target(table);
-                    (__diesel_internal_rhs, __diesel_internal_on_clause)
-                }
-            }
-
-            impl<Join, On> diesel::JoinTo<diesel::internal::table_macro::JoinOn<Join, On>> for table where
-                diesel::internal::table_macro::JoinOn<Join, On>: diesel::JoinTo<table>,
-            {
-                type FromClause = diesel::internal::table_macro::JoinOn<Join, On>;
-                type OnClause = <diesel::internal::table_macro::JoinOn<Join, On> as diesel::JoinTo<table>>::OnClause;
-
-                fn join_target(__diesel_internal_rhs: diesel::internal::table_macro::JoinOn<Join, On>) -> (Self::FromClause, Self::OnClause) {
-                    let (_, __diesel_internal_on_clause) = diesel::internal::table_macro::JoinOn::join_target(table);
-                    (__diesel_internal_rhs, __diesel_internal_on_clause)
-                }
-            }
-
-            impl<F, S, D, W, O, L, Of, G> diesel::JoinTo<diesel::internal::table_macro::SelectStatement<diesel::internal::table_macro::FromClause<F>, S, D, W, O, L, Of, G>> for table where
-                diesel::internal::table_macro::SelectStatement<diesel::internal::table_macro::FromClause<F>, S, D, W, O, L, Of, G>: diesel::JoinTo<table>,
-                F: diesel::query_source::QuerySource
-            {
-                type FromClause = diesel::internal::table_macro::SelectStatement<diesel::internal::table_macro::FromClause<F>, S, D, W, O, L, Of, G>;
-                type OnClause = <diesel::internal::table_macro::SelectStatement<diesel::internal::table_macro::FromClause<F>, S, D, W, O, L, Of, G> as diesel::JoinTo<table>>::OnClause;
-
-                fn join_target(__diesel_internal_rhs: diesel::internal::table_macro::SelectStatement<diesel::internal::table_macro::FromClause<F>, S, D, W, O, L, Of, G>) -> (Self::FromClause, Self::OnClause) {
-                    let (_, __diesel_internal_on_clause) = diesel::internal::table_macro::SelectStatement::join_target(table);
-                    (__diesel_internal_rhs, __diesel_internal_on_clause)
-                }
-            }
-
-            impl<'a, QS, ST, DB> diesel::JoinTo<diesel::internal::table_macro::BoxedSelectStatement<'a, diesel::internal::table_macro::FromClause<QS>, ST, DB>> for table where
-                diesel::internal::table_macro::BoxedSelectStatement<'a, diesel::internal::table_macro::FromClause<QS>, ST, DB>: diesel::JoinTo<table>,
-                QS: diesel::query_source::QuerySource,
-            {
-                type FromClause = diesel::internal::table_macro::BoxedSelectStatement<'a, diesel::internal::table_macro::FromClause<QS>, ST, DB>;
-                type OnClause = <diesel::internal::table_macro::BoxedSelectStatement<'a, diesel::internal::table_macro::FromClause<QS>, ST, DB> as diesel::JoinTo<table>>::OnClause;
-                fn join_target(__diesel_internal_rhs: diesel::internal::table_macro::BoxedSelectStatement<'a, diesel::internal::table_macro::FromClause<QS>, ST, DB>) -> (Self::FromClause, Self::OnClause) {
-                    let (_, __diesel_internal_on_clause) = diesel::internal::table_macro::BoxedSelectStatement::join_target(table);
-                    (__diesel_internal_rhs, __diesel_internal_on_clause)
-                }
-            }
-
-            impl<S> diesel::JoinTo<diesel::query_source::Alias<S>> for table
-            where
-                diesel::query_source::Alias<S>: diesel::JoinTo<table>,
-            {
-                type FromClause = diesel::query_source::Alias<S>;
-                type OnClause = <diesel::query_source::Alias<S> as diesel::JoinTo<table>>::OnClause;
-
-                fn join_target(__diesel_internal_rhs: diesel::query_source::Alias<S>) -> (Self::FromClause, Self::OnClause) {
-                    let (_, __diesel_internal_on_clause) = diesel::query_source::Alias::<S>::join_target(table);
                     (__diesel_internal_rhs, __diesel_internal_on_clause)
                 }
             }
