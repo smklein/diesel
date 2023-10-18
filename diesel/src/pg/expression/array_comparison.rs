@@ -1,5 +1,5 @@
 use crate::expression::subselect::Subselect;
-use crate::expression::{AsExpression, Expression, TypedExpressionType, ValidGrouping};
+use crate::expression::{AsExpression, Expression, TypedExpressionType};
 use crate::pg::Pg;
 use crate::query_builder::*;
 use crate::result::QueryResult;
@@ -63,7 +63,7 @@ where
 }
 
 #[doc(hidden)]
-#[derive(Debug, Copy, Clone, QueryId, ValidGrouping)]
+#[derive(Debug, Copy, Clone, QueryId)]
 pub struct Any<Expr> {
     expr: Expr,
 }
@@ -97,7 +97,7 @@ where
 impl_selectable_expression!(Any<Expr>);
 
 #[doc(hidden)]
-#[derive(Debug, Copy, Clone, QueryId, ValidGrouping)]
+#[derive(Debug, Copy, Clone, QueryId)]
 pub struct All<Expr> {
     expr: Expr,
 }

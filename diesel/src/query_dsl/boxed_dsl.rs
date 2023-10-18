@@ -1,6 +1,5 @@
 use crate::dsl;
 use crate::expression::TypedExpressionType;
-use crate::expression::ValidGrouping;
 use crate::query_builder::AsQuery;
 use crate::query_builder::FromClause;
 use crate::query_builder::SelectStatement;
@@ -26,7 +25,7 @@ impl<'a, T, DB> BoxedDsl<'a, DB> for T
 where
     T: Table + AsQuery<Query = SelectStatement<FromClause<T>>>,
     SelectStatement<FromClause<T>>: BoxedDsl<'a, DB>,
-    T::DefaultSelection: Expression<SqlType = T::SqlType> + ValidGrouping<()>,
+    T::DefaultSelection: Expression<SqlType = T::SqlType>,
     T::SqlType: TypedExpressionType,
 {
     type Output = dsl::IntoBoxed<'a, SelectStatement<FromClause<T>>, DB>;

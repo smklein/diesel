@@ -67,7 +67,6 @@ macro_rules! __diesel_operator_body {
             Copy,
             $crate::query_builder::QueryId,
             $crate::sql_types::DieselNumericOps,
-            $crate::expression::ValidGrouping
         )]
         #[doc(hidden)]
         pub struct $name<$($ty_param,)+> {
@@ -553,7 +552,7 @@ postfix_operator!(
 prefix_operator!(Not, " NOT ");
 
 use crate::backend::{sql_dialect, Backend, SqlDialect};
-use crate::expression::{TypedExpressionType, ValidGrouping};
+use crate::expression::{TypedExpressionType};
 use crate::insertable::{ColumnInsertValue, Insertable};
 use crate::query_builder::{QueryFragment, QueryId, ValuesClause};
 use crate::query_source::Column;
@@ -587,7 +586,7 @@ where
     feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes",
     public_fields(left, right)
 )]
-#[derive(Debug, Clone, Copy, QueryId, DieselNumericOps, ValidGrouping)]
+#[derive(Debug, Clone, Copy, QueryId, DieselNumericOps)]
 pub struct Concat<L, R> {
     /// The left side expression of the operator
     pub(crate) left: L,

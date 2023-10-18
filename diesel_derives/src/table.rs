@@ -349,13 +349,6 @@ pub(crate) fn expand(input: TableDecl) -> TokenStream {
                 /// being used that way
                 pub struct star;
 
-                impl<__GB> diesel::expression::ValidGrouping<__GB> for star
-                where
-                    (#(#column_names,)*): diesel::expression::ValidGrouping<__GB>,
-                {
-                    type IsAggregate = <(#(#column_names,)*) as diesel::expression::ValidGrouping<__GB>>::IsAggregate;
-                }
-
                 impl diesel::Expression for star {
                     type SqlType = diesel::expression::expression_types::NotSelectable;
                 }
@@ -637,20 +630,6 @@ fn expand_column_def(column_def: &ColumnDef) -> TokenStream {
             From: diesel::query_source::QuerySource,
             #column_name: diesel::SelectableExpression<From> + diesel::AppearsOnTable<diesel::internal::table_macro::SelectStatement<diesel::internal::table_macro::FromClause<From>>>,
         {
-        }
-
-        impl<__GB> diesel::expression::ValidGrouping<__GB> for #column_name
-        where __GB: diesel::expression::IsContainedInGroupBy<#column_name, Output = diesel::expression::is_contained_in_group_by::Yes>,
-        {
-            type IsAggregate = diesel::expression::is_aggregate::Yes;
-        }
-
-        impl diesel::expression::ValidGrouping<()> for #column_name {
-            type IsAggregate = diesel::expression::is_aggregate::No;
-        }
-
-        impl diesel::expression::IsContainedInGroupBy<#column_name> for #column_name {
-            type Output = diesel::expression::is_contained_in_group_by::Yes;
         }
 
         impl diesel::query_source::Column for #column_name {

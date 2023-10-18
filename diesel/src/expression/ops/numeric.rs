@@ -1,5 +1,5 @@
 use crate::backend::Backend;
-use crate::expression::{Expression, TypedExpressionType, ValidGrouping};
+use crate::expression::{Expression, TypedExpressionType};
 use crate::query_builder::*;
 use crate::result::QueryResult;
 use crate::sql_types;
@@ -7,7 +7,7 @@ use crate::sql_types;
 macro_rules! numeric_operation {
     ($name:ident, $op:expr) => {
         #[doc(hidden)]
-        #[derive(Debug, Copy, Clone, QueryId, ValidGrouping)]
+        #[derive(Debug, Copy, Clone, QueryId)]
         pub struct $name<Lhs, Rhs> {
             lhs: Lhs,
             rhs: Rhs,

@@ -950,45 +950,7 @@ pub fn derive_sql_type(input: TokenStream) -> TokenStream {
         .into()
 }
 
-/// Implements `ValidGrouping`
-///
-/// This trait can be automatically derived for structs with no type parameters
-/// which are never aggregate, as well as for structs which are `NonAggregate`
-/// when all type parameters are `NonAggregate`. For example:
-///
-/// ```ignore
-/// #[derive(ValidGrouping)]
-/// struct LiteralOne;
-///
-/// #[derive(ValidGrouping)]
-/// struct Plus<Lhs, Rhs>(Lhs, Rhs);
-///
-/// // The following impl will be generated:
-///
-/// impl<GroupByClause> ValidGrouping<GroupByClause> for LiteralOne {
-///     type IsAggregate = is_aggregate::Never;
-/// }
-///
-/// impl<Lhs, Rhs, GroupByClause> ValidGrouping<GroupByClause> for Plus<Lhs, Rhs>
-/// where
-///     Lhs: ValidGrouping<GroupByClause>,
-///     Rhs: ValidGrouping<GroupByClause>,
-///     Lhs::IsAggregate: MixedAggregates<Rhs::IsAggregate>,
-/// {
-///     type IsAggregate = <Lhs::IsAggregate as MixedAggregates<Rhs::IsAggregate>>::Output;
-/// }
-/// ```
-///
-/// For types which are always considered aggregate (such as an aggregate
-/// function), annotate your struct with `#[diesel(aggregate)]` to set `IsAggregate`
-/// explicitly to `is_aggregate::Yes`.
-///
-/// # Attributes
-///
-/// ## Optional container attributes
-///
-/// * `#[diesel(aggregate)]` for cases where the type represents an aggregating
-///    SQL expression
+// TODO: Delete me!
 #[proc_macro_derive(ValidGrouping, attributes(diesel))]
 pub fn derive_valid_grouping(input: TokenStream) -> TokenStream {
     valid_grouping::derive(parse_macro_input!(input))

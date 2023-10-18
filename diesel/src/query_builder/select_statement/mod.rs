@@ -239,7 +239,6 @@ impl<F, S, D, W, O, LOf, G, H, LC> Query for SelectStatement<F, S, D, W, O, LOf,
 where
     G: ValidGroupByClause,
     S: SelectClauseExpression<F>,
-    S::Selection: ValidGrouping<G::Expressions>,
     W: ValidWhereClause<F>,
 {
     type SqlType = S::SelectClauseSqlType;

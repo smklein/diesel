@@ -1,6 +1,6 @@
 use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::expression::expression_types::NotSelectable;
-use crate::expression::{TypedExpressionType, ValidGrouping};
+use crate::expression::{TypedExpressionType};
 use crate::pg::Pg;
 use crate::query_builder::update_statement::changeset::AssignmentTarget;
 use crate::query_builder::{AstPass, QueryFragment, QueryId};
@@ -59,7 +59,7 @@ __diesel_infix_operator!(
     backend: Pg
 );
 
-#[derive(Debug, Clone, Copy, QueryId, DieselNumericOps, ValidGrouping)]
+#[derive(Debug, Clone, Copy, QueryId, DieselNumericOps)]
 #[doc(hidden)]
 pub struct ArrayIndex<L, R> {
     pub(crate) array_expr: L,

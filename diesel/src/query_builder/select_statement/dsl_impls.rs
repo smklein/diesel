@@ -127,7 +127,7 @@ impl<F, S, D, W, O, LOf, G, H, LC, Selection> SelectDsl<Selection>
 where
     G: ValidGroupByClause,
     F: QuerySource,
-    Selection: SelectableExpression<F> + ValidGrouping<G::Expressions>,
+    Selection: SelectableExpression<F>,
     SelectStatement<FromClause<F>, SelectClause<Selection>, D, W, O, LOf, G, H, LC>: SelectQuery,
 {
     type Output = SelectStatement<FromClause<F>, SelectClause<Selection>, D, W, O, LOf, G, H, LC>;
@@ -151,7 +151,7 @@ impl<S, D, W, O, LOf, G, H, LC, Selection> SelectDsl<Selection>
     for SelectStatement<NoFromClause, S, D, W, O, LOf, G, H, LC>
 where
     G: ValidGroupByClause,
-    Selection: SelectableExpression<NoFromClause> + ValidGrouping<G::Expressions>,
+    Selection: SelectableExpression<NoFromClause>,
     SelectStatement<NoFromClause, SelectClause<Selection>, D, W, O, LOf, G, H, LC>: SelectQuery,
 {
     type Output = SelectStatement<NoFromClause, SelectClause<Selection>, D, W, O, LOf, G, H, LC>;
@@ -196,7 +196,7 @@ where
 impl<F, S, D, W, O, LOf, G, H, LC, Predicate> FilterDsl<Predicate>
     for SelectStatement<F, S, D, W, O, LOf, G, H, LC>
 where
-    Predicate: Expression + NonAggregate,
+    Predicate: Expression,
     Predicate::SqlType: BoolOrNullableBool,
     W: WhereAnd<Predicate>,
 {
@@ -220,7 +220,7 @@ where
 impl<F, S, D, W, O, LOf, G, H, LC, Predicate> OrFilterDsl<Predicate>
     for SelectStatement<F, S, D, W, O, LOf, G, H, LC>
 where
-    Predicate: Expression + NonAggregate,
+    Predicate: Expression,
     Predicate::SqlType: BoolOrNullableBool,
     W: WhereOr<Predicate>,
 {
@@ -470,7 +470,6 @@ where
     DB: Backend,
     F: QuerySource,
     S: SelectClauseExpression<FromClause<F>> + QueryFragment<DB> + Send + 'a,
-    S::Selection: ValidGrouping<G::Expressions>,
     D: QueryFragment<DB> + Send + 'a,
     W: Into<BoxedWhereClause<'a, DB>>,
     O: Into<Option<Box<dyn QueryFragment<DB> + Send + 'a>>>,
@@ -501,7 +500,6 @@ where
     Self: AsQuery,
     DB: Backend,
     S: SelectClauseExpression<NoFromClause> + QueryFragment<DB> + Send + 'a,
-    S::Selection: ValidGrouping<G::Expressions>,
     D: QueryFragment<DB> + Send + 'a,
     W: Into<BoxedWhereClause<'a, DB>>,
     O: Into<Option<Box<dyn QueryFragment<DB> + Send + 'a>>>,
@@ -583,8 +581,6 @@ impl<F, S, D, W, O, LOf, G, H, LC, Tab> Insertable<Tab>
 where
     Tab: Table,
     Self: Query,
-    <Tab::AllColumns as ValidGrouping<()>>::IsAggregate:
-        MixedAggregates<is_aggregate::No, Output = is_aggregate::No>,
 {
     type Values = InsertFromSelect<Self, Tab::AllColumns>;
 
@@ -598,8 +594,6 @@ impl<'a, F, S, D, W, O, LOf, G, H, LC, Tab> Insertable<Tab>
 where
     Tab: Table,
     Self: Query,
-    <Tab::AllColumns as ValidGrouping<()>>::IsAggregate:
-        MixedAggregates<is_aggregate::No, Output = is_aggregate::No>,
 {
     type Values = InsertFromSelect<Self, Tab::AllColumns>;
 

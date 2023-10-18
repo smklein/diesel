@@ -4,9 +4,9 @@ use crate::deserialize::{
     self, FromSqlRow, FromStaticSqlRow, Queryable, SqlTypeOrSelectable, StaticallySizedRow,
 };
 use crate::expression::{
-    is_contained_in_group_by, AppearsOnTable, AsExpression, AsExpressionList, Expression,
-    IsContainedInGroupBy, MixedAggregates, QueryMetadata, Selectable, SelectableExpression,
-    TypedExpressionType, ValidGrouping,
+    AppearsOnTable, AsExpression, AsExpressionList, Expression,
+    QueryMetadata, Selectable, SelectableExpression,
+    TypedExpressionType,
 };
 use crate::insertable::{CanInsertInSingleQuery, InsertValues, Insertable, InsertableOptionHelper};
 use crate::query_builder::*;
@@ -113,8 +113,6 @@ macro_rules! tuple_impls {
 
                 const HAS_STATIC_QUERY_ID: bool = $($T::HAS_STATIC_QUERY_ID &&)+ true;
             }
-
-            impl_valid_grouping_for_tuple_of_columns!($($T,)*);
 
             impl<$($T,)+ Tab> UndecoratedInsertRecord<Tab> for ($($T,)+)
             where
@@ -439,42 +437,6 @@ macro_rules! impl_from_sql_row {
             }
         }
     }
-}
-
-macro_rules! impl_valid_grouping_for_tuple_of_columns {
-    ($T1: ident, $($T: ident,)+) => {
-        impl<$T1, $($T,)* __GroupByClause> ValidGrouping<__GroupByClause> for ($T1, $($T,)*)
-        where
-            $T1: ValidGrouping<__GroupByClause>,
-            ($($T,)*): ValidGrouping<__GroupByClause>,
-            $T1::IsAggregate: MixedAggregates<<($($T,)*) as ValidGrouping<__GroupByClause>>::IsAggregate>,
-        {
-            type IsAggregate = <$T1::IsAggregate as MixedAggregates<<($($T,)*) as ValidGrouping<__GroupByClause>>::IsAggregate>>::Output;
-        }
-
-        impl<$T1, $($T,)* Col> IsContainedInGroupBy<Col> for ($T1, $($T,)*)
-        where Col: Column,
-              ($($T,)*): IsContainedInGroupBy<Col>,
-              $T1: IsContainedInGroupBy<Col>,
-              $T1::Output: is_contained_in_group_by::IsAny<<($($T,)*) as IsContainedInGroupBy<Col>>::Output>
-        {
-            type Output = <$T1::Output as is_contained_in_group_by::IsAny<<($($T,)*) as IsContainedInGroupBy<Col>>::Output>>::Output;
-        }
-    };
-    ($T1: ident,) => {
-        impl<$T1, Col> IsContainedInGroupBy<Col> for ($T1,)
-        where Col: Column,
-              $T1: IsContainedInGroupBy<Col>
-        {
-            type Output = <$T1 as IsContainedInGroupBy<Col>>::Output;
-        }
-
-        impl<$T1, __GroupByClause> ValidGrouping<__GroupByClause> for ($T1,)
-            where $T1: ValidGrouping<__GroupByClause>
-        {
-            type IsAggregate = $T1::IsAggregate;
-        }
-    };
 }
 
 macro_rules! impl_sql_type {

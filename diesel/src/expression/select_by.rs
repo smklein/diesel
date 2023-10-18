@@ -2,7 +2,7 @@ use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::dsl::SqlTypeOf;
 use crate::expression::{
     AppearsOnTable, Expression, QueryMetadata, Selectable, SelectableExpression,
-    TypedExpressionType, ValidGrouping,
+    TypedExpressionType,
 };
 use crate::query_builder::*;
 use crate::result::QueryResult;
@@ -72,15 +72,6 @@ where
     T: Selectable<DB>,
     DB: Backend,
 {
-}
-
-impl<T, GB, E, DB> ValidGrouping<GB> for SelectBy<T, DB>
-where
-    DB: Backend,
-    T: Selectable<DB, SelectExpression = E>,
-    E: Expression + ValidGrouping<GB>,
-{
-    type IsAggregate = E::IsAggregate;
 }
 
 impl<T, DB> QueryMetadata<SelectBy<T, DB>> for DB

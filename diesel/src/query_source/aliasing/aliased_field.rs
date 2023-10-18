@@ -3,7 +3,7 @@ use super::{Alias, AliasSource};
 use crate::backend::Backend;
 use crate::dsl;
 use crate::expression::{
-    is_aggregate, AppearsOnTable, AsExpression, Expression, SelectableExpression, ValidGrouping,
+    AppearsOnTable, AsExpression, Expression, SelectableExpression,
 };
 use crate::expression_methods::{EqAll, ExpressionMethods};
 use crate::query_builder::{AstPass, FromClause, QueryFragment, QueryId, SelectStatement};
@@ -68,24 +68,6 @@ where
     C: Column<Table = S::Target>,
     Self: AppearsOnTable<Alias<S>>,
 {
-}
-
-impl<S, C> ValidGrouping<()> for AliasedField<S, C>
-where
-    S: AliasSource,
-    C: Column<Table = S::Target>,
-{
-    type IsAggregate = is_aggregate::No;
-}
-
-impl<S, C1, C2> ValidGrouping<AliasedField<S, C1>> for AliasedField<S, C2>
-where
-    S: AliasSource,
-    C1: Column<Table = S::Target>,
-    C2: Column<Table = S::Target>,
-    C2: ValidGrouping<C1, IsAggregate = is_aggregate::Yes>,
-{
-    type IsAggregate = is_aggregate::Yes;
 }
 
 // FIXME: Remove this when overlapping marker traits are stable

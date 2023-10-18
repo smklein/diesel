@@ -4,7 +4,7 @@ use super::{Alias, AliasSource};
 use crate::dsl;
 #[cfg(feature = "postgres_backend")]
 use crate::expression::SelectableExpression;
-use crate::expression::{Expression, TypedExpressionType, ValidGrouping};
+use crate::expression::{Expression, TypedExpressionType};
 use crate::expression_methods::EqAll;
 use crate::query_builder::{combination_clause, AsQuery, FromClause, Query, SelectStatement};
 use crate::query_dsl::methods::*;
@@ -65,7 +65,7 @@ where
     Alias<S>: QuerySource + AsQuery<Query = SelectStatement<FromClause<Alias<S>>>>,
     SelectStatement<FromClause<Alias<S>>>: BoxedDsl<'a, DB>,
     <Alias<S> as QuerySource>::DefaultSelection:
-        Expression<SqlType = <Alias<S> as AsQuery>::SqlType> + ValidGrouping<()>,
+        Expression<SqlType = <Alias<S> as AsQuery>::SqlType>,
     <Alias<S> as AsQuery>::SqlType: TypedExpressionType,
 {
     type Output = dsl::IntoBoxed<'a, SelectStatement<FromClause<Alias<S>>>, DB>;
@@ -164,7 +164,7 @@ where
     Self: QuerySource + AsQuery<Query = SelectStatement<FromClause<Self>>>,
     SelectStatement<FromClause<Self>>: DistinctOnDsl<Selection>,
     <Self as QuerySource>::DefaultSelection:
-        Expression<SqlType = <Self as AsQuery>::SqlType> + ValidGrouping<()>,
+        Expression<SqlType = <Self as AsQuery>::SqlType>,
     <Self as AsQuery>::SqlType: TypedExpressionType,
 {
     type Output = dsl::DistinctOn<SelectStatement<FromClause<Self>>, Selection>;
@@ -202,7 +202,7 @@ impl<S, Lock> LockingDsl<Lock> for Alias<S>
 where
     Self: QuerySource + AsQuery<Query = SelectStatement<FromClause<Self>>>,
     <Self as QuerySource>::DefaultSelection:
-        Expression<SqlType = <Self as AsQuery>::SqlType> + ValidGrouping<()>,
+        Expression<SqlType = <Self as AsQuery>::SqlType>,
     <Self as AsQuery>::SqlType: TypedExpressionType,
 {
     type Output = <SelectStatement<FromClause<Self>> as LockingDsl<Lock>>::Output;

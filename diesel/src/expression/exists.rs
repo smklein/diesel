@@ -3,7 +3,7 @@
 
 use crate::backend::{sql_dialect, Backend, SqlDialect};
 use crate::expression::subselect::Subselect;
-use crate::expression::{AppearsOnTable, Expression, SelectableExpression, ValidGrouping};
+use crate::expression::{AppearsOnTable, Expression, SelectableExpression};
 use crate::helper_types::exists;
 use crate::query_builder::*;
 use crate::result::QueryResult;
@@ -57,13 +57,6 @@ where
     Subselect<T, Bool>: Expression,
 {
     type SqlType = Bool;
-}
-
-impl<T, GB> ValidGrouping<GB> for Exists<T>
-where
-    Subselect<T, Bool>: ValidGrouping<GB>,
-{
-    type IsAggregate = <Subselect<T, Bool> as ValidGrouping<GB>>::IsAggregate;
 }
 
 impl<T, DB> QueryFragment<DB> for Exists<T>

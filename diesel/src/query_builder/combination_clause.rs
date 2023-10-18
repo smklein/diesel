@@ -3,7 +3,6 @@
 
 use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::expression::subselect::ValidSubselect;
-use crate::expression::NonAggregate;
 use crate::query_builder::insert_statement::InsertFromSelect;
 use crate::query_builder::{AsQuery, AstPass, Query, QueryFragment, QueryId, SelectQuery};
 use crate::{CombineDsl, Insertable, QueryResult, RunQueryDsl, Table};
@@ -81,7 +80,6 @@ impl<Combinator, Rule, Source, Rhs, T> Insertable<T>
     for CombinationClause<Combinator, Rule, Source, Rhs>
 where
     T: Table,
-    T::AllColumns: NonAggregate,
     Self: Query,
 {
     type Values = InsertFromSelect<Self, T::AllColumns>;

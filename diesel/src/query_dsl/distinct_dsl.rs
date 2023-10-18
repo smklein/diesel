@@ -2,7 +2,6 @@ use crate::dsl;
 #[cfg(feature = "postgres_backend")]
 use crate::expression::SelectableExpression;
 use crate::expression::TypedExpressionType;
-use crate::expression::ValidGrouping;
 use crate::query_builder::FromClause;
 use crate::query_builder::{AsQuery, SelectStatement};
 use crate::query_source::Table;
@@ -26,7 +25,7 @@ pub trait DistinctDsl {
 impl<T> DistinctDsl for T
 where
     T: Table + AsQuery<Query = SelectStatement<FromClause<T>>>,
-    T::DefaultSelection: Expression<SqlType = T::SqlType> + ValidGrouping<()>,
+    T::DefaultSelection: Expression<SqlType = T::SqlType>,
     T::SqlType: TypedExpressionType,
 {
     type Output = dsl::Distinct<SelectStatement<FromClause<T>>>;
@@ -58,7 +57,7 @@ where
     Selection: SelectableExpression<T>,
     T: Table + AsQuery<Query = SelectStatement<FromClause<T>>>,
     SelectStatement<FromClause<T>>: DistinctOnDsl<Selection>,
-    T::DefaultSelection: Expression<SqlType = T::SqlType> + ValidGrouping<()>,
+    T::DefaultSelection: Expression<SqlType = T::SqlType>,
     T::SqlType: TypedExpressionType,
 {
     type Output = dsl::DistinctOn<SelectStatement<FromClause<T>>, Selection>;

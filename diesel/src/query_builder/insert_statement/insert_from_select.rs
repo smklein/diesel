@@ -1,5 +1,5 @@
 use crate::backend::Backend;
-use crate::expression::{Expression, NonAggregate, SelectableExpression};
+use crate::expression::{Expression, SelectableExpression};
 use crate::insertable::*;
 use crate::query_builder::*;
 use crate::query_source::Table;
@@ -17,7 +17,7 @@ impl<Select, Columns> InsertFromSelect<Select, Columns> {
     pub fn new<T>(query: Select) -> Self
     where
         T: Table<AllColumns = Columns>,
-        Columns: SelectableExpression<T> + NonAggregate,
+        Columns: SelectableExpression<T>,
     {
         Self {
             query,

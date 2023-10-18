@@ -97,7 +97,7 @@ pub(crate) fn expand(input: SqlFunctionDecl) -> TokenStream {
     let args_iter = args.iter();
     let mut tokens = quote! {
         use diesel::{self, QueryResult};
-        use diesel::expression::{AsExpression, Expression, SelectableExpression, AppearsOnTable, ValidGrouping};
+        use diesel::expression::{AsExpression, Expression, SelectableExpression, AppearsOnTable};
         use diesel::query_builder::{QueryFragment, AstPass};
         use diesel::sql_types::*;
         use super::*;
@@ -172,15 +172,6 @@ pub(crate) fn expand(input: SqlFunctionDecl) -> TokenStream {
         && arg_type.iter().all(|a| is_sqlite_type(a));
 
     if is_aggregate {
-        tokens = quote! {
-            #tokens
-
-            impl #impl_generics_internal ValidGrouping<__DieselInternal>
-                for #fn_name #ty_generics
-            {
-                type IsAggregate = diesel::expression::is_aggregate::Yes;
-            }
-        };
         if is_supported_on_sqlite {
             tokens = quote! {
                 #tokens
@@ -256,21 +247,6 @@ pub(crate) fn expand(input: SqlFunctionDecl) -> TokenStream {
             }
         }
     } else {
-        tokens = quote! {
-            #tokens
-
-            #[derive(ValidGrouping)]
-            pub struct __Derived<#(#arg_name,)*>(#(#arg_name,)*);
-
-            impl #impl_generics_internal ValidGrouping<__DieselInternal>
-                for #fn_name #ty_generics
-            where
-                __Derived<#(#arg_name,)*>: ValidGrouping<__DieselInternal>,
-            {
-                type IsAggregate = <__Derived<#(#arg_name,)*> as ValidGrouping<__DieselInternal>>::IsAggregate;
-            }
-        };
-
         if is_supported_on_sqlite && !arg_name.is_empty() {
             tokens = quote! {
                 #tokens

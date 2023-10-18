@@ -2,7 +2,7 @@ use super::field_alias_mapper::FieldAliasMapper;
 use super::{AliasSource, AliasedField};
 
 use crate::backend::{sql_dialect, Backend};
-use crate::expression::{Expression, SelectableExpression, ValidGrouping};
+use crate::expression::{Expression, SelectableExpression};
 use crate::helper_types::AliasedFields;
 use crate::query_builder::{AsQuery, AstPass, FromClause, QueryFragment, QueryId, SelectStatement};
 use crate::query_source::{AppearsInFromClause, Column, Never, QuerySource, Table, TableNotEqual};
@@ -114,7 +114,6 @@ where
     S: AliasSource,
     S::Target: AsQuery,
     Self: QuerySource,
-    <Self as QuerySource>::DefaultSelection: ValidGrouping<()>,
 {
     type SqlType = <<Self as QuerySource>::DefaultSelection as Expression>::SqlType;
     type Query = SelectStatement<FromClause<Self>>;

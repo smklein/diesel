@@ -5,7 +5,6 @@ use std::num::NonZeroU32;
 use crate::deserialize::{self, FromSql, Queryable};
 use crate::expression::{
     AppearsOnTable, AsExpression, Expression, SelectableExpression, TypedExpressionType,
-    ValidGrouping,
 };
 use crate::pg::{Pg, PgValue};
 use crate::query_builder::bind_collector::ByteWrapper;
@@ -133,7 +132,7 @@ macro_rules! tuple_impls {
 
 diesel_derives::__diesel_for_each_tuple!(tuple_impls);
 
-#[derive(Debug, Clone, Copy, QueryId, ValidGrouping)]
+#[derive(Debug, Clone, Copy, QueryId)]
 pub struct PgTuple<T>(T);
 
 impl<T> QueryFragment<Pg> for PgTuple<T>

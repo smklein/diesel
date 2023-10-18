@@ -1,4 +1,4 @@
-use crate::expression::{Expression, ValidGrouping};
+use crate::expression::Expression;
 use crate::pg::Pg;
 use crate::query_builder::{AsQuery, AstPass, FromClause, QueryFragment, QueryId, SelectStatement};
 use crate::query_source::QuerySource;
@@ -23,7 +23,7 @@ where
 impl<S> QuerySource for Only<S>
 where
     S: Table + Clone,
-    <S as QuerySource>::DefaultSelection: ValidGrouping<()> + SelectableExpression<Only<S>>,
+    <S as QuerySource>::DefaultSelection: SelectableExpression<Only<S>>,
 {
     type FromClause = Self;
     type DefaultSelection = <S as QuerySource>::DefaultSelection;
@@ -51,7 +51,7 @@ where
 impl<S> AsQuery for Only<S>
 where
     S: Table + Clone,
-    <S as QuerySource>::DefaultSelection: ValidGrouping<()> + SelectableExpression<Only<S>>,
+    <S as QuerySource>::DefaultSelection: SelectableExpression<Only<S>>,
 {
     type SqlType = <<Self as QuerySource>::DefaultSelection as Expression>::SqlType;
     type Query = SelectStatement<FromClause<Self>>;
@@ -80,7 +80,7 @@ where
 
     <S as Table>::PrimaryKey: SelectableExpression<Only<S>>,
     <S as Table>::AllColumns: SelectableExpression<Only<S>>,
-    <S as QuerySource>::DefaultSelection: ValidGrouping<()> + SelectableExpression<Only<S>>,
+    <S as QuerySource>::DefaultSelection: SelectableExpression<Only<S>>,
 {
     type PrimaryKey = <S as Table>::PrimaryKey;
     type AllColumns = <S as Table>::AllColumns;

@@ -194,10 +194,6 @@ impl<QS, ST, T> SelectableExpression<QS> for SqlLiteral<ST, T> where Self: Expre
 
 impl<QS, ST, T> AppearsOnTable<QS> for SqlLiteral<ST, T> where Self: Expression {}
 
-impl<ST, T, GB> ValidGrouping<GB> for SqlLiteral<ST, T> {
-    type IsAggregate = is_aggregate::Never;
-}
-
 /// Use literal SQL in the query builder.
 ///
 /// Available for when you truly cannot represent something using the expression
@@ -356,10 +352,6 @@ where
     Q: Query,
 {
     type SqlType = Q::SqlType;
-}
-
-impl<Query, Value, GB> ValidGrouping<GB> for UncheckedBind<Query, Value> {
-    type IsAggregate = is_aggregate::Never;
 }
 
 impl<QS, Query, Value> SelectableExpression<QS> for UncheckedBind<Query, Value> where

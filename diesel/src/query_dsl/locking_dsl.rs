@@ -1,5 +1,4 @@
 use crate::expression::TypedExpressionType;
-use crate::expression::ValidGrouping;
 use crate::query_builder::AsQuery;
 use crate::query_builder::FromClause;
 use crate::query_builder::SelectStatement;
@@ -27,7 +26,7 @@ pub trait LockingDsl<Lock> {
 impl<T, Lock> LockingDsl<Lock> for T
 where
     T: Table + AsQuery<Query = SelectStatement<FromClause<T>>>,
-    T::DefaultSelection: Expression<SqlType = T::SqlType> + ValidGrouping<()>,
+    T::DefaultSelection: Expression<SqlType = T::SqlType>,
     T::SqlType: TypedExpressionType,
 {
     type Output = <SelectStatement<FromClause<T>> as LockingDsl<Lock>>::Output;

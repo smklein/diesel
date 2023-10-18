@@ -1,5 +1,5 @@
 use crate::expression::{
-    AppearsOnTable, AsExpressionList, Expression, SelectableExpression, ValidGrouping,
+    AppearsOnTable, AsExpressionList, Expression, SelectableExpression,
 };
 use crate::pg::Pg;
 use crate::query_builder::{AstPass, QueryFragment, QueryId};
@@ -89,11 +89,4 @@ where
     T: AppearsOnTable<QS>,
     ArrayLiteral<T, ST>: Expression,
 {
-}
-
-impl<T, ST, GB> ValidGrouping<GB> for ArrayLiteral<T, ST>
-where
-    T: ValidGrouping<GB>,
-{
-    type IsAggregate = T::IsAggregate;
 }

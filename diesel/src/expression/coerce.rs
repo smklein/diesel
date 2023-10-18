@@ -64,10 +64,3 @@ where
         self.expr.walk_ast(pass)
     }
 }
-
-impl<T, ST, GB> ValidGrouping<GB> for Coerce<T, ST>
-where
-    T: ValidGrouping<GB>,
-{
-    type IsAggregate = T::IsAggregate;
-}

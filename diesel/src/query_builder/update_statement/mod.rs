@@ -6,7 +6,7 @@ use self::target::UpdateTarget;
 use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::dsl::{Filter, IntoBoxed};
 use crate::expression::{
-    is_aggregate, AppearsOnTable, Expression, MixedAggregates, SelectableExpression, ValidGrouping,
+    AppearsOnTable, Expression, SelectableExpression,
 };
 use crate::query_builder::returning_clause::*;
 use crate::query_builder::where_clause::*;
@@ -228,9 +228,6 @@ impl<T, U, V> AsQuery for UpdateStatement<T, U, V, NoReturningClause>
 where
     T: Table,
     UpdateStatement<T, U, V, ReturningClause<T::AllColumns>>: Query,
-    T::AllColumns: ValidGrouping<()>,
-    <T::AllColumns as ValidGrouping<()>>::IsAggregate:
-        MixedAggregates<is_aggregate::No, Output = is_aggregate::No>,
 {
     type SqlType = <Self::Query as Query>::SqlType;
     type Query = UpdateStatement<T, U, V, ReturningClause<T::AllColumns>>;
@@ -243,8 +240,7 @@ where
 impl<T, U, V, Ret> Query for UpdateStatement<T, U, V, ReturningClause<Ret>>
 where
     T: Table,
-    Ret: Expression + SelectableExpression<T> + ValidGrouping<()>,
-    Ret::IsAggregate: MixedAggregates<is_aggregate::No, Output = is_aggregate::No>,
+    Ret: Expression + SelectableExpression<T>,
 {
     type SqlType = Ret::SqlType;
 }

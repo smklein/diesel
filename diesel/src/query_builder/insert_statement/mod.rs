@@ -11,7 +11,7 @@ use super::returning_clause::*;
 use crate::backend::{sql_dialect, Backend, DieselReserveSpecialization, SqlDialect};
 use crate::expression::grouped::Grouped;
 use crate::expression::operators::Eq;
-use crate::expression::{Expression, NonAggregate, SelectableExpression};
+use crate::expression::{Expression, SelectableExpression};
 use crate::query_builder::*;
 use crate::query_dsl::RunQueryDsl;
 use crate::query_source::{Column, Table};
@@ -258,7 +258,7 @@ where
 impl<T, U, Op, Ret> Query for InsertStatement<T, U, Op, ReturningClause<Ret>>
 where
     T: QuerySource,
-    Ret: Expression + SelectableExpression<T> + NonAggregate,
+    Ret: Expression + SelectableExpression<T>,
 {
     type SqlType = Ret::SqlType;
 }

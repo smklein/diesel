@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
 use super::functions::sql_function;
-use super::{is_aggregate, AsExpression};
-use super::{Expression, ValidGrouping};
+use super::AsExpression;
+use super::Expression;
 use crate::backend::Backend;
 use crate::query_builder::*;
 use crate::result::QueryResult;
@@ -58,8 +58,7 @@ pub fn count_star() -> CountStar {
     CountStar
 }
 
-#[derive(Debug, Clone, Copy, QueryId, DieselNumericOps, ValidGrouping)]
-#[diesel(aggregate)]
+#[derive(Debug, Clone, Copy, QueryId, DieselNumericOps)]
 #[doc(hidden)]
 pub struct CountStar;
 
@@ -120,13 +119,6 @@ where
     E: Expression,
 {
     type SqlType = BigInt;
-}
-
-impl<T, E, GB> ValidGrouping<GB> for CountDistinct<T, E>
-where
-    T: SqlType + SingleValue,
-{
-    type IsAggregate = is_aggregate::Yes;
 }
 
 impl<T, E, QS> SelectableExpression<QS> for CountDistinct<T, E>

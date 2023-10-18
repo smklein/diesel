@@ -82,7 +82,6 @@ impl<'a, ST, QS: QuerySource, DB, GB> BoxedSelectStatement<'a, ST, FromClause<QS
             + QueryFragment<DB>
             + Send
             + 'a,
-        S::Selection: ValidGrouping<GB>,
     {
         BoxedSelectStatement {
             select: Box::new(select),
@@ -117,7 +116,6 @@ impl<'a, ST, DB, GB> BoxedSelectStatement<'a, ST, NoFromClause, DB, GB> {
             + QueryFragment<DB>
             + Send
             + 'a,
-        S::Selection: ValidGrouping<GB>,
     {
         BoxedSelectStatement {
             select: Box::new(select),
@@ -276,7 +274,7 @@ impl<'a, ST, QS, DB, Selection, GB> SelectDsl<Selection>
 where
     DB: Backend,
     QS: QuerySource,
-    Selection: SelectableExpression<QS> + QueryFragment<DB> + ValidGrouping<GB> + Send + 'a,
+    Selection: SelectableExpression<QS> + QueryFragment<DB> + Send + 'a,
 {
     type Output = BoxedSelectStatement<'a, Selection::SqlType, FromClause<QS>, DB, GB>;
 
@@ -300,7 +298,7 @@ impl<'a, ST, DB, Selection, GB> SelectDsl<Selection>
 where
     DB: Backend,
     Selection:
-        SelectableExpression<NoFromClause> + QueryFragment<DB> + ValidGrouping<GB> + Send + 'a,
+        SelectableExpression<NoFromClause> + QueryFragment<DB> + Send + 'a,
 {
     type Output = BoxedSelectStatement<'a, Selection::SqlType, NoFromClause, DB, GB>;
 
@@ -324,7 +322,7 @@ impl<'a, ST, QS, DB, Predicate, GB> FilterDsl<Predicate>
 where
     QS: QuerySource,
     BoxedWhereClause<'a, DB>: WhereAnd<Predicate, Output = BoxedWhereClause<'a, DB>>,
-    Predicate: AppearsOnTable<QS> + NonAggregate,
+    Predicate: AppearsOnTable<QS>,
     Predicate::SqlType: BoolOrNullableBool,
 {
     type Output = Self;
@@ -339,7 +337,7 @@ impl<'a, ST, DB, Predicate, GB> FilterDsl<Predicate>
     for BoxedSelectStatement<'a, ST, NoFromClause, DB, GB>
 where
     BoxedWhereClause<'a, DB>: WhereAnd<Predicate, Output = BoxedWhereClause<'a, DB>>,
-    Predicate: AppearsOnTable<NoFromClause> + NonAggregate,
+    Predicate: AppearsOnTable<NoFromClause>,
     Predicate::SqlType: BoolOrNullableBool,
 {
     type Output = Self;
@@ -355,7 +353,7 @@ impl<'a, ST, QS, DB, Predicate, GB> OrFilterDsl<Predicate>
 where
     QS: QuerySource,
     BoxedWhereClause<'a, DB>: WhereOr<Predicate, Output = BoxedWhereClause<'a, DB>>,
-    Predicate: AppearsOnTable<QS> + NonAggregate,
+    Predicate: AppearsOnTable<QS>,
     Predicate::SqlType: BoolOrNullableBool,
 {
     type Output = Self;
@@ -370,7 +368,7 @@ impl<'a, ST, DB, Predicate, GB> OrFilterDsl<Predicate>
     for BoxedSelectStatement<'a, ST, NoFromClause, DB, GB>
 where
     BoxedWhereClause<'a, DB>: WhereOr<Predicate, Output = BoxedWhereClause<'a, DB>>,
-    Predicate: AppearsOnTable<NoFromClause> + NonAggregate,
+    Predicate: AppearsOnTable<NoFromClause>,
     Predicate::SqlType: BoolOrNullableBool,
 {
     type Output = Self;
@@ -461,8 +459,6 @@ impl<'a, ST, QS, DB, T, GB> Insertable<T> for BoxedSelectStatement<'a, ST, QS, D
 where
     T: Table,
     Self: Query,
-    <T::AllColumns as ValidGrouping<()>>::IsAggregate:
-        MixedAggregates<is_aggregate::No, Output = is_aggregate::No>,
 {
     type Values = InsertFromSelect<Self, T::AllColumns>;
 
@@ -475,8 +471,6 @@ impl<'a, 'b, ST, QS, DB, T, GB> Insertable<T> for &'b BoxedSelectStatement<'a, S
 where
     T: Table,
     Self: Query,
-    <T::AllColumns as ValidGrouping<()>>::IsAggregate:
-        MixedAggregates<is_aggregate::No, Output = is_aggregate::No>,
 {
     type Values = InsertFromSelect<Self, T::AllColumns>;
 

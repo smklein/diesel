@@ -443,7 +443,7 @@ impl<T: Table> ToInnerJoin for T {
 
 mod private {
     use crate::backend::Backend;
-    use crate::expression::{Expression, ValidGrouping};
+    use crate::expression::Expression;
     use crate::query_builder::{AstPass, QueryFragment, SelectClauseExpression};
     use crate::{AppearsOnTable, QueryResult, SelectableExpression};
 
@@ -458,12 +458,6 @@ mod private {
         fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
             self.0.walk_ast(pass)
         }
-    }
-
-    // The default select clause is only valid for no group by clause
-    // anyway so we can just skip the recursive check here
-    impl<T> ValidGrouping<()> for SkipSelectableExpressionBoundCheckWrapper<T> {
-        type IsAggregate = crate::expression::is_aggregate::No;
     }
 
     // This needs to use the expression impl

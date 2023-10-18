@@ -7,7 +7,6 @@ use crate::backend::SqlDialect;
 use crate::expression::subselect::Subselect;
 use crate::expression::{
     AppearsOnTable, AsExpression, Expression, SelectableExpression, TypedExpressionType,
-    ValidGrouping,
 };
 use crate::query_builder::combination_clause::CombinationClause;
 use crate::query_builder::{
@@ -30,7 +29,7 @@ use std::marker::PhantomData;
 ///
 /// The postgres backend provided a specialized implementation
 /// by using `left = ANY(values)` as optimized variant instead.
-#[derive(Debug, Copy, Clone, QueryId, ValidGrouping)]
+#[derive(Debug, Copy, Clone, QueryId)]
 #[non_exhaustive]
 pub struct In<T, U> {
     /// The expression on the left side of the `IN` keyword
@@ -50,7 +49,7 @@ pub struct In<T, U> {
 ///
 /// The postgres backend provided a specialized implementation
 /// by using `left = ALL(values)` as optimized variant instead.
-#[derive(Debug, Copy, Clone, QueryId, ValidGrouping)]
+#[derive(Debug, Copy, Clone, QueryId)]
 #[non_exhaustive]
 pub struct NotIn<T, U> {
     /// The expression on the left side of the `NOT IN` keyword
@@ -260,15 +259,6 @@ pub struct Many<ST, I> {
     /// The values contained in the `IN (values)` clause
     pub values: Vec<I>,
     p: PhantomData<ST>,
-}
-
-impl<ST, I, GB> ValidGrouping<GB> for Many<ST, I>
-where
-    ST: SingleValue,
-    I: AsExpression<ST>,
-    I::Expression: ValidGrouping<GB>,
-{
-    type IsAggregate = <I::Expression as ValidGrouping<GB>>::IsAggregate;
 }
 
 impl<ST, I> Expression for Many<ST, I>
