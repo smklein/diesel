@@ -186,22 +186,6 @@ where
     }
 }
 
-impl<S, Expr> GroupByDsl<Expr> for Alias<S>
-where
-    Expr: Expression,
-    Self: QuerySource + AsQuery<Query = SelectStatement<FromClause<Self>>>,
-    <Self as QuerySource>::DefaultSelection:
-        Expression<SqlType = <Self as AsQuery>::SqlType> + ValidGrouping<()>,
-    <Self as AsQuery>::SqlType: TypedExpressionType,
-    <Self as AsQuery>::Query: GroupByDsl<Expr>,
-{
-    type Output = dsl::GroupBy<SelectStatement<FromClause<Self>>, Expr>;
-
-    fn group_by(self, expr: Expr) -> dsl::GroupBy<Self, Expr> {
-        GroupByDsl::group_by(self.as_query(), expr)
-    }
-}
-
 impl<S> LimitDsl for Alias<S>
 where
     Self: AsQuery,

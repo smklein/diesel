@@ -1,7 +1,6 @@
 use diesel_table_macro_syntax::{ColumnDef, TableDecl};
 use proc_macro2::TokenStream;
 use syn::parse_quote;
-use syn::Ident;
 
 const DEFAULT_PRIMARY_KEY_NAME: &str = "id";
 
@@ -98,7 +97,6 @@ pub(crate) fn expand(input: TableDecl) -> TokenStream {
 
     let column_defs = input.column_defs.iter().map(expand_column_def);
     let column_ty = input.column_defs.iter().map(|c| &c.tpe);
-    let valid_grouping_for_table_columns = generate_valid_grouping_for_table_columns(&input);
 
     let sql_name = &input.sql_name;
     let static_query_fragment_impl_for_table = if let Some(schema) = input.schema {
@@ -388,57 +386,9 @@ pub(crate) fn expand(input: TableDecl) -> TokenStream {
                 }
 
                 #(#column_defs)*
-
-                #(#valid_grouping_for_table_columns)*
             }
         }
     }
-}
-
-fn generate_valid_grouping_for_table_columns(table: &TableDecl) -> Vec<TokenStream> {
-    let mut ret = Vec::with_capacity(table.column_defs.len() * table.column_defs.len());
-
-    let primary_key = if let Some(ref pk) = table.primary_keys {
-        if pk.keys.len() == 1 {
-            pk.keys.first().map(ToString::to_string)
-        } else {
-            None
-        }
-    } else {
-        Some(DEFAULT_PRIMARY_KEY_NAME.into())
-    };
-
-    for (id, right_col) in table.column_defs.iter().enumerate() {
-        for left_col in table.column_defs.iter().skip(id) {
-            let right_to_left = if Some(left_col.column_name.to_string()) == primary_key {
-                Ident::new("Yes", proc_macro2::Span::call_site())
-            } else {
-                Ident::new("No", proc_macro2::Span::call_site())
-            };
-
-            let left_to_right = if Some(right_col.column_name.to_string()) == primary_key {
-                Ident::new("Yes", proc_macro2::Span::call_site())
-            } else {
-                Ident::new("No", proc_macro2::Span::call_site())
-            };
-
-            let left_col = &left_col.column_name;
-            let right_col = &right_col.column_name;
-
-            if left_col != right_col {
-                ret.push(quote::quote! {
-                    impl diesel::expression::IsContainedInGroupBy<#right_col> for #left_col {
-                        type Output = diesel::expression::is_contained_in_group_by::#right_to_left;
-                    }
-
-                    impl diesel::expression::IsContainedInGroupBy<#left_col> for #right_col {
-                        type Output = diesel::expression::is_contained_in_group_by::#left_to_right;
-                    }
-                });
-            }
-        }
-    }
-    ret
 }
 
 fn fix_import_for_submodule(import: &syn::ItemUse) -> syn::ItemUse {
