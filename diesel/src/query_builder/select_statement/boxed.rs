@@ -30,6 +30,7 @@ use crate::sql_types::{BigInt, BoolOrNullableBool, IntoNullable};
 /// Using this type directly is only meaningful for custom backends
 /// that need to provide a custom [`QueryFragment`] implementation
 #[allow(missing_debug_implementations)]
+#[must_use = "Queries are only executed when calling `load`, `get_result` or similar."]
 #[diesel_derives::__diesel_public_if(
     feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes",
     public_fields(

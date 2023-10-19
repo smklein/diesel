@@ -6,24 +6,6 @@ macro_rules! simple_clause {
         $clause:ident,
         $sql:expr
     ) => {
-        simple_clause!(
-            $(#[$no_clause_meta])*
-            $no_clause,
-            $(#[$clause_meta])*
-            $clause,
-            $sql,
-            backend_bounds =
-        );
-    };
-
-    (
-        $(#[$no_clause_meta: meta])*
-        $no_clause:ident,
-        $(#[$clause_meta: meta])*
-        $clause:ident,
-        $sql:expr,
-        backend_bounds = $($backend_bounds:ident),*
-    ) => {
         use crate::backend::{Backend, DieselReserveSpecialization};
         use crate::result::QueryResult;
         use crate::query_builder::QueryId;
@@ -47,7 +29,7 @@ macro_rules! simple_clause {
         pub struct $clause<Expr>(pub Expr);
 
         impl<Expr, DB> QueryFragment<DB> for $clause<Expr> where
-            DB: Backend + DieselReserveSpecialization $(+ $backend_bounds)*,
+            DB: Backend + DieselReserveSpecialization,
             Expr: QueryFragment<DB>,
         {
             fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()>
