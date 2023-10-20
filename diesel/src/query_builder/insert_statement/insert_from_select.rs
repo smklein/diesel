@@ -58,9 +58,16 @@ where
     }
 }
 
+// TODO:
+// I dunno if this is worth keeping or not, but in the implementation of
+// multi-table "insert from select", there is no longer one single table to
+// reference to construct the UndecoratedInsertRecord.
+
+/*
 impl<Select, Columns> UndecoratedInsertRecord<Columns::Table> for InsertFromSelect<Select, Columns>
 where
     Columns: ColumnList + Expression,
     Select: Query<SqlType = Columns::SqlType>,
 {
 }
+*/

@@ -8,8 +8,10 @@ pub(crate) mod aliasing;
 pub(crate) mod joins;
 mod peano_numbers;
 
+use crate::backend::Backend;
 use crate::expression::{Expression, SelectableExpression};
 use crate::query_builder::*;
+use crate::result::QueryResult;
 
 pub use self::aliasing::{Alias, AliasSource, AliasedField};
 pub use self::joins::JoinTo;
@@ -50,6 +52,16 @@ pub trait Column: Expression {
 
     /// The name of this column
     const NAME: &'static str;
+}
+
+/// A column on a database table, where the table's type information has been
+/// erased. This is useful in situations where we want to consider columns
+/// from multiple tables.
+pub trait UntypedColumn {
+    /// Generate the SQL for this column name.
+    ///
+    /// This includes the fully-qualified table name.
+    fn walk_ast<DB: Backend>(&self, out: AstPass<'_, '_, DB>) -> QueryResult<()>;
 }
 
 /// A SQL database table. Types which implement this trait should have been

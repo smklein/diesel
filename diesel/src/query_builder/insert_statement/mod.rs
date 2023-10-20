@@ -203,7 +203,7 @@ impl<T: QuerySource, U, C, Op, Ret> InsertStatement<T, InsertFromSelect<U, C>, O
         columns: C2,
     ) -> InsertStatement<T, InsertFromSelect<U, C2>, Op, Ret>
     where
-        C2: ColumnList<Table = T> + Expression,
+        C2: ColumnList + Expression,
         U: Query<SqlType = C2::SqlType>,
     {
         InsertStatement::new(

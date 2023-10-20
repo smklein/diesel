@@ -638,6 +638,17 @@ fn expand_column_def(column_def: &ColumnDef) -> TokenStream {
             const NAME: &'static str = #sql_name;
         }
 
+        impl diesel::query_source::UntypedColumn for #column_name {
+            fn walk_ast<DB: diesel::backend::Backend>(&self, mut __diesel_internal_out: diesel::query_builder::AstPass<'_, '_, DB>) -> diesel::result::QueryResult<()>
+            {
+                use diesel::query_builder::QueryFragment;
+
+                <super::table as diesel::internal::table_macro::StaticQueryFragment>::STATIC_COMPONENT.walk_ast(__diesel_internal_out.reborrow())?;
+                __diesel_internal_out.push_sql(".");
+                __diesel_internal_out.push_identifier(#sql_name)
+            }
+        }
+
         impl<T> diesel::EqAll<T> for #column_name where
             T: diesel::expression::AsExpression<#sql_type>,
             diesel::dsl::Eq<#column_name, T::Expression>: diesel::Expression<SqlType=diesel::sql_types::Bool>,

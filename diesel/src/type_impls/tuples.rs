@@ -91,12 +91,10 @@ macro_rules! tuple_impls {
                 }
             }
 
-            impl<$($T,)+ Tab> ColumnList for ($($T,)+)
+            impl<$($T,)+ > ColumnList for ($($T,)+)
             where
-                $($T: ColumnList<Table = Tab>,)+
+                $($T: ColumnList,)+
             {
-                type Table = Tab;
-
                 fn walk_ast<__DB: Backend>(&self, mut out: AstPass<'_, '_, __DB>) -> QueryResult<()> {
                     $(
                         if $idx != 0 {
