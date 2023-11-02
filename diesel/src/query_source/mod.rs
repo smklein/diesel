@@ -8,7 +8,7 @@ pub(crate) mod aliasing;
 pub(crate) mod joins;
 mod peano_numbers;
 
-use crate::backend::Backend;
+use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::expression::{Expression, SelectableExpression};
 use crate::query_builder::*;
 use crate::result::QueryResult;
@@ -61,7 +61,7 @@ pub trait UntypedColumn {
     /// Generate the SQL for this column name.
     ///
     /// This includes the fully-qualified table name.
-    fn walk_ast<DB: Backend>(&self, out: AstPass<'_, '_, DB>) -> QueryResult<()>;
+    fn walk_ast<DB: Backend + DieselReserveSpecialization>(&self, out: AstPass<'_, '_, DB>) -> QueryResult<()>;
 }
 
 /// A SQL database table. Types which implement this trait should have been

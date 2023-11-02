@@ -108,7 +108,7 @@ fn lookup_type<T: Connection<Backend = Pg> + LoadConnection<DefaultLoadingMode>>
         // We have an explicit type name and schema given here
         // that should resolve to an unique type
         metadata_query
-            .inner_join(pg_namespace::table)
+            .inner_join(pg_namespace::table.on(pg_namespace::oid.eq(pg_type::oid)))
             .filter(pg_type::typname.eq(&cache_key.type_name))
             .filter(pg_namespace::nspname.eq(schema))
             .first(conn)?
@@ -211,7 +211,6 @@ table! {
     }
 }
 
-joinable!(pg_type -> pg_namespace(typnamespace));
 allow_tables_to_appear_in_same_query!(pg_type, pg_namespace);
 
 sql_function! { fn pg_my_temp_schema() -> Oid; }

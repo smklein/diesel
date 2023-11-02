@@ -639,7 +639,7 @@ fn expand_column_def(column_def: &ColumnDef) -> TokenStream {
         }
 
         impl diesel::query_source::UntypedColumn for #column_name {
-            fn walk_ast<DB: diesel::backend::Backend>(&self, mut __diesel_internal_out: diesel::query_builder::AstPass<'_, '_, DB>) -> diesel::result::QueryResult<()>
+            fn walk_ast<DB: diesel::backend::Backend + diesel::backend::DieselReserveSpecialization>(&self, mut __diesel_internal_out: diesel::query_builder::AstPass<'_, '_, DB>) -> diesel::result::QueryResult<()>
             {
                 use diesel::query_builder::QueryFragment;
 

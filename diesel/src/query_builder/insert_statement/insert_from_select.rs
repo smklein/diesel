@@ -1,4 +1,4 @@
-use crate::backend::Backend;
+use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::expression::{Expression, SelectableExpression};
 use crate::insertable::*;
 use crate::query_builder::*;
@@ -45,7 +45,7 @@ where
 
 impl<DB, Select, Columns> QueryFragment<DB> for InsertFromSelect<Select, Columns>
 where
-    DB: Backend,
+    DB: Backend + DieselReserveSpecialization,
     Columns: ColumnList + Expression,
     Select: Query<SqlType = Columns::SqlType> + QueryFragment<DB>,
 {

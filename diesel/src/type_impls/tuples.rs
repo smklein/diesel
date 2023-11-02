@@ -1,5 +1,5 @@
 use crate::associations::BelongsTo;
-use crate::backend::Backend;
+use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::deserialize::{
     self, FromSqlRow, FromStaticSqlRow, Queryable, SqlTypeOrSelectable, StaticallySizedRow,
 };
@@ -95,7 +95,7 @@ macro_rules! tuple_impls {
             where
                 $($T: ColumnList,)+
             {
-                fn walk_ast<__DB: Backend>(&self, mut out: AstPass<'_, '_, __DB>) -> QueryResult<()> {
+                fn walk_ast<__DB: Backend + DieselReserveSpecialization>(&self, mut out: AstPass<'_, '_, __DB>) -> QueryResult<()> {
                     $(
                         if $idx != 0 {
                             out.push_sql(", ");
