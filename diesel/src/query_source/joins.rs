@@ -7,6 +7,7 @@ use crate::expression::SelectableExpression;
 use crate::prelude::*;
 use crate::query_builder::*;
 use crate::query_dsl::InternalJoinDsl;
+use crate::query_source::{Column, Never, Pick};
 use crate::result::QueryResult;
 use crate::sql_types::BoolOrNullableBool;
 use crate::util::TupleAppend;
@@ -16,6 +17,35 @@ pub struct Join<Left: QuerySource, Right: QuerySource, Kind> {
     left: FromClause<Left>,
     right: FromClause<Right>,
     kind: Kind,
+}
+
+// Enables SELECT-ing a column from the left side of a LEFT OUTER JOIN.
+impl<Left, Right, C> SelectableExpression<Join<Left, Right, LeftOuter>> for C
+where
+    C: Column + AppearsInQuery<Join<Left, Right, LeftOuter>>,
+    Self: SelectableExpression<Left>,
+    // If our table is on the right side of this join, only
+    // `Nullable<Self>` can be selected
+    Right: AppearsInFromClause<C::Table, Count = Never> + QuerySource,
+    Left: QuerySource
+{
+}
+
+// Enables SELECT-ing a column from the left or right side of a LEFT INNER JOIN.
+impl<Left, Right, C> SelectableExpression<Join<Left, Right, Inner>> for C
+where
+    C: Column + AppearsInQuery<Join<Left, Right, Inner>>,
+    Left: AppearsInFromClause<C::Table> + QuerySource,
+    Right: AppearsInFromClause<C::Table> + QuerySource,
+    (Left::Count, Right::Count): Pick<Left, Right>,
+    Self: SelectableExpression<<(Left::Count, Right::Count) as Pick<Left, Right>>::Selection>,
+{
+}
+
+impl<Join, On, C> SelectableExpression<JoinOn<Join, On>> for C
+where
+    C: Column + SelectableExpression<Join> + AppearsInQuery<JoinOn<Join, On>>,
+{
 }
 
 impl<Left, Right, Kind> Clone for Join<Left, Right, Kind>

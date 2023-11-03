@@ -288,19 +288,19 @@ impl<T> IntoSql for T {}
 /// instead.
 pub trait AppearsInQuery<QS: ?Sized>: Expression {}
 
-impl<T: ?Sized, QS> AppearsInQuery<QS> for Box<T>
-where
-    T: AppearsInQuery<QS>,
-    Box<T>: Expression,
-{
-}
-
-impl<'a, T: ?Sized, QS> AppearsInQuery<QS> for &'a T
-where
-    T: AppearsInQuery<QS>,
-    &'a T: Expression,
-{
-}
+// impl<T: ?Sized, QS> AppearsInQuery<QS> for Box<T>
+// where
+//     T: AppearsInQuery<QS>,
+//     Box<T>: Expression,
+// {
+// }
+// 
+// impl<'a, T: ?Sized, QS> AppearsInQuery<QS> for &'a T
+// where
+//     T: AppearsInQuery<QS>,
+//     &'a T: Expression,
+// {
+// }
 
 /// Indicates that an expression can be selected from a source.
 ///
@@ -320,19 +320,19 @@ where
 )]
 pub trait SelectableExpression<QS: ?Sized>: AppearsInQuery<QS> {}
 
-impl<T: ?Sized, QS> SelectableExpression<QS> for Box<T>
-where
-    T: SelectableExpression<QS>,
-    Box<T>: AppearsInQuery<QS>,
-{
-}
+// impl<T: ?Sized, QS> SelectableExpression<QS> for Box<T>
+// where
+//     T: SelectableExpression<QS>,
+//     Box<T>: AppearsInQuery<QS>,
+// {
+// }
 
-impl<'a, T: ?Sized, QS> SelectableExpression<QS> for &'a T
-where
-    T: SelectableExpression<QS>,
-    &'a T: AppearsInQuery<QS>,
-{
-}
+// impl<'a, T: ?Sized, QS> SelectableExpression<QS> for &'a T
+// where
+//     T: SelectableExpression<QS>,
+//     &'a T: AppearsInQuery<QS>,
+// {
+// }
 
 /// Trait indicating that a record can be selected and queried from the database.
 ///

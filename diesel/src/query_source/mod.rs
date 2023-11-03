@@ -8,10 +8,12 @@ pub(crate) mod aliasing;
 pub(crate) mod joins;
 mod peano_numbers;
 
+use crate::AppearsInQuery;
 use crate::backend::{Backend, DieselReserveSpecialization};
-use crate::expression::{Expression, SelectableExpression};
+use crate::expression::{AsExpression, Expression, SelectableExpression};
 use crate::query_builder::*;
 use crate::result::QueryResult;
+use crate::sql_types;
 
 pub use self::aliasing::{Alias, AliasSource, AliasedField};
 pub use self::joins::JoinTo;
@@ -52,6 +54,36 @@ pub trait Column: Expression {
 
     /// The name of this column
     const NAME: &'static str;
+}
+
+// Columns should appear once in the tables on which they are defined.
+impl<QS, C> AppearsInQuery<QS> for C
+where
+    C: Column,
+    QS: AppearsInFromClause<C::Table, Count = diesel::query_source::Once>
+{
+}
+
+// impl<From, C> SelectableExpression<SelectStatement<FromClause<From>>> for C
+// where
+//     From: QuerySource,
+//     C: Column + SelectableExpression<From> + AppearsInQuery<SelectStatement<FromClause<From>>>,
+// {
+// }
+
+impl<T, C> diesel::EqAll<T> for C
+where
+    C: Column + Expression,
+    T: AsExpression<C::SqlType>,
+    diesel::dsl::Eq<C, T::Expression>: Expression<SqlType = sql_types::Bool>,
+    <C as Expression>::SqlType: sql_types::SqlType + sql_types::SingleValue,
+{
+    type Output = diesel::dsl::Eq<Self, T::Expression>;
+
+    fn eq_all(self, __diesel_internal_rhs: T) -> Self::Output {
+        use diesel::expression_methods::ExpressionMethods;
+        self.eq(__diesel_internal_rhs)
+    }
 }
 
 /// A column on a database table, where the table's type information has been
