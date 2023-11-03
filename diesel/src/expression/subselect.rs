@@ -36,12 +36,12 @@ impl<T, ST> MaybeEmpty for Subselect<T, ST> {
 
 impl<T, ST, QS> SelectableExpression<QS> for Subselect<T, ST>
 where
-    Subselect<T, ST>: AppearsOnTable<QS>,
+    Subselect<T, ST>: AppearsInQuery<QS>,
     T: ValidSubselect<QS>,
 {
 }
 
-impl<T, ST, QS> AppearsOnTable<QS> for Subselect<T, ST>
+impl<T, ST, QS> AppearsInQuery<QS> for Subselect<T, ST>
 where
     Subselect<T, ST>: Expression,
     T: ValidSubselect<QS>,

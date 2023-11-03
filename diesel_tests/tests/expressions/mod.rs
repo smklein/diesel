@@ -168,7 +168,7 @@ where
 
 impl<T, QS> SelectableExpression<QS> for Arbitrary<T> where Self: Expression {}
 
-impl<T, QS> AppearsOnTable<QS> for Arbitrary<T> where Self: Expression {}
+impl<T, QS> AppearsInQuery<QS> for Arbitrary<T> where Self: Expression {}
 
 fn arbitrary<T>() -> Arbitrary<T> {
     Arbitrary {

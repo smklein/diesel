@@ -6,13 +6,13 @@ error[E0271]: type mismatch resolving `<NoFromClause as AppearsInFromClause<tabl
    |          |
    |          required by a bound introduced by this call
    |
-note: required for `columns::hair_color` to implement `AppearsOnTable<NoFromClause>`
+note: required for `columns::hair_color` to implement `AppearsInQuery<NoFromClause>`
   --> tests/fail/columns_cannot_be_rhs_of_insert.rs:10:9
    |
 10 |         hair_color -> Text,
    |         ^^^^^^^^^^
    = note: 1 redundant requirement hidden
-   = note: required for `&columns::hair_color` to implement `AppearsOnTable<NoFromClause>`
+   = note: required for `&columns::hair_color` to implement `AppearsInQuery<NoFromClause>`
    = note: required for `ColumnInsertValue<columns::name, &columns::hair_color>` to implement `InsertValues<users::table, _>`
    = note: required for `diesel::query_builder::insert_statement::ValuesClause<ColumnInsertValue<columns::name, &columns::hair_color>, users::table>` to implement `QueryFragment<_>`
    = note: 1 redundant requirement hidden

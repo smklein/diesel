@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::backend::sql_dialect::on_conflict_clause;
 use crate::backend::Backend;
-use crate::expression::{AppearsOnTable, Expression};
+use crate::expression::{AppearsInQuery, Expression};
 use crate::query_builder::*;
 use crate::query_source::*;
 use crate::result::QueryResult;
@@ -122,7 +122,7 @@ where
     type SqlType = T::SqlType;
 }
 
-impl<T> AppearsOnTable<T::Table> for Excluded<T>
+impl<T> AppearsInQuery<T::Table> for Excluded<T>
 where
     T: Column,
     Excluded<T>: Expression,

@@ -286,18 +286,18 @@ impl<T> IntoSql for T {}
 /// SQL type doesn't matter (everything except `select` and `returning`). For
 /// places where nullability is important, `SelectableExpression` is used
 /// instead.
-pub trait AppearsOnTable<QS: ?Sized>: Expression {}
+pub trait AppearsInQuery<QS: ?Sized>: Expression {}
 
-impl<T: ?Sized, QS> AppearsOnTable<QS> for Box<T>
+impl<T: ?Sized, QS> AppearsInQuery<QS> for Box<T>
 where
-    T: AppearsOnTable<QS>,
+    T: AppearsInQuery<QS>,
     Box<T>: Expression,
 {
 }
 
-impl<'a, T: ?Sized, QS> AppearsOnTable<QS> for &'a T
+impl<'a, T: ?Sized, QS> AppearsInQuery<QS> for &'a T
 where
-    T: AppearsOnTable<QS>,
+    T: AppearsInQuery<QS>,
     &'a T: Expression,
 {
 }
@@ -318,19 +318,19 @@ where
         note = "`{Self}` is no valid selection for `{QS}`"
     )
 )]
-pub trait SelectableExpression<QS: ?Sized>: AppearsOnTable<QS> {}
+pub trait SelectableExpression<QS: ?Sized>: AppearsInQuery<QS> {}
 
 impl<T: ?Sized, QS> SelectableExpression<QS> for Box<T>
 where
     T: SelectableExpression<QS>,
-    Box<T>: AppearsOnTable<QS>,
+    Box<T>: AppearsInQuery<QS>,
 {
 }
 
 impl<'a, T: ?Sized, QS> SelectableExpression<QS> for &'a T
 where
     T: SelectableExpression<QS>,
-    &'a T: AppearsOnTable<QS>,
+    &'a T: AppearsInQuery<QS>,
 {
 }
 

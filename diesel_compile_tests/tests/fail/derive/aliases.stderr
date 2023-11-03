@@ -51,9 +51,9 @@ error[E0271]: type mismatch resolving `<Once as Plus<Once>>::Output == Once`
    |          |
    |          required by a bound introduced by this call
    |
-   = note: required for `AliasedField<posts2, posts::columns::id>` to implement `AppearsOnTable<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, Alias<posts2>, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<AliasedField<posts2, posts::columns::author>>, NullableExpression<users::columns::id>>>>, Alias<posts2>, Inner>>`
+   = note: required for `AliasedField<posts2, posts::columns::id>` to implement `AppearsInQuery<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, Alias<posts2>, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<AliasedField<posts2, posts::columns::author>>, NullableExpression<users::columns::id>>>>, Alias<posts2>, Inner>>`
    = note: 2 redundant requirements hidden
-   = note: required for `((id, name), (AliasedField<posts2, id>, AliasedField<posts2, author>, AliasedField<posts2, title>), ...)` to implement `AppearsOnTable<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, Alias<posts2>, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<AliasedField<posts2, posts::columns::author>>, NullableExpression<users::columns::id>>>>, Alias<posts2>, Inner>>`
+   = note: required for `((id, name), (AliasedField<posts2, id>, AliasedField<posts2, author>, AliasedField<posts2, title>), ...)` to implement `AppearsInQuery<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, Alias<posts2>, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<AliasedField<posts2, posts::columns::author>>, NullableExpression<users::columns::id>>>>, Alias<posts2>, Inner>>`
    = note: required for `Join<JoinOn<Join<table, Alias<posts2>, Inner>, Grouped<Eq<Nullable<AliasedField<..., ...>>, ...>>>, ..., ...>` to implement `QuerySource`
    = note: 1 redundant requirement hidden
    = note: required for `JoinOn<Join<JoinOn<Join<table, Alias<posts2>, Inner>, Grouped<Eq<Nullable<...>, ...>>>, ..., ...>, ...>` to implement `QuerySource`
@@ -74,9 +74,9 @@ error[E0271]: type mismatch resolving `<Join<JoinOn<Join<table, Alias<posts2>, I
 43 |         .inner_join(post_alias)
    |          ^^^^^^^^^^ expected `MoreThanOnce`, found `Once`
    |
-   = note: required for `AliasedField<posts2, posts::columns::id>` to implement `AppearsOnTable<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, Alias<posts2>, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<AliasedField<posts2, posts::columns::author>>, NullableExpression<users::columns::id>>>>, Alias<posts2>, Inner>>`
+   = note: required for `AliasedField<posts2, posts::columns::id>` to implement `AppearsInQuery<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, Alias<posts2>, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<AliasedField<posts2, posts::columns::author>>, NullableExpression<users::columns::id>>>>, Alias<posts2>, Inner>>`
    = note: 2 redundant requirements hidden
-   = note: required for `((id, name), (AliasedField<posts2, id>, AliasedField<posts2, author>, AliasedField<posts2, title>), ...)` to implement `AppearsOnTable<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, Alias<posts2>, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<AliasedField<posts2, posts::columns::author>>, NullableExpression<users::columns::id>>>>, Alias<posts2>, Inner>>`
+   = note: required for `((id, name), (AliasedField<posts2, id>, AliasedField<posts2, author>, AliasedField<posts2, title>), ...)` to implement `AppearsInQuery<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, Alias<posts2>, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<AliasedField<posts2, posts::columns::author>>, NullableExpression<users::columns::id>>>>, Alias<posts2>, Inner>>`
    = note: required for `Join<JoinOn<Join<table, Alias<posts2>, Inner>, Grouped<Eq<Nullable<AliasedField<..., ...>>, ...>>>, ..., ...>` to implement `QuerySource`
    = note: 1 redundant requirement hidden
    = note: required for `JoinOn<Join<JoinOn<Join<table, Alias<posts2>, Inner>, Grouped<Eq<Nullable<...>, ...>>>, ..., ...>, ...>` to implement `QuerySource`
@@ -165,13 +165,13 @@ error[E0277]: the trait bound `Alias<users2>: AppearsInFromClause<pets::table>` 
    |
    = help: the trait `AppearsInFromClause<QS>` is implemented for `Alias<S>`
    = note: required for `query_source::joins::Join<pets::table, Alias<users2>, Inner>` to implement `AppearsInFromClause<pets::table>`
-note: required for `pets::columns::id` to implement `AppearsOnTable<query_source::joins::Join<pets::table, Alias<users2>, Inner>>`
+note: required for `pets::columns::id` to implement `AppearsInQuery<query_source::joins::Join<pets::table, Alias<users2>, Inner>>`
   --> tests/fail/derive/aliases.rs:24:9
    |
 24 |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `((pets::columns::id,), (AliasedField<users2, users::columns::id>, AliasedField<users2, users::columns::name>))` to implement `AppearsOnTable<query_source::joins::Join<pets::table, Alias<users2>, Inner>>`
+   = note: required for `((pets::columns::id,), (AliasedField<users2, users::columns::id>, AliasedField<users2, users::columns::name>))` to implement `AppearsInQuery<query_source::joins::Join<pets::table, Alias<users2>, Inner>>`
    = note: required for `query_source::joins::Join<pets::table, Alias<users2>, Inner>` to implement `QuerySource`
    = note: 1 redundant requirement hidden
    = note: required for `JoinOn<query_source::joins::Join<pets::table, Alias<users2>, Inner>, _>` to implement `QuerySource`

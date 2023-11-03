@@ -3,7 +3,7 @@ use super::{Alias, AliasSource};
 use crate::backend::Backend;
 use crate::dsl;
 use crate::expression::{
-    AppearsOnTable, AsExpression, Expression, SelectableExpression,
+    AppearsInQuery, AsExpression, Expression, SelectableExpression,
 };
 use crate::expression_methods::{EqAll, ExpressionMethods};
 use crate::query_builder::{AstPass, FromClause, QueryFragment, QueryId, SelectStatement};
@@ -32,7 +32,7 @@ where
     const HAS_STATIC_QUERY_ID: bool = <C as QueryId>::HAS_STATIC_QUERY_ID;
 }
 
-impl<QS, S, C> AppearsOnTable<QS> for AliasedField<S, C>
+impl<QS, S, C> AppearsInQuery<QS> for AliasedField<S, C>
 where
     S: AliasSource,
     QS: AppearsInFromClause<Alias<S>, Count = Once>,
@@ -66,14 +66,14 @@ impl<S, C> SelectableExpression<Alias<S>> for AliasedField<S, C>
 where
     S: AliasSource,
     C: Column<Table = S::Target>,
-    Self: AppearsOnTable<Alias<S>>,
+    Self: AppearsInQuery<Alias<S>>,
 {
 }
 
 // FIXME: Remove this when overlapping marker traits are stable
 impl<From, S, C> SelectableExpression<SelectStatement<FromClause<From>>> for AliasedField<S, C>
 where
-    Self: SelectableExpression<From> + AppearsOnTable<SelectStatement<FromClause<From>>>,
+    Self: SelectableExpression<From> + AppearsInQuery<SelectStatement<FromClause<From>>>,
     From: QuerySource,
 {
 }

@@ -3,7 +3,7 @@
 use super::field_alias_mapper::FieldAliasMapper;
 use super::{Alias, AliasSource, AliasedField};
 
-use crate::expression::{AppearsOnTable, SelectableExpression};
+use crate::expression::{AppearsInQuery, SelectableExpression};
 use crate::query_builder::AsQuery;
 use crate::query_dsl::InternalJoinDsl;
 use crate::query_source::joins::ToInnerJoin;
@@ -71,7 +71,7 @@ where
 
 impl<Left, Right, S, C> SelectableExpression<Join<Left, Right, LeftOuter>> for AliasedField<S, C>
 where
-    Self: AppearsOnTable<Join<Left, Right, LeftOuter>>,
+    Self: AppearsInQuery<Join<Left, Right, LeftOuter>>,
     Self: SelectableExpression<Left>,
     Left: QuerySource,
     Right: AppearsInFromClause<Alias<S>, Count = Never> + QuerySource,
@@ -80,7 +80,7 @@ where
 
 impl<Left, Right, S, C> SelectableExpression<Join<Left, Right, Inner>> for AliasedField<S, C>
 where
-    Self: AppearsOnTable<Join<Left, Right, Inner>>,
+    Self: AppearsInQuery<Join<Left, Right, Inner>>,
     Left: AppearsInFromClause<Alias<S>> + QuerySource,
     Right: AppearsInFromClause<Alias<S>> + QuerySource,
     (Left::Count, Right::Count): Pick<Left, Right>,
@@ -90,7 +90,7 @@ where
 
 // FIXME: Remove this when overlapping marker traits are stable
 impl<Join, On, S, C> SelectableExpression<JoinOn<Join, On>> for AliasedField<S, C> where
-    Self: SelectableExpression<Join> + AppearsOnTable<JoinOn<Join, On>>
+    Self: SelectableExpression<Join> + AppearsInQuery<JoinOn<Join, On>>
 {
 }
 

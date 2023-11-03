@@ -3,7 +3,7 @@
 
 use crate::backend::{sql_dialect, Backend, SqlDialect};
 use crate::expression::subselect::Subselect;
-use crate::expression::{AppearsOnTable, Expression, SelectableExpression};
+use crate::expression::{AppearsInQuery, Expression, SelectableExpression};
 use crate::helper_types::exists;
 use crate::query_builder::*;
 use crate::result::QueryResult;
@@ -84,14 +84,14 @@ where
 
 impl<T, QS> SelectableExpression<QS> for Exists<T>
 where
-    Self: AppearsOnTable<QS>,
+    Self: AppearsInQuery<QS>,
     Subselect<T, Bool>: SelectableExpression<QS>,
 {
 }
 
-impl<T, QS> AppearsOnTable<QS> for Exists<T>
+impl<T, QS> AppearsInQuery<QS> for Exists<T>
 where
     Self: Expression,
-    Subselect<T, Bool>: AppearsOnTable<QS>,
+    Subselect<T, Bool>: AppearsInQuery<QS>,
 {
 }

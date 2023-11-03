@@ -7,7 +7,7 @@ use crate::backend::Backend;
 use crate::query_builder::*;
 use crate::result::QueryResult;
 use crate::sql_types::{BigInt, DieselNumericOps, SingleValue, SqlType};
-use crate::{AppearsOnTable, SelectableExpression};
+use crate::{AppearsInQuery, SelectableExpression};
 
 sql_function! {
     /// Creates a SQL `COUNT` expression
@@ -123,15 +123,15 @@ where
 
 impl<T, E, QS> SelectableExpression<QS> for CountDistinct<T, E>
 where
-    Self: AppearsOnTable<QS>,
+    Self: AppearsInQuery<QS>,
     E: SelectableExpression<QS>,
 {
 }
 
-impl<T, E, QS> AppearsOnTable<QS> for CountDistinct<T, E>
+impl<T, E, QS> AppearsInQuery<QS> for CountDistinct<T, E>
 where
     Self: Expression,
-    E: AppearsOnTable<QS>,
+    E: AppearsInQuery<QS>,
 {
 }
 

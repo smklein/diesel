@@ -375,7 +375,7 @@ pub(crate) fn expand(input: TableDecl) -> TokenStream {
                 impl diesel::SelectableExpression<table> for star {
                 }
 
-                impl diesel::AppearsOnTable<table> for star {
+                impl diesel::AppearsInQuery<table> for star {
                 }
 
                 #(#column_defs)*
@@ -589,7 +589,7 @@ fn expand_column_def(column_def: &ColumnDef) -> TokenStream {
         impl diesel::SelectableExpression<super::table> for #column_name {
         }
 
-        impl<QS> diesel::AppearsOnTable<QS> for #column_name where
+        impl<QS> diesel::AppearsInQuery<QS> for #column_name where
             QS: diesel::query_source::AppearsInFromClause<super::table, Count=diesel::query_source::Once>,
         {
         }
@@ -597,7 +597,7 @@ fn expand_column_def(column_def: &ColumnDef) -> TokenStream {
         impl<Left, Right> diesel::SelectableExpression<
                 diesel::internal::table_macro::Join<Left, Right, diesel::internal::table_macro::LeftOuter>,
             > for #column_name where
-            #column_name: diesel::AppearsOnTable<diesel::internal::table_macro::Join<Left, Right, diesel::internal::table_macro::LeftOuter>>,
+            #column_name: diesel::AppearsInQuery<diesel::internal::table_macro::Join<Left, Right, diesel::internal::table_macro::LeftOuter>>,
             Self: diesel::SelectableExpression<Left>,
             // If our table is on the right side of this join, only
             // `Nullable<Self>` can be selected
@@ -609,7 +609,7 @@ fn expand_column_def(column_def: &ColumnDef) -> TokenStream {
         impl<Left, Right> diesel::SelectableExpression<
                 diesel::internal::table_macro::Join<Left, Right, diesel::internal::table_macro::Inner>,
             > for #column_name where
-            #column_name: diesel::AppearsOnTable<diesel::internal::table_macro::Join<Left, Right, diesel::internal::table_macro::Inner>>,
+            #column_name: diesel::AppearsInQuery<diesel::internal::table_macro::Join<Left, Right, diesel::internal::table_macro::Inner>>,
             Left: diesel::query_source::AppearsInFromClause<super::table> + diesel::query_source::QuerySource,
             Right: diesel::query_source::AppearsInFromClause<super::table> + diesel::query_source::QuerySource,
         (Left::Count, Right::Count): diesel::internal::table_macro::Pick<Left, Right>,
@@ -621,14 +621,14 @@ fn expand_column_def(column_def: &ColumnDef) -> TokenStream {
 
         // FIXME: Remove this when overlapping marker traits are stable
         impl<Join, On> diesel::SelectableExpression<diesel::internal::table_macro::JoinOn<Join, On>> for #column_name where
-            #column_name: diesel::SelectableExpression<Join> + diesel::AppearsOnTable<diesel::internal::table_macro::JoinOn<Join, On>>,
+            #column_name: diesel::SelectableExpression<Join> + diesel::AppearsInQuery<diesel::internal::table_macro::JoinOn<Join, On>>,
         {
         }
 
         // FIXME: Remove this when overlapping marker traits are stable
         impl<From> diesel::SelectableExpression<diesel::internal::table_macro::SelectStatement<diesel::internal::table_macro::FromClause<From>>> for #column_name where
             From: diesel::query_source::QuerySource,
-            #column_name: diesel::SelectableExpression<From> + diesel::AppearsOnTable<diesel::internal::table_macro::SelectStatement<diesel::internal::table_macro::FromClause<From>>>,
+            #column_name: diesel::SelectableExpression<From> + diesel::AppearsInQuery<diesel::internal::table_macro::SelectStatement<diesel::internal::table_macro::FromClause<From>>>,
         {
         }
 

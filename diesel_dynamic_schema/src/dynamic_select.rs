@@ -2,7 +2,7 @@ use diesel::backend::Backend;
 use diesel::expression::{is_aggregate, NonAggregate, ValidGrouping};
 use diesel::query_builder::{AstPass, QueryFragment, QueryId};
 use diesel::sql_types::Untyped;
-use diesel::{AppearsOnTable, Expression, QueryResult, SelectableExpression};
+use diesel::{AppearsInQuery, Expression, QueryResult, SelectableExpression};
 use std::marker::PhantomData;
 
 /// Represents a dynamically sized select clause
@@ -42,10 +42,10 @@ impl<'a, DB, QS> DynamicSelectClause<'a, DB, QS> {
     }
 }
 
-impl<'a, DB, QS> AppearsOnTable<QS> for DynamicSelectClause<'a, DB, QS> where Self: Expression {}
+impl<'a, DB, QS> AppearsInQuery<QS> for DynamicSelectClause<'a, DB, QS> where Self: Expression {}
 
 impl<'a, DB, QS> SelectableExpression<QS> for DynamicSelectClause<'a, DB, QS> where
-    Self: AppearsOnTable<QS>
+    Self: AppearsInQuery<QS>
 {
 }
 

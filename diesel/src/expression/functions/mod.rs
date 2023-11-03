@@ -21,7 +21,7 @@ macro_rules! no_arg_sql_function_body_except_to_sql {
 
         impl<QS> $crate::expression::SelectableExpression<QS> for $type_name {}
 
-        impl<QS> $crate::expression::AppearsOnTable<QS> for $type_name {}
+        impl<QS> $crate::expression::AppearsInQuery<QS> for $type_name {}
     };
 }
 

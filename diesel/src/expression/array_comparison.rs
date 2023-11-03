@@ -6,7 +6,7 @@ use crate::backend::Backend;
 use crate::backend::SqlDialect;
 use crate::expression::subselect::Subselect;
 use crate::expression::{
-    AppearsOnTable, AsExpression, Expression, SelectableExpression, TypedExpressionType,
+    AppearsInQuery, AsExpression, Expression, SelectableExpression, TypedExpressionType,
 };
 use crate::query_builder::combination_clause::CombinationClause;
 use crate::query_builder::{
@@ -276,14 +276,14 @@ impl<ST, I> MaybeEmpty for Many<ST, I> {
 
 impl<ST, I, QS> SelectableExpression<QS> for Many<ST, I>
 where
-    Many<ST, I>: AppearsOnTable<QS>,
+    Many<ST, I>: AppearsInQuery<QS>,
     ST: SingleValue,
     I: AsExpression<ST>,
     <I as AsExpression<ST>>::Expression: SelectableExpression<QS>,
 {
 }
 
-impl<ST, I, QS> AppearsOnTable<QS> for Many<ST, I>
+impl<ST, I, QS> AppearsInQuery<QS> for Many<ST, I>
 where
     Many<ST, I>: Expression,
     I: AsExpression<ST>,

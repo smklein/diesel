@@ -30,13 +30,13 @@ error[E0271]: type mismatch resolving `<FromClause<table> as AppearsInFromClause
 30 |     users::table.select(users::name).group_by(users::id).having(posts::id.eq(42)).load(&mut conn);
    |                                                          ^^^^^^ expected `Never`, found `Once`
    |
-note: required for `posts::columns::id` to implement `AppearsOnTable<FromClause<users::table>>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<FromClause<users::table>>`
   --> tests/fail/having_cant_be_used_without_group_by.rs:14:9
    |
 14 |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsOnTable<FromClause<users::table>>`
+   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsInQuery<FromClause<users::table>>`
    = note: required for `SelectStatement<FromClause<table>, SelectClause<name>, NoDistinctClause, NoWhereClause, ..., ..., ...>` to implement `HavingDsl<diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::id, diesel::expression::bound::Bound<diesel::sql_types::Integer, i32>>>>`
 
 error[E0271]: type mismatch resolving `<FromClause<table> as AppearsInFromClause<table>>::Count == Once`
@@ -45,11 +45,11 @@ error[E0271]: type mismatch resolving `<FromClause<table> as AppearsInFromClause
 32 |     users::table.select(users::name).group_by(users::id).into_boxed().having(posts::id.eq(42)).load(&mut conn);
    |                                                                       ^^^^^^ expected `Never`, found `Once`
    |
-note: required for `posts::columns::id` to implement `AppearsOnTable<FromClause<users::table>>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<FromClause<users::table>>`
   --> tests/fail/having_cant_be_used_without_group_by.rs:14:9
    |
 14 |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsOnTable<FromClause<users::table>>`
+   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsInQuery<FromClause<users::table>>`
    = note: required for `BoxedSelectStatement<'_, diesel::sql_types::Text, FromClause<users::table>, _, users::columns::id>` to implement `HavingDsl<diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::id, diesel::expression::bound::Bound<diesel::sql_types::Integer, i32>>>>`

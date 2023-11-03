@@ -301,13 +301,13 @@ error[E0271]: type mismatch resolving `<table as AppearsInFromClause<table>>::Co
     |          |
     |          required by a bound introduced by this call
     |
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
    --> tests/fail/selectable.rs:15:9
     |
 15  |         id -> Integer,
     |         ^^
     = note: 1 redundant requirement hidden
-    = note: required for `(posts::columns::id, posts::columns::title)` to implement `AppearsOnTable<users::table>`
+    = note: required for `(posts::columns::id, posts::columns::title)` to implement `AppearsInQuery<users::table>`
     = note: required for `(posts::columns::id, posts::columns::title)` to implement `SelectableExpression<users::table>`
     = note: 2 redundant requirements hidden
     = note: required for `diesel::expression::select_by::SelectBy<UserWithEmbeddedPost, _>` to implement `SelectableExpression<users::table>`
@@ -389,13 +389,13 @@ error[E0271]: type mismatch resolving `<table as AppearsInFromClause<table>>::Co
     |          |
     |          required by a bound introduced by this call
     |
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
    --> tests/fail/selectable.rs:15:9
     |
 15  |         id -> Integer,
     |         ^^
     = note: 1 redundant requirement hidden
-    = note: required for `(posts::columns::id, posts::columns::title)` to implement `AppearsOnTable<users::table>`
+    = note: required for `(posts::columns::id, posts::columns::title)` to implement `AppearsInQuery<users::table>`
     = note: required for `(posts::columns::id, posts::columns::title)` to implement `SelectableExpression<users::table>`
     = note: 2 redundant requirements hidden
     = note: required for `diesel::expression::select_by::SelectBy<UserWithEmbeddedPost, _>` to implement `SelectableExpression<users::table>`
@@ -476,13 +476,13 @@ error[E0271]: type mismatch resolving `<table as AppearsInFromClause<table>>::Co
     |          |
     |          required by a bound introduced by this call
     |
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
    --> tests/fail/selectable.rs:15:9
     |
 15  |         id -> Integer,
     |         ^^
     = note: 1 redundant requirement hidden
-    = note: required for `(posts::columns::id, posts::columns::title)` to implement `AppearsOnTable<users::table>`
+    = note: required for `(posts::columns::id, posts::columns::title)` to implement `AppearsInQuery<users::table>`
     = note: required for `(posts::columns::id, posts::columns::title)` to implement `SelectableExpression<users::table>`
     = note: 2 redundant requirements hidden
     = note: required for `diesel::expression::select_by::SelectBy<UserWithEmbeddedPost, _>` to implement `SelectableExpression<users::table>`
@@ -564,13 +564,13 @@ error[E0271]: type mismatch resolving `<table as AppearsInFromClause<table>>::Co
     |          |
     |          required by a bound introduced by this call
     |
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
    --> tests/fail/selectable.rs:15:9
     |
 15  |         id -> Integer,
     |         ^^
     = note: 1 redundant requirement hidden
-    = note: required for `(posts::columns::id, posts::columns::title)` to implement `AppearsOnTable<users::table>`
+    = note: required for `(posts::columns::id, posts::columns::title)` to implement `AppearsInQuery<users::table>`
     = note: required for `(posts::columns::id, posts::columns::title)` to implement `SelectableExpression<users::table>`
     = note: 2 redundant requirements hidden
     = note: required for `diesel::expression::select_by::SelectBy<UserWithEmbeddedPost, _>` to implement `SelectableExpression<users::table>`
@@ -649,13 +649,13 @@ error[E0271]: type mismatch resolving `<table as AppearsInFromClause<table>>::Co
     |          |
     |          required by a bound introduced by this call
     |
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
    --> tests/fail/selectable.rs:15:9
     |
 15  |         id -> Integer,
     |         ^^
     = note: 1 redundant requirement hidden
-    = note: required for `(posts::columns::id, posts::columns::title)` to implement `AppearsOnTable<users::table>`
+    = note: required for `(posts::columns::id, posts::columns::title)` to implement `AppearsInQuery<users::table>`
     = note: required for `(posts::columns::id, posts::columns::title)` to implement `SelectableExpression<users::table>`
     = note: 2 redundant requirements hidden
     = note: required for `diesel::expression::select_by::SelectBy<UserWithEmbeddedPost, _>` to implement `SelectableExpression<users::table>`
@@ -736,13 +736,13 @@ error[E0271]: type mismatch resolving `<table as AppearsInFromClause<table>>::Co
     |          |
     |          required by a bound introduced by this call
     |
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
    --> tests/fail/selectable.rs:15:9
     |
 15  |         id -> Integer,
     |         ^^
     = note: 1 redundant requirement hidden
-    = note: required for `(posts::columns::id, posts::columns::title)` to implement `AppearsOnTable<users::table>`
+    = note: required for `(posts::columns::id, posts::columns::title)` to implement `AppearsInQuery<users::table>`
     = note: required for `(posts::columns::id, posts::columns::title)` to implement `SelectableExpression<users::table>`
     = note: 2 redundant requirements hidden
     = note: required for `diesel::expression::select_by::SelectBy<UserWithEmbeddedPost, _>` to implement `SelectableExpression<users::table>`

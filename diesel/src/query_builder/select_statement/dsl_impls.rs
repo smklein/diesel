@@ -266,7 +266,7 @@ impl<ST, F, S, D, W, O, LOf, G, H, LC, Expr> OrderDsl<Expr>
     for SelectStatement<FromClause<F>, S, D, W, O, LOf, G, H, LC>
 where
     F: QuerySource,
-    Expr: AppearsOnTable<F>,
+    Expr: AppearsInQuery<F>,
     Self: SelectQuery<SqlType = ST>,
     SelectStatement<FromClause<F>, S, D, W, OrderClause<Expr>, LOf, G, H, LC>:
         SelectQuery<SqlType = ST>,
@@ -294,7 +294,7 @@ impl<F, S, D, W, O, LOf, G, H, LC, Expr> ThenOrderDsl<Expr>
     for SelectStatement<FromClause<F>, S, D, W, OrderClause<O>, LOf, G, H, LC>
 where
     F: QuerySource,
-    Expr: AppearsOnTable<F>,
+    Expr: AppearsInQuery<F>,
 {
     type Output = SelectStatement<FromClause<F>, S, D, W, OrderClause<(O, Expr)>, LOf, G, H, LC>;
 
@@ -393,7 +393,7 @@ where
 impl<F, S, D, W, O, LOf, G, H, Expr> GroupByDsl<Expr> for SelectStatement<F, S, D, W, O, LOf, G, H>
 where
     SelectStatement<F, S, D, W, O, LOf, GroupByClause<Expr>, H>: SelectQuery,
-    Expr: Expression + AppearsOnTable<F>,
+    Expr: Expression + AppearsInQuery<F>,
 {
     type Output = SelectStatement<F, S, D, W, O, LOf, GroupByClause<Expr>, H>;
 
@@ -658,7 +658,7 @@ where
 impl<F, S, D, W, O, LOf, G, H, Predicate> HavingDsl<Predicate>
     for SelectStatement<F, S, D, W, O, LOf, GroupByClause<G>, H>
 where
-    Predicate: AppearsOnTable<F>,
+    Predicate: AppearsInQuery<F>,
     Predicate: Expression,
     Predicate::SqlType: BoolOrNullableBool,
 {

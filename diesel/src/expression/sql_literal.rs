@@ -192,7 +192,7 @@ impl<ST, T, Conn> RunQueryDsl<Conn> for SqlLiteral<ST, T> {}
 
 impl<QS, ST, T> SelectableExpression<QS> for SqlLiteral<ST, T> where Self: Expression {}
 
-impl<QS, ST, T> AppearsOnTable<QS> for SqlLiteral<ST, T> where Self: Expression {}
+impl<QS, ST, T> AppearsInQuery<QS> for SqlLiteral<ST, T> where Self: Expression {}
 
 /// Use literal SQL in the query builder.
 ///
@@ -355,11 +355,11 @@ where
 }
 
 impl<QS, Query, Value> SelectableExpression<QS> for UncheckedBind<Query, Value> where
-    Self: AppearsOnTable<QS>
+    Self: AppearsInQuery<QS>
 {
 }
 
-impl<QS, Query, Value> AppearsOnTable<QS> for UncheckedBind<Query, Value> where Self: Expression {}
+impl<QS, Query, Value> AppearsInQuery<QS> for UncheckedBind<Query, Value> where Self: Expression {}
 
 impl<Query, Value, Conn> RunQueryDsl<Conn> for UncheckedBind<Query, Value> {}
 

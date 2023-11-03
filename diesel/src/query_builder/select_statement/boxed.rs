@@ -323,7 +323,7 @@ impl<'a, ST, QS, DB, Predicate, GB> FilterDsl<Predicate>
 where
     QS: QuerySource,
     BoxedWhereClause<'a, DB>: WhereAnd<Predicate, Output = BoxedWhereClause<'a, DB>>,
-    Predicate: AppearsOnTable<QS>,
+    Predicate: AppearsInQuery<QS>,
     Predicate::SqlType: BoolOrNullableBool,
 {
     type Output = Self;
@@ -338,7 +338,7 @@ impl<'a, ST, DB, Predicate, GB> FilterDsl<Predicate>
     for BoxedSelectStatement<'a, ST, NoFromClause, DB, GB>
 where
     BoxedWhereClause<'a, DB>: WhereAnd<Predicate, Output = BoxedWhereClause<'a, DB>>,
-    Predicate: AppearsOnTable<NoFromClause>,
+    Predicate: AppearsInQuery<NoFromClause>,
     Predicate::SqlType: BoolOrNullableBool,
 {
     type Output = Self;
@@ -354,7 +354,7 @@ impl<'a, ST, QS, DB, Predicate, GB> OrFilterDsl<Predicate>
 where
     QS: QuerySource,
     BoxedWhereClause<'a, DB>: WhereOr<Predicate, Output = BoxedWhereClause<'a, DB>>,
-    Predicate: AppearsOnTable<QS>,
+    Predicate: AppearsInQuery<QS>,
     Predicate::SqlType: BoolOrNullableBool,
 {
     type Output = Self;
@@ -369,7 +369,7 @@ impl<'a, ST, DB, Predicate, GB> OrFilterDsl<Predicate>
     for BoxedSelectStatement<'a, ST, NoFromClause, DB, GB>
 where
     BoxedWhereClause<'a, DB>: WhereOr<Predicate, Output = BoxedWhereClause<'a, DB>>,
-    Predicate: AppearsOnTable<NoFromClause>,
+    Predicate: AppearsInQuery<NoFromClause>,
     Predicate::SqlType: BoolOrNullableBool,
 {
     type Output = Self;
@@ -412,7 +412,7 @@ impl<'a, ST, QS, DB, Order, GB> OrderDsl<Order>
 where
     DB: Backend,
     QS: QuerySource,
-    Order: QueryFragment<DB> + AppearsOnTable<QS> + Send + 'a,
+    Order: QueryFragment<DB> + AppearsInQuery<QS> + Send + 'a,
 {
     type Output = Self;
 
@@ -427,7 +427,7 @@ impl<'a, ST, QS, DB, Order, GB> ThenOrderDsl<Order>
 where
     DB: Backend + 'a,
     QS: QuerySource,
-    Order: QueryFragment<DB> + AppearsOnTable<QS> + Send + 'a,
+    Order: QueryFragment<DB> + AppearsInQuery<QS> + Send + 'a,
 {
     type Output = Self;
 
@@ -507,7 +507,7 @@ where
     DB: Backend,
     GB: Expression,
     HavingClause<Predicate>: QueryFragment<DB> + Send + 'a,
-    Predicate: AppearsOnTable<QS>,
+    Predicate: AppearsInQuery<QS>,
     Predicate::SqlType: BoolOrNullableBool,
 {
     type Output = Self;

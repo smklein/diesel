@@ -20,13 +20,13 @@ error[E0271]: type mismatch resolving `<Join<table, table, Inner> as AppearsInFr
    |          |
    |          required by a bound introduced by this call
    |
-note: required for `comments::columns::id` to implement `AppearsOnTable<query_source::joins::Join<posts::table, users::table, Inner>>`
+note: required for `comments::columns::id` to implement `AppearsInQuery<query_source::joins::Join<posts::table, users::table, Inner>>`
   --> tests/fail/subselect_cannot_reference_random_tables.rs:19:9
    |
 19 |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsOnTable<query_source::joins::Join<posts::table, users::table, Inner>>`
+   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsInQuery<query_source::joins::Join<posts::table, users::table, Inner>>`
    = note: required for `WhereClause<Grouped<Eq<id, Bound<Integer, i32>>>>` to implement `diesel::query_builder::where_clause::ValidWhereClause<FromClause<query_source::joins::Join<posts::table, users::table, Inner>>>`
    = note: required for `SelectStatement<FromClause<table>, SelectClause<id>, NoDistinctClause, WhereClause<Grouped<Eq<id, ...>>>>` to implement `diesel::expression::subselect::ValidSubselect<users::table>`
    = note: 4 redundant requirements hidden
@@ -50,13 +50,13 @@ error[E0271]: type mismatch resolving `<Join<table, table, Inner> as AppearsInFr
    |          |
    |          required by a bound introduced by this call
    |
-note: required for `comments::columns::id` to implement `AppearsOnTable<query_source::joins::Join<posts::table, users::table, Inner>>`
+note: required for `comments::columns::id` to implement `AppearsInQuery<query_source::joins::Join<posts::table, users::table, Inner>>`
   --> tests/fail/subselect_cannot_reference_random_tables.rs:19:9
    |
 19 |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsOnTable<query_source::joins::Join<posts::table, users::table, Inner>>`
+   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsInQuery<query_source::joins::Join<posts::table, users::table, Inner>>`
    = note: required for `WhereClause<Grouped<Eq<id, Bound<Integer, i32>>>>` to implement `diesel::query_builder::where_clause::ValidWhereClause<FromClause<query_source::joins::Join<posts::table, users::table, Inner>>>`
    = note: required for `SelectStatement<FromClause<table>, SelectClause<id>, NoDistinctClause, WhereClause<Grouped<Eq<id, ...>>>>` to implement `diesel::expression::subselect::ValidSubselect<users::table>`
    = note: 5 redundant requirements hidden
@@ -80,13 +80,13 @@ error[E0271]: type mismatch resolving `<Join<table, table, Inner> as AppearsInFr
    |          |
    |          required by a bound introduced by this call
    |
-note: required for `comments::columns::id` to implement `AppearsOnTable<query_source::joins::Join<posts::table, users::table, Inner>>`
+note: required for `comments::columns::id` to implement `AppearsInQuery<query_source::joins::Join<posts::table, users::table, Inner>>`
   --> tests/fail/subselect_cannot_reference_random_tables.rs:19:9
    |
 19 |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsOnTable<query_source::joins::Join<posts::table, users::table, Inner>>`
+   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsInQuery<query_source::joins::Join<posts::table, users::table, Inner>>`
    = note: required for `WhereClause<Grouped<Eq<id, Bound<Integer, i32>>>>` to implement `diesel::query_builder::where_clause::ValidWhereClause<FromClause<query_source::joins::Join<posts::table, users::table, Inner>>>`
    = note: required for `SelectStatement<FromClause<table>, DefaultSelectClause<FromClause<table>>, NoDistinctClause, WhereClause<...>>` to implement `diesel::expression::subselect::ValidSubselect<users::table>`
    = note: 3 redundant requirements hidden

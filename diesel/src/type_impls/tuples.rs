@@ -4,7 +4,7 @@ use crate::deserialize::{
     self, FromSqlRow, FromStaticSqlRow, Queryable, SqlTypeOrSelectable, StaticallySizedRow,
 };
 use crate::expression::{
-    AppearsOnTable, AsExpression, AsExpressionList, Expression,
+    AppearsInQuery, AsExpression, AsExpressionList, Expression,
     QueryMetadata, Selectable, SelectableExpression,
     TypedExpressionType,
 };
@@ -188,12 +188,12 @@ macro_rules! tuple_impls {
 
             impl<$($T,)+ QS> SelectableExpression<QS> for ($($T,)+) where
                 $($T: SelectableExpression<QS>,)+
-                ($($T,)+): AppearsOnTable<QS>,
+                ($($T,)+): AppearsInQuery<QS>,
             {
             }
 
-            impl<$($T,)+ QS> AppearsOnTable<QS> for ($($T,)+) where
-                $($T: AppearsOnTable<QS>,)+
+            impl<$($T,)+ QS> AppearsInQuery<QS> for ($($T,)+) where
+                $($T: AppearsInQuery<QS>,)+
                 ($($T,)+): Expression,
             {
             }

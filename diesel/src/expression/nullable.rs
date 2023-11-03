@@ -35,9 +35,9 @@ where
     }
 }
 
-impl<T, QS> AppearsOnTable<QS> for Nullable<T>
+impl<T, QS> AppearsInQuery<QS> for Nullable<T>
 where
-    T: AppearsOnTable<QS>,
+    T: AppearsInQuery<QS>,
     Nullable<T>: Expression,
 {
 }
@@ -50,10 +50,10 @@ impl<T: QueryId> QueryId for Nullable<T> {
 
 impl<T, QS> SelectableExpression<QS> for Nullable<T>
 where
-    Self: AppearsOnTable<QS>,
+    Self: AppearsInQuery<QS>,
     QS: ToInnerJoin,
     T: SelectableExpression<QS::InnerJoin>,
 {
 }
 
-impl<T> SelectableExpression<NoFromClause> for Nullable<T> where Self: AppearsOnTable<NoFromClause> {}
+impl<T> SelectableExpression<NoFromClause> for Nullable<T> where Self: AppearsInQuery<NoFromClause> {}

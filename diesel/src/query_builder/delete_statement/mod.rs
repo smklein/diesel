@@ -1,6 +1,6 @@
 use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::dsl::{Filter, IntoBoxed, OrFilter};
-use crate::expression::{AppearsOnTable, SelectableExpression};
+use crate::expression::{AppearsInQuery, SelectableExpression};
 use crate::query_builder::returning_clause::*;
 use crate::query_builder::where_clause::*;
 use crate::query_builder::*;
@@ -206,7 +206,7 @@ impl<T: QuerySource, U> DeleteStatement<T, U, NoReturningClause> {
 impl<T, U, Ret, Predicate> FilterDsl<Predicate> for DeleteStatement<T, U, Ret>
 where
     U: WhereAnd<Predicate>,
-    Predicate: AppearsOnTable<T>,
+    Predicate: AppearsInQuery<T>,
     T: QuerySource,
 {
     type Output = DeleteStatement<T, U::Output, Ret>;
@@ -224,7 +224,7 @@ impl<T, U, Ret, Predicate> OrFilterDsl<Predicate> for DeleteStatement<T, U, Ret>
 where
     T: QuerySource,
     U: WhereOr<Predicate>,
-    Predicate: AppearsOnTable<T>,
+    Predicate: AppearsInQuery<T>,
 {
     type Output = DeleteStatement<T, U::Output, Ret>;
 

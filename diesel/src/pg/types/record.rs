@@ -4,7 +4,7 @@ use std::num::NonZeroU32;
 
 use crate::deserialize::{self, FromSql, Queryable};
 use crate::expression::{
-    AppearsOnTable, AsExpression, Expression, SelectableExpression, TypedExpressionType,
+    AppearsInQuery, AsExpression, Expression, SelectableExpression, TypedExpressionType,
 };
 use crate::pg::{Pg, PgValue};
 use crate::query_builder::bind_collector::ByteWrapper;
@@ -158,13 +158,13 @@ where
 impl<T, QS> SelectableExpression<QS> for PgTuple<T>
 where
     T: SelectableExpression<QS>,
-    Self: AppearsOnTable<QS>,
+    Self: AppearsInQuery<QS>,
 {
 }
 
-impl<T, QS> AppearsOnTable<QS> for PgTuple<T>
+impl<T, QS> AppearsInQuery<QS> for PgTuple<T>
 where
-    T: AppearsOnTable<QS>,
+    T: AppearsInQuery<QS>,
     Self: Expression,
 {
 }

@@ -27,13 +27,13 @@ error[E0271]: type mismatch resolving `<table as AppearsInFromClause<table>>::Co
 23 |     update(users::table).filter(posts::id.eq(1));
    |                          ^^^^^^ expected `Never`, found `Once`
    |
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
   --> tests/fail/update_requires_valid_where_clause.rs:13:9
    |
 13 |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsOnTable<users::table>`
+   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsInQuery<users::table>`
    = note: required for `UpdateStatement<users::table, diesel::query_builder::where_clause::NoWhereClause>` to implement `FilterDsl<diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::id, diesel::expression::bound::Bound<diesel::sql_types::Integer, i32>>>>`
 
 error[E0277]: the trait bound `users::table: TableNotEqual<posts::table>` is not satisfied
@@ -50,13 +50,13 @@ error[E0277]: the trait bound `users::table: TableNotEqual<posts::table>` is not
              <pg::metadata_lookup::pg_type::table as TableNotEqual<Only<pg::metadata_lookup::pg_namespace::table>>>
              <pg::metadata_lookup::pg_type::table as TableNotEqual<pg::metadata_lookup::pg_namespace::table>>
    = note: required for `users::table` to implement `AppearsInFromClause<posts::table>`
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
   --> tests/fail/update_requires_valid_where_clause.rs:13:9
    |
 13 |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsOnTable<users::table>`
+   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsInQuery<users::table>`
    = note: required for `UpdateStatement<users::table, diesel::query_builder::where_clause::NoWhereClause>` to implement `FilterDsl<diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::id, diesel::expression::bound::Bound<diesel::sql_types::Integer, i32>>>>`
 
 error[E0271]: type mismatch resolving `<table as AppearsInFromClause<table>>::Count == Once`
@@ -65,13 +65,13 @@ error[E0271]: type mismatch resolving `<table as AppearsInFromClause<table>>::Co
 26 |         .filter(posts::id.eq(1));
    |          ^^^^^^ expected `Never`, found `Once`
    |
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
   --> tests/fail/update_requires_valid_where_clause.rs:13:9
    |
 13 |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsOnTable<users::table>`
+   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsInQuery<users::table>`
    = note: required for `UpdateStatement<table, NoWhereClause, Assign<ColumnWrapperForUpdate<id>, Bound<Integer, i32>>>` to implement `FilterDsl<diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::id, diesel::expression::bound::Bound<diesel::sql_types::Integer, i32>>>>`
 
 error[E0277]: the trait bound `users::table: TableNotEqual<posts::table>` is not satisfied
@@ -88,13 +88,13 @@ error[E0277]: the trait bound `users::table: TableNotEqual<posts::table>` is not
              <pg::metadata_lookup::pg_type::table as TableNotEqual<Only<pg::metadata_lookup::pg_namespace::table>>>
              <pg::metadata_lookup::pg_type::table as TableNotEqual<pg::metadata_lookup::pg_namespace::table>>
    = note: required for `users::table` to implement `AppearsInFromClause<posts::table>`
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
   --> tests/fail/update_requires_valid_where_clause.rs:13:9
    |
 13 |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsOnTable<users::table>`
+   = note: required for `Grouped<Eq<id, Bound<Integer, i32>>>` to implement `AppearsInQuery<users::table>`
    = note: required for `UpdateStatement<table, NoWhereClause, Assign<ColumnWrapperForUpdate<id>, Bound<Integer, i32>>>` to implement `FilterDsl<diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::id, diesel::expression::bound::Bound<diesel::sql_types::Integer, i32>>>>`
 
 error[E0277]: the trait bound `SelectStatement<FromClause<users::table>, diesel::query_builder::select_clause::DefaultSelectClause<FromClause<users::table>>, diesel::query_builder::distinct_clause::NoDistinctClause, diesel::query_builder::where_clause::WhereClause<diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::id, diesel::expression::bound::Bound<diesel::sql_types::Integer, i32>>>>>: IntoUpdateTarget` is not satisfied

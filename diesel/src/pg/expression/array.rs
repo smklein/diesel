@@ -1,5 +1,5 @@
 use crate::expression::{
-    AppearsOnTable, AsExpressionList, Expression, SelectableExpression,
+    AppearsInQuery, AsExpressionList, Expression, SelectableExpression,
 };
 use crate::pg::Pg;
 use crate::query_builder::{AstPass, QueryFragment, QueryId};
@@ -80,13 +80,13 @@ where
 impl<T, ST, QS> SelectableExpression<QS> for ArrayLiteral<T, ST>
 where
     T: SelectableExpression<QS>,
-    ArrayLiteral<T, ST>: AppearsOnTable<QS>,
+    ArrayLiteral<T, ST>: AppearsInQuery<QS>,
 {
 }
 
-impl<T, ST, QS> AppearsOnTable<QS> for ArrayLiteral<T, ST>
+impl<T, ST, QS> AppearsInQuery<QS> for ArrayLiteral<T, ST>
 where
-    T: AppearsOnTable<QS>,
+    T: AppearsInQuery<QS>,
     ArrayLiteral<T, ST>: Expression,
 {
 }

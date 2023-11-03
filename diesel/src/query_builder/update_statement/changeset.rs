@@ -1,7 +1,7 @@
 use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::expression::grouped::Grouped;
 use crate::expression::operators::Eq;
-use crate::expression::AppearsOnTable;
+use crate::expression::AppearsInQuery;
 use crate::query_builder::*;
 use crate::query_source::{Column, QuerySource};
 use crate::result::QueryResult;
@@ -42,7 +42,7 @@ impl<T: AsChangeset> AsChangeset for Option<T> {
 impl<Left, Right> AsChangeset for Eq<Left, Right>
 where
     Left: AssignmentTarget,
-    Right: AppearsOnTable<Left::Table>,
+    Right: AppearsInQuery<Left::Table>,
 {
     type Target = Left::Table;
     type Changeset = Assign<<Left as AssignmentTarget>::QueryAstNode, Right>;

@@ -132,13 +132,13 @@ impl<QS> ValidWhereClause<QS> for NoWhereClause {}
 
 impl<QS, Expr> ValidWhereClause<QS> for WhereClause<Expr>
 where
-    Expr: AppearsOnTable<QS::QuerySource>,
+    Expr: AppearsInQuery<QS::QuerySource>,
     QS: AsQuerySource,
 {
 }
 
 impl<Expr> ValidWhereClause<NoFromClause> for WhereClause<Expr> where
-    Expr: AppearsOnTable<NoFromClause>
+    Expr: AppearsInQuery<NoFromClause>
 {
 }
 

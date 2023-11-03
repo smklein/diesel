@@ -6,13 +6,13 @@ error[E0271]: type mismatch resolving `<Once as Plus<Once>>::Output == Once`
    |                          |
    |                          required by a bound introduced by this call
    |
-note: required for `users::columns::id` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
+note: required for `users::columns::id` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
   --> tests/fail/invalid_joins.rs:7:9
    |
 7  |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `((id, name), SkipSelectableExpressionBoundCheckWrapper<((id, title, user_id), (id, name))>)` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
+   = note: required for `((id, name), SkipSelectableExpressionBoundCheckWrapper<((id, title, user_id), (id, name))>)` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
    = note: required for `Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, Inner>, Grouped<Eq<..., ...>>>>>, ...>` to implement `QuerySource`
    = note: 1 redundant requirement hidden
    = note: required for `JoinOn<Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, Inner>, Grouped<...>>>>, ...>, ...>` to implement `QuerySource`
@@ -35,13 +35,13 @@ error[E0271]: type mismatch resolving `<Join<table, SelectStatement<FromClause<J
 41 |     let _ = users::table.inner_join(posts::table.inner_join(users::table));
    |                          ^^^^^^^^^^ expected `MoreThanOnce`, found `Once`
    |
-note: required for `users::columns::id` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
+note: required for `users::columns::id` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
   --> tests/fail/invalid_joins.rs:7:9
    |
 7  |         id -> Integer,
    |         ^^
    = note: 3 redundant requirements hidden
-   = note: required for `Grouped<Eq<Nullable<user_id>, Nullable<id>>>` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
+   = note: required for `Grouped<Eq<Nullable<user_id>, Nullable<id>>>` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
    = note: required for `JoinOn<Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, Inner>, Grouped<...>>>>, ...>, ...>` to implement `QuerySource`
    = note: required for `SelectStatement<FromClause<users::table>>` to implement `InternalJoinDsl<SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>`
 
@@ -53,13 +53,13 @@ error[E0271]: type mismatch resolving `<Once as Plus<Once>>::Output == Once`
    |                          |
    |                          required by a bound introduced by this call
    |
-note: required for `users::columns::id` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, Inner>>`
+note: required for `users::columns::id` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, Inner>>`
   --> tests/fail/invalid_joins.rs:7:9
    |
 7  |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `((id, name), SkipSelectableExpressionBoundCheckWrapper<((id, title, user_id), (id, name))>)` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, Inner>>`
+   = note: required for `((id, name), SkipSelectableExpressionBoundCheckWrapper<((id, title, user_id), (id, name))>)` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, Inner>>`
    = note: required for `Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, Inner>, Grouped<Eq<user_id, id>>>>>, Inner>` to implement `QuerySource`
    = note: 1 redundant requirement hidden
    = note: required for `JoinOn<Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, Inner>, Grouped<...>>>>, ...>, ...>` to implement `QuerySource`
@@ -82,13 +82,13 @@ error[E0271]: type mismatch resolving `<Join<table, SelectStatement<FromClause<J
 44 |     let _ = users::table.inner_join(posts::table.inner_join(users::table.on(posts::user_id.eq(users::id))));
    |                          ^^^^^^^^^^ expected `MoreThanOnce`, found `Once`
    |
-note: required for `users::columns::id` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, Inner>>`
+note: required for `users::columns::id` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, Inner>>`
   --> tests/fail/invalid_joins.rs:7:9
    |
 7  |         id -> Integer,
    |         ^^
    = note: 3 redundant requirements hidden
-   = note: required for `Grouped<Eq<Nullable<user_id>, Nullable<id>>>` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, Inner>>`
+   = note: required for `Grouped<Eq<Nullable<user_id>, Nullable<id>>>` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, Inner>>`
    = note: required for `JoinOn<Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, Inner>, Grouped<...>>>>, ...>, ...>` to implement `QuerySource`
    = note: required for `SelectStatement<FromClause<users::table>>` to implement `InternalJoinDsl<SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, Inner, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>`
 
@@ -100,13 +100,13 @@ error[E0271]: type mismatch resolving `<Once as Plus<Once>>::Output == Once`
    |                          |
    |                          required by a bound introduced by this call
    |
-note: required for `users::columns::id` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
+note: required for `users::columns::id` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
   --> tests/fail/invalid_joins.rs:7:9
    |
 7  |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `((id, name), SkipSelectableExpressionBoundCheckWrapper<((id, title, user_id), (id, name))>)` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
+   = note: required for `((id, name), SkipSelectableExpressionBoundCheckWrapper<((id, title, user_id), (id, name))>)` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
    = note: required for `Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, Inner>, Grouped<Eq<..., ...>>>>>, ...>` to implement `QuerySource`
    = note: 1 redundant requirement hidden
    = note: required for `JoinOn<Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, Inner>, Grouped<...>>>>, ...>, ...>` to implement `QuerySource`
@@ -129,13 +129,13 @@ error[E0271]: type mismatch resolving `<Join<table, SelectStatement<FromClause<J
 47 |     let _ = users::table.inner_join(posts::table.on(users::id.eq(posts::user_id)).inner_join(users::table));
    |                          ^^^^^^^^^^ expected `MoreThanOnce`, found `Once`
    |
-note: required for `users::columns::id` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
+note: required for `users::columns::id` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
   --> tests/fail/invalid_joins.rs:7:9
    |
 7  |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<users::columns::id, posts::columns::user_id>>` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
+   = note: required for `diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<users::columns::id, posts::columns::user_id>>` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner>>`
    = note: required for `JoinOn<Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, Inner>, Grouped<...>>>>, ...>, ...>` to implement `QuerySource`
    = note: required for `SelectStatement<FromClause<users::table>>` to implement `InternalJoinDsl<SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, Inner, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<users::columns::id, posts::columns::user_id>>>`
 
@@ -147,13 +147,13 @@ error[E0271]: type mismatch resolving `<Once as Plus<Once>>::Output == Once`
    |                                                      |
    |                                                      required by a bound introduced by this call
    |
-note: required for `comments::columns::id` to implement `AppearsOnTable<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, comments::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::user_id>, NullableExpression<users::columns::id>>>>, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, comments::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::post_id>, NullableExpression<posts::columns::id>>>>>>, Inner>>`
+note: required for `comments::columns::id` to implement `AppearsInQuery<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, comments::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::user_id>, NullableExpression<users::columns::id>>>>, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, comments::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::post_id>, NullableExpression<posts::columns::id>>>>>>, Inner>>`
   --> tests/fail/invalid_joins.rs:22:9
    |
 22 |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `((id, name), (id, user_id, post_id, name), SkipSelectableExpressionBoundCheckWrapper<((id, title, ...), ...)>)` to implement `AppearsOnTable<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, comments::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::user_id>, NullableExpression<users::columns::id>>>>, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, comments::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::post_id>, NullableExpression<posts::columns::id>>>>>>, Inner>>`
+   = note: required for `((id, name), (id, user_id, post_id, name), SkipSelectableExpressionBoundCheckWrapper<((id, title, ...), ...)>)` to implement `AppearsInQuery<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, comments::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::user_id>, NullableExpression<users::columns::id>>>>, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, comments::table, Inner>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::post_id>, NullableExpression<posts::columns::id>>>>>>, Inner>>`
    = note: required for `Join<JoinOn<Join<table, table, Inner>, Grouped<Eq<Nullable<user_id>, Nullable<id>>>>, ..., ...>` to implement `QuerySource`
    = note: 1 redundant requirement hidden
    = note: required for `JoinOn<Join<JoinOn<Join<table, table, Inner>, Grouped<Eq<Nullable<user_id>, Nullable<id>>>>, ..., ...>, ...>` to implement `QuerySource`
@@ -176,13 +176,13 @@ error[E0271]: type mismatch resolving `<Once as Plus<Once>>::Output == Once`
    |                          |
    |                          required by a bound introduced by this call
    |
-note: required for `users::columns::id` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
+note: required for `users::columns::id` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
   --> tests/fail/invalid_joins.rs:7:9
    |
 7  |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `((id, name), Nullable<SkipSelectableExpressionBoundCheckWrapper<((id, title, user_id), Nullable<(id, ...)>)>>)` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
+   = note: required for `((id, name), Nullable<SkipSelectableExpressionBoundCheckWrapper<((id, title, user_id), Nullable<(id, ...)>)>>)` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
    = note: required for `Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, LeftOuter>, Grouped<Eq<..., ...>>>>>, ...>` to implement `QuerySource`
    = note: 1 redundant requirement hidden
    = note: required for `JoinOn<Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, LeftOuter>, ...>>>, ...>, ...>` to implement `QuerySource`
@@ -205,13 +205,13 @@ error[E0271]: type mismatch resolving `<Join<table, SelectStatement<FromClause<J
 58 |     let _ = users::table.left_join(posts::table.left_join(users::table));
    |                          ^^^^^^^^^ expected `MoreThanOnce`, found `Once`
    |
-note: required for `users::columns::id` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
+note: required for `users::columns::id` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
   --> tests/fail/invalid_joins.rs:7:9
    |
 7  |         id -> Integer,
    |         ^^
    = note: 3 redundant requirements hidden
-   = note: required for `Grouped<Eq<Nullable<user_id>, Nullable<id>>>` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
+   = note: required for `Grouped<Eq<Nullable<user_id>, Nullable<id>>>` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
    = note: required for `JoinOn<Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, LeftOuter>, ...>>>, ...>, ...>` to implement `QuerySource`
    = note: required for `SelectStatement<FromClause<users::table>>` to implement `InternalJoinDsl<SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>`
 
@@ -223,13 +223,13 @@ error[E0271]: type mismatch resolving `<Once as Plus<Once>>::Output == Once`
    |                          |
    |                          required by a bound introduced by this call
    |
-note: required for `users::columns::id` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, LeftOuter>>`
+note: required for `users::columns::id` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, LeftOuter>>`
   --> tests/fail/invalid_joins.rs:7:9
    |
 7  |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `((id, name), Nullable<SkipSelectableExpressionBoundCheckWrapper<((id, title, user_id), Nullable<(id, ...)>)>>)` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, LeftOuter>>`
+   = note: required for `((id, name), Nullable<SkipSelectableExpressionBoundCheckWrapper<((id, title, user_id), Nullable<(id, ...)>)>>)` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, LeftOuter>>`
    = note: required for `Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, LeftOuter>, Grouped<Eq<user_id, id>>>>>, ...>` to implement `QuerySource`
    = note: 1 redundant requirement hidden
    = note: required for `JoinOn<Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, LeftOuter>, ...>>>, ...>, ...>` to implement `QuerySource`
@@ -252,13 +252,13 @@ error[E0271]: type mismatch resolving `<Join<table, SelectStatement<FromClause<J
 61 |     let _ = users::table.left_join(posts::table.left_join(users::table.on(posts::user_id.eq(users::id))));
    |                          ^^^^^^^^^ expected `MoreThanOnce`, found `Once`
    |
-note: required for `users::columns::id` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, LeftOuter>>`
+note: required for `users::columns::id` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, LeftOuter>>`
   --> tests/fail/invalid_joins.rs:7:9
    |
 7  |         id -> Integer,
    |         ^^
    = note: 3 redundant requirements hidden
-   = note: required for `Grouped<Eq<Nullable<user_id>, Nullable<id>>>` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, LeftOuter>>`
+   = note: required for `Grouped<Eq<Nullable<user_id>, Nullable<id>>>` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, LeftOuter>>`
    = note: required for `JoinOn<Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, LeftOuter>, ...>>>, ...>, ...>` to implement `QuerySource`
    = note: required for `SelectStatement<FromClause<users::table>>` to implement `InternalJoinDsl<SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<posts::columns::user_id, users::columns::id>>>>>, LeftOuter, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>`
 
@@ -270,13 +270,13 @@ error[E0271]: type mismatch resolving `<Once as Plus<Once>>::Output == Once`
    |                          |
    |                          required by a bound introduced by this call
    |
-note: required for `users::columns::id` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
+note: required for `users::columns::id` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
   --> tests/fail/invalid_joins.rs:7:9
    |
 7  |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `((id, name), Nullable<SkipSelectableExpressionBoundCheckWrapper<((id, title, user_id), Nullable<(id, ...)>)>>)` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
+   = note: required for `((id, name), Nullable<SkipSelectableExpressionBoundCheckWrapper<((id, title, user_id), Nullable<(id, ...)>)>>)` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
    = note: required for `Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, LeftOuter>, Grouped<Eq<..., ...>>>>>, ...>` to implement `QuerySource`
    = note: 1 redundant requirement hidden
    = note: required for `JoinOn<Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, LeftOuter>, ...>>>, ...>, ...>` to implement `QuerySource`
@@ -299,13 +299,13 @@ error[E0271]: type mismatch resolving `<Join<table, SelectStatement<FromClause<J
 64 |     let _ = users::table.left_join(posts::table.on(users::id.eq(posts::user_id)).left_join(users::table));
    |                          ^^^^^^^^^ expected `MoreThanOnce`, found `Once`
    |
-note: required for `users::columns::id` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
+note: required for `users::columns::id` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
   --> tests/fail/invalid_joins.rs:7:9
    |
 7  |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<users::columns::id, posts::columns::user_id>>` to implement `AppearsOnTable<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
+   = note: required for `diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<users::columns::id, posts::columns::user_id>>` to implement `AppearsInQuery<query_source::joins::Join<users::table, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter>>`
    = note: required for `JoinOn<Join<table, SelectStatement<FromClause<JoinOn<Join<table, table, LeftOuter>, ...>>>, ...>, ...>` to implement `QuerySource`
    = note: required for `SelectStatement<FromClause<users::table>>` to implement `InternalJoinDsl<SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, users::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<posts::columns::user_id>, NullableExpression<users::columns::id>>>>>>, LeftOuter, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<users::columns::id, posts::columns::user_id>>>`
 
@@ -317,13 +317,13 @@ error[E0271]: type mismatch resolving `<Once as Plus<Once>>::Output == Once`
    |                                                     |
    |                                                     required by a bound introduced by this call
    |
-note: required for `comments::columns::id` to implement `AppearsOnTable<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, comments::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::user_id>, NullableExpression<users::columns::id>>>>, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, comments::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::post_id>, NullableExpression<posts::columns::id>>>>>>, LeftOuter>>`
+note: required for `comments::columns::id` to implement `AppearsInQuery<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, comments::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::user_id>, NullableExpression<users::columns::id>>>>, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, comments::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::post_id>, NullableExpression<posts::columns::id>>>>>>, LeftOuter>>`
   --> tests/fail/invalid_joins.rs:22:9
    |
 22 |         id -> Integer,
    |         ^^
    = note: 3 redundant requirements hidden
-   = note: required for `((id, name), Nullable<(id, user_id, post_id, name)>, Nullable<SkipSelectableExpressionBoundCheckWrapper<...>>)` to implement `AppearsOnTable<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, comments::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::user_id>, NullableExpression<users::columns::id>>>>, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, comments::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::post_id>, NullableExpression<posts::columns::id>>>>>>, LeftOuter>>`
+   = note: required for `((id, name), Nullable<(id, user_id, post_id, name)>, Nullable<SkipSelectableExpressionBoundCheckWrapper<...>>)` to implement `AppearsInQuery<query_source::joins::Join<JoinOn<query_source::joins::Join<users::table, comments::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::user_id>, NullableExpression<users::columns::id>>>>, SelectStatement<FromClause<JoinOn<query_source::joins::Join<posts::table, comments::table, LeftOuter>, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<NullableExpression<comments::columns::post_id>, NullableExpression<posts::columns::id>>>>>>, LeftOuter>>`
    = note: required for `Join<JoinOn<Join<table, table, LeftOuter>, Grouped<Eq<Nullable<user_id>, Nullable<id>>>>, ..., ...>` to implement `QuerySource`
    = note: 1 redundant requirement hidden
    = note: required for `JoinOn<Join<JoinOn<Join<table, table, LeftOuter>, Grouped<Eq<Nullable<user_id>, ...>>>, ..., ...>, ...>` to implement `QuerySource`

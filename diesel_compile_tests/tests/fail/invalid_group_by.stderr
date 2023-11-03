@@ -5,7 +5,7 @@ error[E0277]: the trait bound `FromClause<users::table>: AppearsInFromClause<pos
    |          ^^^^^^^^ the trait `AppearsInFromClause<posts::table>` is not implemented for `FromClause<users::table>`
    |
    = help: the trait `AppearsInFromClause<QS1>` is implemented for `FromClause<QS2>`
-note: required for `posts::columns::id` to implement `AppearsOnTable<FromClause<users::table>>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<FromClause<users::table>>`
   --> tests/fail/invalid_group_by.rs:15:9
    |
 15 |         id -> Integer,
@@ -37,7 +37,7 @@ error[E0277]: the trait bound `FromClause<users::table>: AppearsInFromClause<pos
    |          ^^^^^^^^ the trait `AppearsInFromClause<posts::table>` is not implemented for `FromClause<users::table>`
    |
    = help: the trait `AppearsInFromClause<QS1>` is implemented for `FromClause<QS2>`
-note: required for `posts::columns::id` to implement `AppearsOnTable<FromClause<users::table>>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<FromClause<users::table>>`
   --> tests/fail/invalid_group_by.rs:15:9
    |
 15 |         id -> Integer,
@@ -51,7 +51,7 @@ error[E0277]: the trait bound `FromClause<Alias<user1>>: AppearsInFromClause<pos
    |          ^^^^^^^^ the trait `AppearsInFromClause<posts::table>` is not implemented for `FromClause<Alias<user1>>`
    |
    = help: the trait `AppearsInFromClause<QS1>` is implemented for `FromClause<QS2>`
-note: required for `posts::columns::id` to implement `AppearsOnTable<FromClause<Alias<user1>>>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<FromClause<Alias<user1>>>`
   --> tests/fail/invalid_group_by.rs:15:9
    |
 15 |         id -> Integer,
@@ -85,7 +85,7 @@ error[E0271]: type mismatch resolving `<FromClause<table> as AppearsInFromClause
 48 |         .group_by(post_alias.field(posts::id))
    |          ^^^^^^^^ expected `Never`, found `Once`
    |
-   = note: required for `AliasedField<post1, posts::columns::id>` to implement `AppearsOnTable<FromClause<users::table>>`
+   = note: required for `AliasedField<post1, posts::columns::id>` to implement `AppearsInQuery<FromClause<users::table>>`
    = note: required for `SelectStatement<FromClause<users::table>>` to implement `GroupByDsl<AliasedField<post1, posts::columns::id>>`
 
 error[E0277]: the trait bound `AliasedField<post1, posts::columns::id>: IsContainedInGroupBy<users::columns::id>` is not satisfied
@@ -118,7 +118,7 @@ error[E0277]: the trait bound `FromClause<Alias<user1>>: AppearsInFromClause<Ali
    |          ^^^^^^^^ the trait `AppearsInFromClause<Alias<post1>>` is not implemented for `FromClause<Alias<user1>>`
    |
    = help: the trait `AppearsInFromClause<QS1>` is implemented for `FromClause<QS2>`
-   = note: required for `AliasedField<post1, posts::columns::id>` to implement `AppearsOnTable<FromClause<Alias<user1>>>`
+   = note: required for `AliasedField<post1, posts::columns::id>` to implement `AppearsInQuery<FromClause<Alias<user1>>>`
    = note: required for `SelectStatement<FromClause<Alias<user1>>>` to implement `GroupByDsl<AliasedField<post1, posts::columns::id>>`
 
 error[E0277]: the trait bound `AliasedField<user1, users::columns::id>: ValidGrouping<AliasedField<post1, posts::columns::id>>` is not satisfied
@@ -149,7 +149,7 @@ error[E0277]: the trait bound `FromClause<Alias<user1>>: AppearsInFromClause<pos
    |          ^^^^^^^^ the trait `AppearsInFromClause<posts::table>` is not implemented for `FromClause<Alias<user1>>`
    |
    = help: the trait `AppearsInFromClause<QS1>` is implemented for `FromClause<QS2>`
-note: required for `posts::columns::id` to implement `AppearsOnTable<FromClause<Alias<user1>>>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<FromClause<Alias<user1>>>`
   --> tests/fail/invalid_group_by.rs:15:9
    |
 15 |         id -> Integer,
@@ -162,7 +162,7 @@ error[E0271]: type mismatch resolving `<FromClause<table> as AppearsInFromClause
 67 |         .group_by(post_alias.field(posts::id))
    |          ^^^^^^^^ expected `Never`, found `Once`
    |
-   = note: required for `AliasedField<post1, posts::columns::id>` to implement `AppearsOnTable<FromClause<users::table>>`
+   = note: required for `AliasedField<post1, posts::columns::id>` to implement `AppearsInQuery<FromClause<users::table>>`
    = note: required for `SelectStatement<FromClause<users::table>, diesel::query_builder::select_clause::SelectClause<users::columns::id>>` to implement `GroupByDsl<AliasedField<post1, posts::columns::id>>`
 
 error[E0277]: the trait bound `FromClause<Alias<user1>>: AppearsInFromClause<Alias<post1>>` is not satisfied
@@ -172,5 +172,5 @@ error[E0277]: the trait bound `FromClause<Alias<user1>>: AppearsInFromClause<Ali
    |          ^^^^^^^^ the trait `AppearsInFromClause<Alias<post1>>` is not implemented for `FromClause<Alias<user1>>`
    |
    = help: the trait `AppearsInFromClause<QS1>` is implemented for `FromClause<QS2>`
-   = note: required for `AliasedField<post1, posts::columns::id>` to implement `AppearsOnTable<FromClause<Alias<user1>>>`
+   = note: required for `AliasedField<post1, posts::columns::id>` to implement `AppearsInQuery<FromClause<Alias<user1>>>`
    = note: required for `SelectStatement<FromClause<Alias<user1>>, diesel::query_builder::select_clause::SelectClause<AliasedField<user1, users::columns::id>>>` to implement `GroupByDsl<AliasedField<post1, posts::columns::id>>`

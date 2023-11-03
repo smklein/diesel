@@ -38,13 +38,13 @@ error[E0271]: type mismatch resolving `<table as AppearsInFromClause<table>>::Co
 22 |     let stuff = users::table.select((posts::id, posts::user_id));
    |                              ^^^^^^ expected `Never`, found `Once`
    |
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
   --> tests/fail/selecting_multiple_columns_requires_all_must_be_from_selectable_table.rs:15:9
    |
 15 |         id -> Integer,
    |         ^^
    = note: 1 redundant requirement hidden
-   = note: required for `(posts::columns::id, posts::columns::user_id)` to implement `AppearsOnTable<users::table>`
+   = note: required for `(posts::columns::id, posts::columns::user_id)` to implement `AppearsInQuery<users::table>`
    = note: required for `(posts::columns::id, posts::columns::user_id)` to implement `SelectableExpression<users::table>`
    = note: required for `SelectStatement<FromClause<users::table>>` to implement `SelectDsl<(posts::columns::id, posts::columns::user_id)>`
 
@@ -62,13 +62,13 @@ error[E0277]: the trait bound `users::table: TableNotEqual<posts::table>` is not
              <pg::metadata_lookup::pg_type::table as TableNotEqual<Only<pg::metadata_lookup::pg_namespace::table>>>
              <pg::metadata_lookup::pg_type::table as TableNotEqual<pg::metadata_lookup::pg_namespace::table>>
    = note: required for `users::table` to implement `AppearsInFromClause<posts::table>`
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
   --> tests/fail/selecting_multiple_columns_requires_all_must_be_from_selectable_table.rs:15:9
    |
 15 |         id -> Integer,
    |         ^^
    = note: 1 redundant requirement hidden
-   = note: required for `(posts::columns::id, posts::columns::user_id)` to implement `AppearsOnTable<users::table>`
+   = note: required for `(posts::columns::id, posts::columns::user_id)` to implement `AppearsInQuery<users::table>`
    = note: required for `(posts::columns::id, posts::columns::user_id)` to implement `SelectableExpression<users::table>`
    = note: required for `SelectStatement<FromClause<users::table>>` to implement `SelectDsl<(posts::columns::id, posts::columns::user_id)>`
 
@@ -95,13 +95,13 @@ error[E0271]: type mismatch resolving `<table as AppearsInFromClause<table>>::Co
 23 |     let stuff = users::table.select((posts::id, users::name));
    |                              ^^^^^^ expected `Never`, found `Once`
    |
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
   --> tests/fail/selecting_multiple_columns_requires_all_must_be_from_selectable_table.rs:15:9
    |
 15 |         id -> Integer,
    |         ^^
    = note: 1 redundant requirement hidden
-   = note: required for `(posts::columns::id, users::columns::name)` to implement `AppearsOnTable<users::table>`
+   = note: required for `(posts::columns::id, users::columns::name)` to implement `AppearsInQuery<users::table>`
    = note: required for `(posts::columns::id, users::columns::name)` to implement `SelectableExpression<users::table>`
    = note: required for `SelectStatement<FromClause<users::table>>` to implement `SelectDsl<(posts::columns::id, users::columns::name)>`
 
@@ -119,12 +119,12 @@ error[E0277]: the trait bound `users::table: TableNotEqual<posts::table>` is not
              <pg::metadata_lookup::pg_type::table as TableNotEqual<Only<pg::metadata_lookup::pg_namespace::table>>>
              <pg::metadata_lookup::pg_type::table as TableNotEqual<pg::metadata_lookup::pg_namespace::table>>
    = note: required for `users::table` to implement `AppearsInFromClause<posts::table>`
-note: required for `posts::columns::id` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::id` to implement `AppearsInQuery<users::table>`
   --> tests/fail/selecting_multiple_columns_requires_all_must_be_from_selectable_table.rs:15:9
    |
 15 |         id -> Integer,
    |         ^^
    = note: 1 redundant requirement hidden
-   = note: required for `(posts::columns::id, users::columns::name)` to implement `AppearsOnTable<users::table>`
+   = note: required for `(posts::columns::id, users::columns::name)` to implement `AppearsInQuery<users::table>`
    = note: required for `(posts::columns::id, users::columns::name)` to implement `SelectableExpression<users::table>`
    = note: required for `SelectStatement<FromClause<users::table>>` to implement `SelectDsl<(posts::columns::id, users::columns::name)>`

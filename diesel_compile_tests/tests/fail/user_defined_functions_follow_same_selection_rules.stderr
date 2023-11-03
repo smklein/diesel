@@ -14,13 +14,13 @@ error[E0271]: type mismatch resolving `<table as AppearsInFromClause<table>>::Co
    |          |
    |          required by a bound introduced by this call
    |
-note: required for `posts::columns::title` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::title` to implement `AppearsInQuery<users::table>`
   --> tests/fail/user_defined_functions_follow_same_selection_rules.rs:16:9
    |
 16 |         title -> VarChar,
    |         ^^^^^
    = note: 3 redundant requirements hidden
-   = note: required for `diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<users::columns::name, bar::bar<posts::columns::title>>>` to implement `AppearsOnTable<users::table>`
+   = note: required for `diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<users::columns::name, bar::bar<posts::columns::title>>>` to implement `AppearsInQuery<users::table>`
    = note: required for `WhereClause<Grouped<Eq<name, bar<title>>>>` to implement `diesel::query_builder::where_clause::ValidWhereClause<FromClause<users::table>>`
    = note: required for `SelectStatement<FromClause<table>, DefaultSelectClause<FromClause<table>>, NoDistinctClause, WhereClause<...>>` to implement `Query`
    = note: required for `SelectStatement<FromClause<table>, DefaultSelectClause<FromClause<table>>, NoDistinctClause, WhereClause<...>>` to implement `LoadQuery<'_, _, User>`
@@ -49,13 +49,13 @@ error[E0277]: the trait bound `users::table: TableNotEqual<posts::table>` is not
              <pg::metadata_lookup::pg_type::table as TableNotEqual<Only<pg::metadata_lookup::pg_namespace::table>>>
              <pg::metadata_lookup::pg_type::table as TableNotEqual<pg::metadata_lookup::pg_namespace::table>>
    = note: required for `users::table` to implement `AppearsInFromClause<posts::table>`
-note: required for `posts::columns::title` to implement `AppearsOnTable<users::table>`
+note: required for `posts::columns::title` to implement `AppearsInQuery<users::table>`
   --> tests/fail/user_defined_functions_follow_same_selection_rules.rs:16:9
    |
 16 |         title -> VarChar,
    |         ^^^^^
    = note: 3 redundant requirements hidden
-   = note: required for `diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<users::columns::name, bar::bar<posts::columns::title>>>` to implement `AppearsOnTable<users::table>`
+   = note: required for `diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<users::columns::name, bar::bar<posts::columns::title>>>` to implement `AppearsInQuery<users::table>`
    = note: required for `WhereClause<Grouped<Eq<name, bar<title>>>>` to implement `diesel::query_builder::where_clause::ValidWhereClause<FromClause<users::table>>`
    = note: required for `SelectStatement<FromClause<table>, DefaultSelectClause<FromClause<table>>, NoDistinctClause, WhereClause<...>>` to implement `Query`
    = note: required for `SelectStatement<FromClause<table>, DefaultSelectClause<FromClause<table>>, NoDistinctClause, WhereClause<...>>` to implement `LoadQuery<'_, _, User>`

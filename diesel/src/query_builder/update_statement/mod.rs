@@ -6,7 +6,7 @@ use self::target::UpdateTarget;
 use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::dsl::{Filter, IntoBoxed};
 use crate::expression::{
-    AppearsOnTable, Expression, SelectableExpression,
+    AppearsInQuery, Expression, SelectableExpression,
 };
 use crate::query_builder::returning_clause::*;
 use crate::query_builder::where_clause::*;
@@ -157,7 +157,7 @@ impl<T, U, V, Ret, Predicate> FilterDsl<Predicate> for UpdateStatement<T, U, V, 
 where
     T: QuerySource,
     U: WhereAnd<Predicate>,
-    Predicate: AppearsOnTable<T>,
+    Predicate: AppearsInQuery<T>,
 {
     type Output = UpdateStatement<T, U::Output, V, Ret>;
 

@@ -1,6 +1,6 @@
 use diesel::backend::Backend;
 use diesel::expression::{
-    is_aggregate, AppearsOnTable, Expression, SelectableExpression, TypedExpressionType,
+    is_aggregate, AppearsInQuery, Expression, SelectableExpression, TypedExpressionType,
     ValidGrouping,
 };
 use diesel::prelude::*;
@@ -44,7 +44,7 @@ impl<T, U, ST> QueryId for Column<T, U, ST> {
 
 impl<T, U, ST, QS> SelectableExpression<QS> for Column<T, U, ST> where Self: Expression {}
 
-impl<T, U, ST, QS> AppearsOnTable<QS> for Column<T, U, ST> where Self: Expression {}
+impl<T, U, ST, QS> AppearsInQuery<QS> for Column<T, U, ST> where Self: Expression {}
 
 impl<T, U, ST> Expression for Column<T, U, ST>
 where

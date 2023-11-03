@@ -47,13 +47,13 @@ error[E0271]: type mismatch resolving `<table as AppearsInFromClause<table>>::Co
 26 |     posts::table.distinct_on((posts::name, users::name)).get_result(&mut connection);
    |                  ^^^^^^^^^^^ expected `Never`, found `Once`
    |
-note: required for `users::columns::name` to implement `AppearsOnTable<posts::table>`
+note: required for `users::columns::name` to implement `AppearsInQuery<posts::table>`
   --> tests/fail/distinct_on_allows_only_fields_of_table.rs:9:9
    |
 9  |         name -> VarChar,
    |         ^^^^
    = note: 1 redundant requirement hidden
-   = note: required for `(posts::columns::name, users::columns::name)` to implement `AppearsOnTable<posts::table>`
+   = note: required for `(posts::columns::name, users::columns::name)` to implement `AppearsInQuery<posts::table>`
    = note: required for `(posts::columns::name, users::columns::name)` to implement `SelectableExpression<posts::table>`
    = note: required for `posts::table` to implement `DistinctOnDsl<(posts::columns::name, users::columns::name)>`
 
@@ -71,12 +71,12 @@ error[E0277]: the trait bound `posts::table: TableNotEqual<users::table>` is not
              <pg::metadata_lookup::pg_type::table as TableNotEqual<Only<pg::metadata_lookup::pg_namespace::table>>>
              <pg::metadata_lookup::pg_type::table as TableNotEqual<pg::metadata_lookup::pg_namespace::table>>
    = note: required for `posts::table` to implement `AppearsInFromClause<users::table>`
-note: required for `users::columns::name` to implement `AppearsOnTable<posts::table>`
+note: required for `users::columns::name` to implement `AppearsInQuery<posts::table>`
   --> tests/fail/distinct_on_allows_only_fields_of_table.rs:9:9
    |
 9  |         name -> VarChar,
    |         ^^^^
    = note: 1 redundant requirement hidden
-   = note: required for `(posts::columns::name, users::columns::name)` to implement `AppearsOnTable<posts::table>`
+   = note: required for `(posts::columns::name, users::columns::name)` to implement `AppearsInQuery<posts::table>`
    = note: required for `(posts::columns::name, users::columns::name)` to implement `SelectableExpression<posts::table>`
    = note: required for `posts::table` to implement `DistinctOnDsl<(posts::columns::name, users::columns::name)>`

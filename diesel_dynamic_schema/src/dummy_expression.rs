@@ -1,5 +1,5 @@
 use diesel::expression::{
-    expression_types, is_aggregate, AppearsOnTable, Expression, SelectableExpression, ValidGrouping,
+    expression_types, is_aggregate, AppearsInQuery, Expression, SelectableExpression, ValidGrouping,
 };
 
 #[doc(hidden)]
@@ -14,7 +14,7 @@ impl DummyExpression {
 
 impl<QS> SelectableExpression<QS> for DummyExpression {}
 
-impl<QS> AppearsOnTable<QS> for DummyExpression {}
+impl<QS> AppearsInQuery<QS> for DummyExpression {}
 
 impl Expression for DummyExpression {
     type SqlType = expression_types::NotSelectable;

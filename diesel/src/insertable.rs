@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::backend::{sql_dialect, Backend, DieselReserveSpecialization, SqlDialect};
 use crate::expression::grouped::Grouped;
-use crate::expression::{AppearsOnTable, Expression};
+use crate::expression::{AppearsInQuery, Expression};
 use crate::query_builder::{
     AstPass, BatchInsert, InsertStatement, NoFromClause, QueryFragment, QueryId,
     UndecoratedInsertRecord, ValuesClause,
@@ -159,7 +159,7 @@ impl<Col, Expr, DB> InsertValues<Col::Table, DB>
 where
     DB: Backend + SqlDialect<InsertWithDefaultKeyword = sql_dialect::default_keyword_for_insert::IsoSqlDefaultKeyword>,
     Col: Column,
-    Expr: Expression<SqlType = Col::SqlType> + AppearsOnTable<NoFromClause>,
+    Expr: Expression<SqlType = Col::SqlType> + AppearsInQuery<NoFromClause>,
     Self: QueryFragment<DB>,
 {
     fn column_names(&self, mut out: AstPass<'_, '_, DB>) -> QueryResult<()> {
@@ -172,7 +172,7 @@ impl<Col, Expr, DB> InsertValues<Col::Table, DB> for ColumnInsertValue<Col, Expr
 where
     DB: Backend,
     Col: Column,
-    Expr: Expression<SqlType = Col::SqlType> + AppearsOnTable<NoFromClause>,
+    Expr: Expression<SqlType = Col::SqlType> + AppearsInQuery<NoFromClause>,
     Self: QueryFragment<DB>,
 {
     fn column_names(&self, mut out: AstPass<'_, '_, DB>) -> QueryResult<()> {
@@ -222,7 +222,7 @@ impl<Col, Expr> InsertValues<Col::Table, crate::sqlite::Sqlite>
     for DefaultableColumnInsertValue<ColumnInsertValue<Col, Expr>>
 where
     Col: Column,
-    Expr: Expression<SqlType = Col::SqlType> + AppearsOnTable<NoFromClause>,
+    Expr: Expression<SqlType = Col::SqlType> + AppearsInQuery<NoFromClause>,
     Self: QueryFragment<crate::sqlite::Sqlite>,
 {
     fn column_names(&self, mut out: AstPass<'_, '_, crate::sqlite::Sqlite>) -> QueryResult<()> {

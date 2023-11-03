@@ -34,9 +34,9 @@ where
     }
 }
 
-impl<T, QS> AppearsOnTable<QS> for AssumeNotNull<T>
+impl<T, QS> AppearsInQuery<QS> for AssumeNotNull<T>
 where
-    T: AppearsOnTable<QS>,
+    T: AppearsInQuery<QS>,
     AssumeNotNull<T>: Expression,
 {
 }
@@ -49,13 +49,13 @@ impl<T: QueryId> QueryId for AssumeNotNull<T> {
 
 impl<T, QS> SelectableExpression<QS> for AssumeNotNull<T>
 where
-    Self: AppearsOnTable<QS>,
+    Self: AppearsInQuery<QS>,
     QS: ToInnerJoin,
     T: SelectableExpression<QS::InnerJoin>,
 {
 }
 
 impl<T> SelectableExpression<NoFromClause> for AssumeNotNull<T> where
-    Self: AppearsOnTable<NoFromClause>
+    Self: AppearsInQuery<NoFromClause>
 {
 }

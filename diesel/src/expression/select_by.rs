@@ -1,7 +1,7 @@
 use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::dsl::SqlTypeOf;
 use crate::expression::{
-    AppearsOnTable, Expression, QueryMetadata, Selectable, SelectableExpression,
+    AppearsInQuery, Expression, QueryMetadata, Selectable, SelectableExpression,
     TypedExpressionType,
 };
 use crate::query_builder::*;
@@ -103,15 +103,15 @@ where
     DB: Backend,
     T: Selectable<DB>,
     T::SelectExpression: SelectableExpression<QS>,
-    Self: AppearsOnTable<QS>,
+    Self: AppearsInQuery<QS>,
 {
 }
 
-impl<T, QS, DB> AppearsOnTable<QS> for SelectBy<T, DB>
+impl<T, QS, DB> AppearsInQuery<QS> for SelectBy<T, DB>
 where
     DB: Backend,
     T: Selectable<DB>,
-    T::SelectExpression: AppearsOnTable<QS>,
+    T::SelectExpression: AppearsInQuery<QS>,
     Self: Expression,
 {
 }

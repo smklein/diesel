@@ -1,4 +1,4 @@
-/// This will implement `SelectableExpression` and `AppearsOnTable` for "simple"
+/// This will implement `SelectableExpression` and `AppearsInQuery` for "simple"
 /// composite nodes where the where clause is roughly `AllTyParams:
 /// SelectableExpression<QS>, Self: Expression`.
 ///
@@ -21,15 +21,15 @@ macro_rules! impl_selectable_expression {
     (ty_params = ($($ty_params:ident),*), struct_ty = $struct_ty:ty,) => {
         impl<$($ty_params,)* QS> $crate::expression::SelectableExpression<QS>
             for $struct_ty where
-                $struct_ty: $crate::expression::AppearsOnTable<QS>,
+                $struct_ty: $crate::expression::AppearsInQuery<QS>,
                 $($ty_params: $crate::expression::SelectableExpression<QS>,)*
         {
         }
 
-        impl<$($ty_params,)* QS> $crate::expression::AppearsOnTable<QS>
+        impl<$($ty_params,)* QS> $crate::expression::AppearsInQuery<QS>
             for $struct_ty where
                 $struct_ty: $crate::expression::Expression,
-                $($ty_params: $crate::expression::AppearsOnTable<QS>,)*
+                $($ty_params: $crate::expression::AppearsInQuery<QS>,)*
         {
         }
     };

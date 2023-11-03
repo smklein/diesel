@@ -98,7 +98,7 @@ where
     }
 
     pub(crate) fn on<On>(self, on: On) -> JoinOn<Self, On> {
-        JoinOn { join: self, on: on }
+        JoinOn { join: self, on }
     }
 }
 
@@ -106,7 +106,7 @@ impl<Left, Right> QuerySource for Join<Left, Right, Inner>
 where
     Left: QuerySource + AppendSelection<Right::DefaultSelection>,
     Right: QuerySource,
-    Left::Output: AppearsOnTable<Self>,
+    Left::Output: AppearsInQuery<Self>,
     Self: Clone,
 {
     type FromClause = Self;
@@ -136,7 +136,7 @@ impl<Left, Right> QuerySource for Join<Left, Right, LeftOuter>
 where
     Left: QuerySource + AppendSelection<Nullable<Right::DefaultSelection>>,
     Right: QuerySource,
-    Left::Output: AppearsOnTable<Self>,
+    Left::Output: AppearsInQuery<Self>,
     Self: Clone,
 {
     type FromClause = Self;
@@ -174,7 +174,7 @@ impl<DB: Backend> nodes::MiddleFragment<DB> for OnKeyword {
 impl<Join, On> QuerySource for JoinOn<Join, On>
 where
     Join: QuerySource,
-    On: AppearsOnTable<Join::FromClause> + Clone,
+    On: AppearsInQuery<Join::FromClause> + Clone,
     On::SqlType: BoolOrNullableBool,
     Join::DefaultSelection: SelectableExpression<Self>,
 {
@@ -445,7 +445,7 @@ mod private {
     use crate::backend::Backend;
     use crate::expression::Expression;
     use crate::query_builder::{AstPass, QueryFragment, SelectClauseExpression};
-    use crate::{AppearsOnTable, QueryResult, SelectableExpression};
+    use crate::{AppearsInQuery, QueryResult, SelectableExpression};
 
     #[derive(Debug, crate::query_builder::QueryId, Copy, Clone)]
     pub struct SkipSelectableExpressionBoundCheckWrapper<T>(pub(super) T);
@@ -475,11 +475,11 @@ mod private {
     // valid too. We can skip the recursive check here.
     // This is the main optimization.
     impl<QS, T> SelectableExpression<QS> for SkipSelectableExpressionBoundCheckWrapper<T> where
-        Self: AppearsOnTable<QS>
+        Self: AppearsInQuery<QS>
     {
     }
 
-    impl<QS, T> AppearsOnTable<QS> for SkipSelectableExpressionBoundCheckWrapper<T> where
+    impl<QS, T> AppearsInQuery<QS> for SkipSelectableExpressionBoundCheckWrapper<T> where
         Self: Expression
     {
     }

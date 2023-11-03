@@ -48,9 +48,9 @@ where
 {
 }
 
-impl<T, ST, QS> AppearsOnTable<QS> for Coerce<T, ST>
+impl<T, ST, QS> AppearsInQuery<QS> for Coerce<T, ST>
 where
-    T: AppearsOnTable<QS>,
+    T: AppearsInQuery<QS>,
     Self: Expression,
 {
 }

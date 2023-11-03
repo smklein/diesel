@@ -97,7 +97,7 @@ pub(crate) fn expand(input: SqlFunctionDecl) -> TokenStream {
     let args_iter = args.iter();
     let mut tokens = quote! {
         use diesel::{self, QueryResult};
-        use diesel::expression::{AsExpression, Expression, SelectableExpression, AppearsOnTable};
+        use diesel::expression::{AsExpression, Expression, SelectableExpression, AppearsInQuery};
         use diesel::query_builder::{QueryFragment, AstPass};
         use diesel::sql_types::*;
         use super::*;
@@ -126,15 +126,15 @@ pub(crate) fn expand(input: SqlFunctionDecl) -> TokenStream {
             for #fn_name #ty_generics
         #where_clause
             #(#arg_name: SelectableExpression<__DieselInternal>,)*
-            Self: AppearsOnTable<__DieselInternal>,
+            Self: AppearsInQuery<__DieselInternal>,
         {
         }
 
         // __DieselInternal is what we call QS normally
-        impl #impl_generics_internal AppearsOnTable<__DieselInternal>
+        impl #impl_generics_internal AppearsInQuery<__DieselInternal>
             for #fn_name #ty_generics
         #where_clause
-            #(#arg_name: AppearsOnTable<__DieselInternal>,)*
+            #(#arg_name: AppearsInQuery<__DieselInternal>,)*
             Self: Expression,
         {
         }

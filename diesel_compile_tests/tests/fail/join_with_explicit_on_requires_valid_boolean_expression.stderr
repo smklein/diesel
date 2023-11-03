@@ -4,13 +4,13 @@ error[E0271]: type mismatch resolving `<Join<table, table, Inner> as AppearsInFr
 31 |     let _ = users::table.inner_join(posts::table.on(users::id.eq(comments::id)));
    |                          ^^^^^^^^^^ expected `Never`, found `Once`
    |
-note: required for `comments::columns::id` to implement `AppearsOnTable<query_source::joins::Join<users::table, posts::table, Inner>>`
+note: required for `comments::columns::id` to implement `AppearsInQuery<query_source::joins::Join<users::table, posts::table, Inner>>`
   --> tests/fail/join_with_explicit_on_requires_valid_boolean_expression.rs:19:9
    |
 19 |         id -> Integer,
    |         ^^
    = note: 2 redundant requirements hidden
-   = note: required for `diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<users::columns::id, comments::columns::id>>` to implement `AppearsOnTable<query_source::joins::Join<users::table, posts::table, Inner>>`
+   = note: required for `diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<users::columns::id, comments::columns::id>>` to implement `AppearsInQuery<query_source::joins::Join<users::table, posts::table, Inner>>`
    = note: required for `JoinOn<Join<table, table, Inner>, Grouped<Eq<id, id>>>` to implement `QuerySource`
    = note: required for `SelectStatement<FromClause<users::table>>` to implement `InternalJoinDsl<posts::table, Inner, diesel::expression::grouped::Grouped<diesel::expression::operators::Eq<users::columns::id, comments::columns::id>>>`
 

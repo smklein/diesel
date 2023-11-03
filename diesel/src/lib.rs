@@ -116,7 +116,7 @@
 //!    like ` = note: required for i32 to implement AsExpression<diesel::sql_types::Text>`
 //!    that show both the provided rust side type (`i32` in that case) and the expected
 //!    database side type (`Text` in that case).
-//! * `the trait bound i32: AppearsOnTable<users::table> is not satisfied` in the context of `AsChangeset`
+//! * `the trait bound i32: AppearsInQuery<users::table> is not satisfied` in the context of `AsChangeset`
 //!    model structs:
 //!    This error indicates a type mismatch between the field you are trying to update and the actual
 //!    database type. Double check your type mapping.
@@ -636,7 +636,7 @@ pub mod prelude {
     pub use crate::deserialize::{Queryable, QueryableByName};
     #[doc(inline)]
     pub use crate::expression::{
-        AppearsOnTable, BoxableExpression, Expression, IntoSql, Selectable, SelectableExpression,
+        AppearsInQuery, BoxableExpression, Expression, IntoSql, Selectable, SelectableExpression,
     };
 
     #[doc(inline)]
