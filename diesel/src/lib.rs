@@ -348,7 +348,7 @@ pub mod helper_types {
     //! `users.filter(first_name.eq("John")).order(last_name.asc()).limit(10)` would
     //! be `Limit<Order<FindBy<users, first_name, &str>, Asc<last_name>>>`
     use super::query_builder::combination_clause::{self, CombinationClause};
-    use super::query_builder::{locking_clause as lock, AsQuery};
+    use super::query_builder::AsQuery;
     use super::query_dsl::methods::*;
     use super::query_dsl::*;
     use super::query_source::{aliasing, joins};
@@ -372,23 +372,8 @@ pub mod helper_types {
     /// Represents the return type of [`.filter(lhs.eq(rhs))`](crate::prelude::QueryDsl::filter)
     pub type FindBy<Source, Column, Value> = Filter<Source, Eq<Column, Value>>;
 
-    /// Represents the return type of [`.for_update()`](crate::prelude::QueryDsl::for_update)
-    pub type ForUpdate<Source> = <Source as LockingDsl<lock::ForUpdate>>::Output;
-
-    /// Represents the return type of [`.for_no_key_update()`](crate::prelude::QueryDsl::for_no_key_update)
-    pub type ForNoKeyUpdate<Source> = <Source as LockingDsl<lock::ForNoKeyUpdate>>::Output;
-
-    /// Represents the return type of [`.for_share()`](crate::prelude::QueryDsl::for_share)
-    pub type ForShare<Source> = <Source as LockingDsl<lock::ForShare>>::Output;
-
-    /// Represents the return type of [`.for_key_share()`](crate::prelude::QueryDsl::for_key_share)
-    pub type ForKeyShare<Source> = <Source as LockingDsl<lock::ForKeyShare>>::Output;
-
-    /// Represents the return type of [`.skip_locked()`](crate::prelude::QueryDsl::skip_locked)
-    pub type SkipLocked<Source> = <Source as ModifyLockDsl<lock::SkipLocked>>::Output;
-
-    /// Represents the return type of [`.no_wait()`](crate::prelude::QueryDsl::no_wait)
-    pub type NoWait<Source> = <Source as ModifyLockDsl<lock::NoWait>>::Output;
+    /// Represents the return type of [`.with_lock()`](crate::prelude::QueryDsl::with_lock)
+    pub type WithLock<Source> = <Source as LockingDsl>::Output;
 
     /// Represents the return type of [`.find(pk)`](crate::prelude::QueryDsl::find)
     pub type Find<Source, PK> = <Source as FindDsl<PK>>::Output;

@@ -1,4 +1,5 @@
 use crate::expression::TypedExpressionType;
+use crate::query_builder::locking_clause::AllLockingClauses;
 use crate::query_builder::AsQuery;
 use crate::query_builder::FromClause;
 use crate::query_builder::SelectStatement;
@@ -12,7 +13,7 @@ use crate::Expression;
 /// to call `for_update` from generic code.
 ///
 /// [`QueryDsl`]: crate::QueryDsl
-pub trait LockingDsl<Lock> {
+pub trait LockingDsl {
     /// The type returned by `set_lock`. See [`dsl::ForUpdate`] and friends for
     /// convenient access to this type.
     ///
@@ -20,36 +21,18 @@ pub trait LockingDsl<Lock> {
     type Output;
 
     /// See the trait level documentation
-    fn with_lock(self, lock: Lock) -> Self::Output;
+    fn with_lock(self, lock: AllLockingClauses) -> Self::Output;
 }
 
-impl<T, Lock> LockingDsl<Lock> for T
+impl<T> LockingDsl for T
 where
     T: Table + AsQuery<Query = SelectStatement<FromClause<T>>>,
     T::DefaultSelection: Expression<SqlType = T::SqlType>,
     T::SqlType: TypedExpressionType,
 {
-    type Output = <SelectStatement<FromClause<T>> as LockingDsl<Lock>>::Output;
+    type Output = <SelectStatement<FromClause<T>> as LockingDsl>::Output;
 
-    fn with_lock(self, lock: Lock) -> Self::Output {
+    fn with_lock(self, lock: AllLockingClauses) -> Self::Output {
         self.as_query().with_lock(lock)
     }
-}
-
-/// Methods related to modifiers on locking select statements
-///
-/// This trait should not be relied on directly by most apps. Its behavior is
-/// provided by [`QueryDsl`]. However, you may need a where clause on this trait
-/// to call `skip_locked` from generic code.
-///
-/// [`QueryDsl`]: crate::QueryDsl
-pub trait ModifyLockDsl<Modifier> {
-    /// The type returned by `modify_lock`. See [`dsl::SkipLocked`] and friends
-    /// for convenient access to this type.
-    ///
-    /// [`dsl::SkipLocked`]: crate::dsl::SkipLocked
-    type Output;
-
-    /// See the trait level documentation
-    fn modify_lock(self, modifier: Modifier) -> Self::Output;
 }

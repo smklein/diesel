@@ -7,6 +7,7 @@ use crate::expression::SelectableExpression;
 use crate::expression::{Expression, TypedExpressionType};
 use crate::expression_methods::EqAll;
 use crate::query_builder::{combination_clause, AsQuery, FromClause, Query, SelectStatement};
+use crate::query_builder::locking_clause::AllLockingClauses;
 use crate::query_dsl::methods::*;
 use crate::query_dsl::{CombineDsl, QueryDsl, RunQueryDsl};
 use crate::query_source::{QuerySource, Table};
@@ -198,17 +199,18 @@ where
     }
 }
 
-impl<S, Lock> LockingDsl<Lock> for Alias<S>
+impl<S> LockingDsl for Alias<S>
 where
     Self: QuerySource + AsQuery<Query = SelectStatement<FromClause<Self>>>,
-    <Self as QuerySource>::DefaultSelection:
-        Expression<SqlType = <Self as AsQuery>::SqlType>,
+    <Self as QuerySource>::DefaultSelection: Expression<SqlType = <Self as AsQuery>::SqlType>,
     <Self as AsQuery>::SqlType: TypedExpressionType,
 {
-    type Output = <SelectStatement<FromClause<Self>> as LockingDsl<Lock>>::Output;
+    type Output = <SelectStatement<FromClause<Self>> as LockingDsl>::Output;
 
-    fn with_lock(self, lock: Lock) -> Self::Output {
-        self.as_query().with_lock(lock)
+    fn with_lock(self, lock: AllLockingClauses) -> Self::Output {
+        crate::query_dsl::QueryDsl::with_lock(self.as_query(), lock)
+//        locking_dsl::LockingDsl::with_lock(self.as_query(), lock)
+//        self.as_query().with_lock(lock)
     }
 }
 

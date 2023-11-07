@@ -477,7 +477,7 @@ where
         },
         super::group_by_clause::NoGroupByClause,
         super::having_clause::NoHavingClause,
-        super::locking_clause::NoLockingClause,
+        super::locking_clause::AllLockingClauses::NoLocking,
     )
 }
 

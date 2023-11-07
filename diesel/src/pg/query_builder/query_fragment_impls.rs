@@ -2,63 +2,12 @@ use crate::expression::array_comparison::{In, Many, MaybeEmpty, NotIn};
 use crate::pg::backend::PgStyleArrayComparison;
 use crate::pg::types::sql_types::Array;
 use crate::pg::Pg;
-use crate::query_builder::locking_clause::{
-    ForKeyShare, ForNoKeyUpdate, ForShare, ForUpdate, NoModifier, NoWait, SkipLocked,
-};
 use crate::query_builder::upsert::into_conflict_clause::OnConflictSelectWrapper;
 use crate::query_builder::upsert::on_conflict_target_decorations::DecoratedConflictTarget;
 use crate::query_builder::{AstPass, QueryFragment};
 use crate::result::QueryResult;
 use crate::serialize::ToSql;
 use crate::sql_types::{HasSqlType, SingleValue};
-
-impl QueryFragment<Pg> for ForUpdate {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
-        out.push_sql(" FOR UPDATE");
-        Ok(())
-    }
-}
-
-impl QueryFragment<Pg> for ForNoKeyUpdate {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
-        out.push_sql(" FOR NO KEY UPDATE");
-        Ok(())
-    }
-}
-
-impl QueryFragment<Pg> for ForShare {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
-        out.push_sql(" FOR SHARE");
-        Ok(())
-    }
-}
-
-impl QueryFragment<Pg> for ForKeyShare {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
-        out.push_sql(" FOR KEY SHARE");
-        Ok(())
-    }
-}
-
-impl QueryFragment<Pg> for NoModifier {
-    fn walk_ast<'b>(&'b self, _out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
-        Ok(())
-    }
-}
-
-impl QueryFragment<Pg> for SkipLocked {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
-        out.push_sql(" SKIP LOCKED");
-        Ok(())
-    }
-}
-
-impl QueryFragment<Pg> for NoWait {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
-        out.push_sql(" NOWAIT");
-        Ok(())
-    }
-}
 
 impl<T, U> QueryFragment<Pg, PgStyleArrayComparison> for In<T, U>
 where
