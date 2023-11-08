@@ -1,4 +1,3 @@
-use crate::pg::Pg;
 use crate::query_builder::limit_offset_clause::{BoxedLimitOffsetClause, LimitOffsetClause};
 use crate::query_builder::{AstPass, IntoBoxedClause, QueryFragment};
 use crate::result::QueryResult;
@@ -19,7 +18,7 @@ where
 }
 
 impl<'a> QueryFragment for BoxedLimitOffsetClause<'a> {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         if let Some(ref limit) = self.limit {
             limit.walk_ast(out.reborrow())?;
         }
@@ -35,7 +34,7 @@ where
     L: QueryFragment,
     O: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.limit_clause.walk_ast(out.reborrow())?;
         self.offset_clause.walk_ast(out.reborrow())?;
         Ok(())

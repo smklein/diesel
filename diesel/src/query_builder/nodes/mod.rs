@@ -1,4 +1,3 @@
-use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::query_builder::*;
 use crate::result::QueryResult;
 use std::marker::PhantomData;
@@ -20,13 +19,12 @@ impl<T> StaticQueryFragmentInstance<T> {
     }
 }
 
-impl<T, DB> QueryFragment<DB> for StaticQueryFragmentInstance<T>
+impl<T> QueryFragment for StaticQueryFragmentInstance<T>
 where
-    DB: Backend + DieselReserveSpecialization,
     T: StaticQueryFragment,
-    T::Component: QueryFragment<DB>,
+    T::Component: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         T::STATIC_COMPONENT.walk_ast(pass)
     }
 }
@@ -35,18 +33,18 @@ where
 #[doc(hidden)] // used by the table macro
 pub struct Identifier<'a>(pub &'a str);
 
-impl<'a, DB: Backend> QueryFragment<DB> for Identifier<'a> {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+impl<'a> QueryFragment for Identifier<'a> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_identifier(self.0)
     }
 }
 
-pub trait MiddleFragment<DB: Backend> {
-    fn push_sql(&self, pass: AstPass<'_, '_, DB>);
+pub trait MiddleFragment {
+    fn push_sql(&self, pass: AstPass<'_, '_>);
 }
 
-impl<'a, DB: Backend> MiddleFragment<DB> for &'a str {
-    fn push_sql(&self, mut pass: AstPass<'_, '_, DB>) {
+impl<'a> MiddleFragment for &'a str {
+    fn push_sql(&self, mut pass: AstPass<'_, '_>) {
         pass.push_sql(self);
     }
 }
@@ -66,14 +64,13 @@ impl<T, U, M> InfixNode<T, U, M> {
     }
 }
 
-impl<T, U, DB, M> QueryFragment<DB> for InfixNode<T, U, M>
+impl<T, U, M> QueryFragment for InfixNode<T, U, M>
 where
-    DB: Backend + DieselReserveSpecialization,
-    T: QueryFragment<DB>,
-    U: QueryFragment<DB>,
-    M: MiddleFragment<DB>,
+    T: QueryFragment,
+    U: QueryFragment,
+    M: MiddleFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.lhs.walk_ast(out.reborrow())?;
         self.middle.push_sql(out.reborrow());
         self.rhs.walk_ast(out.reborrow())?;

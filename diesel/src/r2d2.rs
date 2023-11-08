@@ -110,7 +110,7 @@ use crate::connection::{
 };
 use crate::expression::QueryMetadata;
 use crate::prelude::*;
-use crate::query_builder::{DB, Query, QueryFragment, QueryId};
+use crate::query_builder::{Query, QueryFragment, QueryId};
 
 /// An r2d2 connection manager for use with Diesel.
 ///
@@ -329,7 +329,7 @@ pub(crate) struct CheckConnectionQuery;
 impl QueryFragment for CheckConnectionQuery {
     fn walk_ast<'b>(
         &'b self,
-        mut pass: crate::query_builder::AstPass<'_, 'b, DB>,
+        mut pass: crate::query_builder::AstPass<'_, 'b>,
     ) -> QueryResult<()> {
         pass.push_sql("SELECT 1");
         Ok(())

@@ -248,7 +248,7 @@ impl<F, S, D, W, O, LOf, G> QueryFragment
 where
     Self: QueryFragment<<DB as SqlDialect>::SelectStatementSyntax>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         <Self as QueryFragment<DB::SelectStatementSyntax>>::walk_ast(self, pass)
     }
 }
@@ -265,7 +265,7 @@ where
     LOf: QueryFragment,
     G: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("SELECT ");
         self.distinct.walk_ast(out.reborrow())?;
         self.select.walk_ast(out.reborrow())?;

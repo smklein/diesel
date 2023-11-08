@@ -162,12 +162,11 @@ where
     type SqlType = ST;
 }
 
-impl<ST, T, DB> QueryFragment<DB> for SqlLiteral<ST, T>
+impl<ST, T> QueryFragment for SqlLiteral<ST, T>
 where
-    DB: Backend,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
         self.inner.walk_ast(out.reborrow())?;
         out.push_sql(&self.sql);
@@ -334,13 +333,12 @@ where
     type SqlType = Query::SqlType;
 }
 
-impl<Query, Value, DB> QueryFragment<DB> for UncheckedBind<Query, Value>
+impl<Query, Value> QueryFragment for UncheckedBind<Query, Value>
 where
-    DB: Backend,
-    Query: QueryFragment<DB>,
-    Value: QueryFragment<DB>,
+    Query: QueryFragment,
+    Value: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.query.walk_ast(out.reborrow())?;
         self.value.walk_ast(out.reborrow())?;
         Ok(())
@@ -364,19 +362,15 @@ impl<QS, Query, Value> AppearsInQuery<QS> for UncheckedBind<Query, Value> where 
 impl<Query, Value, Conn> RunQueryDsl<Conn> for UncheckedBind<Query, Value> {}
 
 mod private {
-    use crate::backend::{Backend, DieselReserveSpecialization};
     use crate::query_builder::{QueryFragment, QueryId};
 
     #[derive(Debug, Clone, Copy, QueryId)]
     pub struct Empty;
 
-    impl<DB> QueryFragment<DB> for Empty
-    where
-        DB: Backend + DieselReserveSpecialization,
-    {
+    impl QueryFragment for Empty {
         fn walk_ast<'b>(
             &'b self,
-            _pass: crate::query_builder::AstPass<'_, 'b, DB>,
+            _pass: crate::query_builder::AstPass<'_, 'b>,
         ) -> crate::QueryResult<()> {
             Ok(())
         }

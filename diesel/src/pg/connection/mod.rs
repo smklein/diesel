@@ -114,7 +114,7 @@ use std::os::raw as libc;
 #[allow(missing_debug_implementations)]
 #[cfg(feature = "postgres")]
 pub struct PgConnection {
-    statement_cache: StatementCache<Pg, Statement>,
+    statement_cache: StatementCache<Statement>,
     metadata_cache: PgMetadataCache,
     connection_and_transaction_manager: ConnectionAndTransactionManager,
 }

@@ -139,7 +139,7 @@ impl<T> QueryFragment for PgTuple<T>
 where
     T: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("(");
         self.0.walk_ast(out.reborrow())?;
         out.push_sql(")");

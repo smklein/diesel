@@ -101,6 +101,7 @@ use std::ops::{Deref, DerefMut};
 use crate::backend::Backend;
 use crate::query_builder::*;
 use crate::result::QueryResult;
+use crate::sql_types::TypeMetadata;
 
 /// A prepared statement cache
 #[allow(missing_debug_implementations, unreachable_pub)]
@@ -108,8 +109,8 @@ use crate::result::QueryResult;
     doc_cfg,
     doc(cfg(feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes"))
 )]
-pub struct StatementCache<DB: Backend, Statement> {
-    pub(crate) cache: HashMap<StatementCacheKey<DB>, Statement>,
+pub struct StatementCache<Statement> {
+    pub(crate) cache: HashMap<StatementCacheKey, Statement>,
 }
 
 /// A helper type that indicates if a certain query
@@ -136,13 +137,7 @@ pub enum PrepareForCache {
     clippy::new_without_default,
     unreachable_pub
 )]
-impl<DB, Statement> StatementCache<DB, Statement>
-where
-    DB: Backend,
-    DB::TypeMetadata: Clone,
-    DB::QueryBuilder: Default,
-    StatementCacheKey<DB>: Hash + Eq,
-{
+impl<Statement> StatementCache<Statement> {
     /// Create a new prepared statement cache
     #[allow(unreachable_pub)]
     pub fn new() -> Self {
@@ -184,7 +179,7 @@ where
         maybe_type_id: Option<TypeId>,
         source: &dyn QueryFragment,
         backend: &DB,
-        bind_types: &[DB::TypeMetadata],
+        bind_types: &[<DB as TypeMetadata>::TypeMetadata],
         prepare_fn: &mut dyn FnMut(&str, PrepareForCache) -> QueryResult<Statement>,
     ) -> QueryResult<MaybeCached<'_, Statement>> {
         use std::collections::hash_map::Entry::{Occupied, Vacant};
@@ -261,7 +256,7 @@ impl<'a, T> DerefMut for MaybeCached<'a, T> {
     doc_cfg,
     doc(cfg(feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes"))
 )]
-pub enum StatementCacheKey<DB: Backend> {
+pub enum StatementCacheKey {
     /// Represents a at compile time known query
     ///
     /// Calculated via [`QueryId::QueryId`]
@@ -275,23 +270,18 @@ pub enum StatementCacheKey<DB: Backend> {
         /// contains the sql query string
         sql: String,
         /// contains the types of any bind parameter passed to the query
-        bind_types: Vec<DB::TypeMetadata>,
+        bind_types: Vec<<DB as TypeMetadata>::TypeMetadata>,
     },
 }
 
-impl<DB> StatementCacheKey<DB>
-where
-    DB: Backend,
-    DB::QueryBuilder: Default,
-    DB::TypeMetadata: Clone,
-{
+impl StatementCacheKey {
     /// Create a new statement cache key for the given query source
     // Note: Intentionally monomorphic over source.
     #[allow(unreachable_pub)]
     pub fn for_source(
         maybe_type_id: Option<TypeId>,
         source: &dyn QueryFragment,
-        bind_types: &[DB::TypeMetadata],
+        bind_types: &[<DB as TypeMetadata>::TypeMetadata],
         backend: &DB,
     ) -> QueryResult<Self> {
         match maybe_type_id {
@@ -320,8 +310,8 @@ where
     }
 
     // Note: Intentionally monomorphic over source.
-    fn construct_sql(source: &dyn QueryFragment<DB>, backend: &DB) -> QueryResult<String> {
-        let mut query_builder = DB::QueryBuilder::default();
+    fn construct_sql(source: &dyn QueryFragment, backend: &DB) -> QueryResult<String> {
+        let mut query_builder = <DB as Backend>::QueryBuilder::default();
         source.to_sql(&mut query_builder, backend)?;
         Ok(query_builder.finish())
     }

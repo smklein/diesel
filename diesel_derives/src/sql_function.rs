@@ -98,7 +98,7 @@ pub(crate) fn expand(input: SqlFunctionDecl) -> TokenStream {
     let mut tokens = quote! {
         use diesel::{self, QueryResult};
         use diesel::expression::{AsExpression, Expression, SelectableExpression, AppearsInQuery};
-        use diesel::query_builder::{AstPass, DB, QueryFragment};
+        use diesel::query_builder::{AstPass, QueryFragment};
         use diesel::sql_types::*;
         use super::*;
 
@@ -144,7 +144,7 @@ pub(crate) fn expand(input: SqlFunctionDecl) -> TokenStream {
             #(#arg_name: QueryFragment,)*
         {
             #[allow(unused_assignments)]
-            fn walk_ast<'__b>(&'__b self, mut out: AstPass<'_, '__b, DB>) -> QueryResult<()>{
+            fn walk_ast<'__b>(&'__b self, mut out: AstPass<'_, '__b>) -> QueryResult<()>{
                 out.push_sql(concat!(#sql_name, "("));
                 // we unroll the arguments manually here, to prevent borrow check issues
                 let mut needs_comma = false;

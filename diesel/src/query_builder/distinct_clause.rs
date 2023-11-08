@@ -8,13 +8,13 @@ pub struct NoDistinctClause;
 pub struct DistinctClause;
 
 impl QueryFragment for NoDistinctClause {
-    fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b>) -> QueryResult<()> {
         Ok(())
     }
 }
 
 impl QueryFragment for DistinctClause {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("DISTINCT ");
         Ok(())
     }

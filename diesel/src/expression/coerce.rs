@@ -58,7 +58,7 @@ impl<T, ST> QueryFragment for Coerce<T, ST>
 where
     T: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         self.expr.walk_ast(pass)
     }
 }

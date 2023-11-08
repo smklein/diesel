@@ -258,7 +258,7 @@ where
     U: QueryFragment,
     Ret: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("DELETE ");
         self.from_clause.walk_ast(out.reborrow())?;
         self.where_clause.walk_ast(out.reborrow())?;

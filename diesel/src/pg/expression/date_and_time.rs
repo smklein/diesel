@@ -1,5 +1,4 @@
 use crate::expression::{Expression};
-use crate::pg::Pg;
 use crate::query_builder::*;
 use crate::result::QueryResult;
 use crate::sql_types::{is_nullable, Date, Nullable, SqlType, Timestamp, Timestamptz, VarChar};
@@ -39,7 +38,7 @@ where
     Ts: QueryFragment,
     Tz: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.timestamp.walk_ast(out.reborrow())?;
         out.push_sql(" AT TIME ZONE ");
         self.timezone.walk_ast(out.reborrow())?;

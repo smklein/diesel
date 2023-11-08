@@ -135,10 +135,10 @@ impl<'a, ST, GB> BoxedSelectStatement<'a, ST, NoFromClause, GB> {
 pub trait BoxedQueryHelper<'a, QS> {
     fn build_query<'b, 'c>(
         &'b self,
-        out: AstPass<'_, 'c, DB>,
+        out: AstPass<'_, 'c>,
         where_clause_handler: impl Fn(
             &'b BoxedWhereClause<'a>,
-            AstPass<'_, 'c, DB>,
+            AstPass<'_, 'c>,
         ) -> QueryResult<()>,
     ) -> QueryResult<()>
     where
@@ -150,10 +150,10 @@ pub trait BoxedQueryHelper<'a, QS> {
 impl<'a, ST, QS, GB> BoxedQueryHelper<'a, QS> for BoxedSelectStatement<'a, ST, QS, GB> {
     fn build_query<'b, 'c>(
         &'b self,
-        mut out: AstPass<'_, 'c, DB>,
+        mut out: AstPass<'_, 'c>,
         where_clause_handler: impl Fn(
             &'b BoxedWhereClause<'a>,
-            AstPass<'_, 'c, DB>,
+            AstPass<'_, 'c>,
         ) -> QueryResult<()>,
     ) -> QueryResult<()>
     where
@@ -195,7 +195,7 @@ impl<'a, ST, QS, GB> QueryFragment for BoxedSelectStatement<'a, ST, QS, GB>
 where
     Self: QueryFragment<<DB as SqlDialect>::SelectStatementSyntax>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         <Self as QueryFragment<DB::SelectStatementSyntax>>::walk_ast(self, pass)
     }
 }
@@ -207,7 +207,7 @@ where
     QS: QueryFragment,
     BoxedLimitOffsetClause<'a>: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.build_query(out, |where_clause, out| where_clause.walk_ast(out))
     }
 }

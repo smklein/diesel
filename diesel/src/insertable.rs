@@ -111,7 +111,7 @@ where
 }
 
 pub trait InsertValues<T: Table>: QueryFragment {
-    fn column_names(&self, out: AstPass<'_, '_, DB>) -> QueryResult<()>;
+    fn column_names(&self, out: AstPass<'_, '_>) -> QueryResult<()>;
 }
 
 #[derive(Debug, Copy, Clone, QueryId)]
@@ -156,7 +156,7 @@ where
     Expr: Expression<SqlType = Col::SqlType> + AppearsInQuery<NoFromClause>,
     Self: QueryFragment,
 {
-    fn column_names(&self, mut out: AstPass<'_, '_, DB>) -> QueryResult<()> {
+    fn column_names(&self, mut out: AstPass<'_, '_>) -> QueryResult<()> {
         out.push_identifier(Col::NAME)?;
         Ok(())
     }
@@ -168,7 +168,7 @@ where
     Expr: Expression<SqlType = Col::SqlType> + AppearsInQuery<NoFromClause>,
     Self: QueryFragment,
 {
-    fn column_names(&self, mut out: AstPass<'_, '_, DB>) -> QueryResult<()> {
+    fn column_names(&self, mut out: AstPass<'_, '_>) -> QueryResult<()> {
         out.push_identifier(Col::NAME)?;
         Ok(())
     }
@@ -178,8 +178,8 @@ impl<Expr> QueryFragment for DefaultableColumnInsertValue<Expr>
 where
     Self: QueryFragment<<DB as SqlDialect>::InsertWithDefaultKeyword>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::InsertWithDefaultKeyword>>::walk_ast(self, pass)
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
+        <Self as QueryFragment<<DB as SqlDialect>::InsertWithDefaultKeyword>>::walk_ast(self, pass)
     }
 }
 
@@ -187,7 +187,7 @@ impl<Expr> QueryFragment<sql_dialect::default_keyword_for_insert::IsoSqlDefaultK
 where
     Expr: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
         if let Self::Expression(ref inner) = *self {
             inner.walk_ast(out.reborrow())?;
@@ -202,7 +202,7 @@ impl<Col, Expr> QueryFragment for ColumnInsertValue<Col, Expr>
 where
     Expr: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         self.expr.walk_ast(pass)
     }
 }

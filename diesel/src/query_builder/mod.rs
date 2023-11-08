@@ -195,9 +195,9 @@ pub trait SelectQuery {
     type SqlType;
 }
 
-#[cfg(feature = "postgres")]
+#[cfg(feature = "postgres_backend")]
 pub type DB = crate::pg::Pg;
-#[cfg(feature = "mysql")]
+#[cfg(feature = "mysql_backend")]
 pub type DB = crate::mysql::Mysql;
 #[cfg(feature = "sqlite")]
 pub type DB = crate::sqlite::Sqlite;
@@ -218,7 +218,7 @@ pub trait QueryFragment<SP = self::private::NotSpecialized> {
     /// This method will contain the behavior required for all possible AST
     /// passes. See [`AstPass`] for more details.
     ///
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()>;
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()>;
 
     /// Converts this `QueryFragment` to its SQL representation.
     ///
@@ -288,7 +288,7 @@ impl<T: ?Sized> QueryFragment for Box<T>
 where
     T: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         QueryFragment::walk_ast(&**self, pass)
     }
 }
@@ -297,13 +297,13 @@ impl<'a, T: ?Sized> QueryFragment for &'a T
 where
     T: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         QueryFragment::walk_ast(&**self, pass)
     }
 }
 
 impl QueryFragment for () {
-    fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b>) -> QueryResult<()> {
         Ok(())
     }
 }
@@ -312,7 +312,7 @@ impl<T> QueryFragment for Option<T>
 where
     T: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b>) -> QueryResult<()> {
         match *self {
             Some(ref c) => c.walk_ast(out),
             None => Ok(()),

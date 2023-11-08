@@ -194,7 +194,7 @@ where
     V: QueryFragment,
     Ret: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         if self.values.is_noop(out.backend())? {
             return Err(QueryBuilderError(
                 "There are no changes to save. This query cannot be built".into(),

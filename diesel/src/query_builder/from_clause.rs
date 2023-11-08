@@ -19,7 +19,7 @@ impl QueryFragment for NoFromClause
 where
     Self: QueryFragment<<DB as SqlDialect>::EmptyFromClauseSyntax>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         <Self as QueryFragment<DB::EmptyFromClauseSyntax>>::walk_ast(self, pass)
     }
 }
@@ -27,7 +27,7 @@ where
 impl QueryFragment<crate::backend::sql_dialect::from_clause_syntax::AnsiSqlFromClauseSyntax>
     for NoFromClause
 {
-    fn walk_ast<'b>(&'b self, _pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, _pass: AstPass<'_, 'b>) -> QueryResult<()> {
         Ok(())
     }
 }
@@ -121,7 +121,7 @@ where
     F: QuerySource,
     F::FromClause: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b>) -> QueryResult<()> {
         pass.push_sql(" FROM ");
         self.from_clause.walk_ast(pass)
     }

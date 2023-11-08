@@ -12,7 +12,7 @@ pub trait OnConflictTarget<Table> {}
 pub struct NoConflictTarget;
 
 impl QueryFragment for NoConflictTarget {
-    fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b>) -> QueryResult<()> {
         Ok(())
     }
 }
@@ -27,7 +27,7 @@ impl<T> QueryFragment for ConflictTarget<T>
 where
     Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
     }
 }
@@ -38,7 +38,7 @@ where
     SP: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
     T: Column,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql(" (");
         out.push_identifier(T::NAME)?;
         out.push_sql(")");
@@ -54,7 +54,7 @@ where
     SP: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
     SqlLiteral<ST>: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql(" ");
         self.0.walk_ast(out.reborrow())?;
         Ok(())
@@ -69,7 +69,7 @@ where
     SP: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
     T: Column,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql(" (");
         out.push_identifier(T::NAME)?;
         out.push_sql(")");
@@ -92,7 +92,7 @@ macro_rules! on_conflict_tuples {
                 _T: Column,
                 $($T: Column<Table=_T::Table>,)*
             {
-                fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()>
+                fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()>
                 {
                     out.push_sql(" (");
                     out.push_identifier(_T::NAME)?;

@@ -73,7 +73,7 @@ impl<Values, Target, Action> QueryFragment
 where
     Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
     }
 }
@@ -87,7 +87,7 @@ where
     Target: QueryFragment,
     Action: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.values.walk_ast(out.reborrow())?;
         out.push_sql(" ON CONFLICT");
         self.target.walk_ast(out.reborrow())?;
@@ -104,7 +104,7 @@ where
     Action: QueryFragment,
     WhereClause<Expr>: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.values.walk_ast(out.reborrow())?;
         out.push_sql(" ON CONFLICT");
         self.target.walk_ast(out.reborrow())?;

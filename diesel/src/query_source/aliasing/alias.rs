@@ -89,7 +89,7 @@ where
     S: AliasSource,
     Self: QueryFragment<<DB as SqlDialect>::AliasSyntax>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         <Self as QueryFragment<DB::AliasSyntax>>::walk_ast(self, pass)
     }
 }
@@ -99,7 +99,7 @@ where
     S: AliasSource,
     S::Target: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b>) -> QueryResult<()> {
         self.source.target().walk_ast(pass.reborrow())?;
         pass.push_sql(" AS ");
         pass.push_identifier(S::NAME)?;

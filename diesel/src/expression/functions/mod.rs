@@ -33,7 +33,7 @@ macro_rules! no_arg_sql_function_body {
         no_arg_sql_function_body_except_to_sql!($type_name, $return_type, $docs);
 
         impl $crate::query_builder::QueryFragment for $type_name {
-            fn walk_ast<'b>(&'b self, mut out: $crate::query_builder::AstPass<'_, 'b, DB>) -> $crate::result::QueryResult<()>
+            fn walk_ast<'b>(&'b self, mut out: $crate::query_builder::AstPass<'_, 'b>) -> $crate::result::QueryResult<()>
             {
                 out.push_sql(concat!(stringify!($type_name), "()"));
                 Ok(())
@@ -45,7 +45,7 @@ macro_rules! no_arg_sql_function_body {
         no_arg_sql_function_body_except_to_sql!($type_name, $return_type, $docs);
 
         impl $crate::query_builder::QueryFragmentkfor $type_name where {
-            fn walk_ast<'b>(&'b self, mut out: $crate::query_builder::AstPass<'_, 'b, DB>) -> $crate::result::QueryResult<()> {
+            fn walk_ast<'b>(&'b self, mut out: $crate::query_builder::AstPass<'_, 'b>) -> $crate::result::QueryResult<()> {
                 out.push_sql(concat!(stringify!($type_name), "()"));
                 Ok(())
             }

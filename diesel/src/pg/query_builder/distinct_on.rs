@@ -1,5 +1,4 @@
 use crate::expression::SelectableExpression;
-use crate::pg::Pg;
 use crate::query_builder::order_clause::NoOrderClause;
 use crate::query_builder::{
     AstPass, FromClause, QueryFragment, QueryId, SelectQuery, SelectStatement,
@@ -268,7 +267,7 @@ impl<T> QueryFragment for DistinctOnClause<T>
 where
     T: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("DISTINCT ON (");
         self.0.walk_ast(out.reborrow())?;
         out.push_sql(")");

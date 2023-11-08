@@ -86,7 +86,7 @@ where
     DB: Backend,
     Cols: QueryFragment<DB>,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
         out.push_sql("CREATE TABLE IF NOT EXISTS ");
         out.push_identifier(self.name)?;
@@ -107,7 +107,7 @@ impl<'a, DB, T> QueryFragment<DB> for Column<'a, T>
 where
     DB: Backend,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
         out.push_identifier(self.name)?;
         out.push_sql(" ");
@@ -127,7 +127,7 @@ where
     DB: Backend,
     Col: QueryFragment<DB>,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
         self.0.walk_ast(out.reborrow())?;
         out.push_sql(" PRIMARY KEY");
@@ -188,7 +188,7 @@ where
     DB: Backend,
     Col: QueryFragment<DB>,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
         self.0.walk_ast(out.reborrow())?;
         out.push_sql(" NOT NULL");
@@ -207,7 +207,7 @@ where
     DB: Backend,
     Col: QueryFragment<DB>,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
         self.column.walk_ast(out.reborrow())?;
         out.push_sql(" DEFAULT ");

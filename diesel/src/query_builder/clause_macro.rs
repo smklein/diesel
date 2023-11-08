@@ -8,14 +8,14 @@ macro_rules! simple_clause {
     ) => {
         use crate::result::QueryResult;
         use crate::query_builder::QueryId;
-        use super::{AstPass, DB, QueryFragment};
+        use super::{AstPass, QueryFragment};
 
         $(#[$no_clause_meta])*
         #[derive(Debug, Clone, Copy, QueryId)]
         pub struct $no_clause;
 
         impl QueryFragment for $no_clause where {
-            fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b, DB>) -> QueryResult<()>
+            fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b>) -> QueryResult<()>
             {
                 Ok(())
             }
@@ -28,7 +28,7 @@ macro_rules! simple_clause {
         impl<Expr> QueryFragment for $clause<Expr> where
             Expr: QueryFragment,
         {
-            fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()>
+            fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()>
             {
                 out.push_sql($sql);
                 self.0.walk_ast(out.reborrow())?;

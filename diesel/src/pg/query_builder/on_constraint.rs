@@ -1,4 +1,3 @@
-use crate::pg::Pg;
 use crate::query_builder::upsert::on_conflict_target::{ConflictTarget, OnConflictTarget};
 use crate::query_builder::*;
 use crate::result::QueryResult;
@@ -62,7 +61,7 @@ impl<'a> QueryId for OnConstraint<'a> {
 impl<'a> QueryFragment<crate::pg::backend::PgOnConflictClause>
     for ConflictTarget<OnConstraint<'a>>
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
         out.push_sql(" ON CONSTRAINT ");
         out.push_identifier(self.0.constraint_name)?;

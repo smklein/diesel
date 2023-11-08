@@ -1,4 +1,3 @@
-use crate::backend::Backend;
 use crate::expression::TypedExpressionType;
 use crate::expression::*;
 use crate::query_builder::*;
@@ -24,12 +23,11 @@ where
     type SqlType = <T::SqlType as IntoNotNullable>::NotNullable;
 }
 
-impl<T, DB> QueryFragment<DB> for AssumeNotNull<T>
+impl<T> QueryFragment for AssumeNotNull<T>
 where
-    DB: Backend,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         self.0.walk_ast(pass)
     }
 }

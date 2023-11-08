@@ -1,7 +1,6 @@
 use crate::expression::{
     AppearsInQuery, AsExpressionList, Expression, SelectableExpression,
 };
-use crate::pg::Pg;
 use crate::query_builder::{AstPass, QueryFragment, QueryId};
 use crate::sql_types;
 use std::marker::PhantomData;
@@ -69,7 +68,7 @@ impl<T, ST> QueryFragment for ArrayLiteral<T, ST>
 where
     T: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> crate::result::QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> crate::result::QueryResult<()> {
         out.push_sql("ARRAY[");
         QueryFragment::walk_ast(&self.elements, out.reborrow())?;
         out.push_sql("]");

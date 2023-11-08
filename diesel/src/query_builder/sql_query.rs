@@ -109,7 +109,7 @@ impl<Inner> QueryFragment for SqlQuery<Inner>
 where
     Inner: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
         self.inner.walk_ast(out.reborrow())?;
         out.push_sql(&self.query);
@@ -235,7 +235,7 @@ where
     Query: QueryFragment,
     Value: ToSql<ST>,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.query.walk_ast(out.reborrow())?;
         out.push_bind_param_value_only(&self.value)?;
         Ok(())
@@ -269,7 +269,7 @@ where
     DB: HasSqlType<ST>,
     U: ToSql<ST>,
 {
-    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b>) -> QueryResult<()> {
         pass.push_bind_param_value_only(&self.value)
     }
 }
@@ -312,7 +312,7 @@ impl<Query> QueryFragment for BoxedSqlQuery<'_, Query>
 where
     Query: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
         self.query.walk_ast(out.reborrow())?;
         out.push_sql(&self.sql);
@@ -337,7 +337,7 @@ impl<Q> Query for BoxedSqlQuery<'_, Q> {
 impl<Conn: Connection, Query> RunQueryDsl<Conn> for BoxedSqlQuery<'_, Query> {}
 
 mod private {
-    use crate::query_builder::{DB, QueryFragment, QueryId};
+    use crate::query_builder::{QueryFragment, QueryId};
 
     #[derive(Debug, Clone, Copy, QueryId)]
     pub struct Empty;
@@ -345,7 +345,7 @@ mod private {
     impl QueryFragment for Empty {
         fn walk_ast<'b>(
             &'b self,
-            _pass: crate::query_builder::AstPass<'_, 'b, DB>,
+            _pass: crate::query_builder::AstPass<'_, 'b>,
         ) -> crate::QueryResult<()> {
             Ok(())
         }

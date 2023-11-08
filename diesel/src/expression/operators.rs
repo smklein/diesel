@@ -87,14 +87,13 @@ macro_rules! __diesel_operator_body {
             type SqlType = $($return_ty)*;
         }
 
-        impl<$($ty_param,)+ $($backend_ty_param,)*> $crate::query_builder::QueryFragment<$backend_ty>
+        impl<$($ty_param,)+> $crate::query_builder::QueryFragment
             for $name<$($ty_param,)+> where
-                $($ty_param: $crate::query_builder::QueryFragment<$backend_ty>,)+
-                $($backend_ty_param: $crate::backend::Backend,)*
+                $($ty_param: $crate::query_builder::QueryFragment,)+
         {
             fn walk_ast<'b>(
                 &'b self,
-                mut out: $crate::query_builder::AstPass<'_, 'b, $backend_ty>
+                mut out: $crate::query_builder::AstPass<'_, 'b>
             ) -> $crate::result::QueryResult<()>
             {
                 $crate::__diesel_operator_to_sql!(
@@ -244,8 +243,8 @@ macro_rules! infix_operator {
             name = $name,
             operator = $operator,
             return_ty = NullableBasedOnArgs ($($return_ty)::*),
-            backend_ty_params = (DB,),
-            backend_ty = DB,
+            backend_ty_params = (),
+            backend_ty = crate::query_builder::DB,
         );
     };
 
@@ -617,9 +616,9 @@ where
 {
     fn walk_ast<'b>(
         &'b self,
-        pass: crate::query_builder::AstPass<'_, 'b, DB>,
+        pass: crate::query_builder::AstPass<'_, 'b>,
     ) -> crate::result::QueryResult<()> {
-        <Self as QueryFragment<DB::ConcatClause>>::walk_ast(self, pass)
+        <Self as QueryFragment<<DB as SqlDialect>::ConcatClause>>::walk_ast(self, pass)
     }
 }
 
@@ -631,7 +630,7 @@ where
 {
     fn walk_ast<'b>(
         &'b self,
-        mut out: crate::query_builder::AstPass<'_, 'b, DB>,
+        mut out: crate::query_builder::AstPass<'_, 'b>,
     ) -> crate::result::QueryResult<()> {
         // Since popular MySQL scalability layer Vitess does not support pipes in query parsing
         // CONCAT has been implemented separately for MySQL (see MysqlConcatClause)

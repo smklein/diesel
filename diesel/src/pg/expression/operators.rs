@@ -1,8 +1,7 @@
 use crate::expression::expression_types::NotSelectable;
 use crate::expression::{TypedExpressionType};
-use crate::pg::Pg;
 use crate::query_builder::update_statement::changeset::AssignmentTarget;
-use crate::query_builder::{AstPass, DB, QueryFragment, QueryId};
+use crate::query_builder::{AstPass, QueryFragment, QueryId};
 use crate::sql_types::{
     Array, Bigint, Binary, Bool, DieselNumericOps, Inet, Integer, Jsonb, SqlType, Text,
 };
@@ -92,7 +91,7 @@ where
 {
     fn walk_ast<'b>(
         &'b self,
-        mut out: crate::query_builder::AstPass<'_, 'b, Pg>,
+        mut out: crate::query_builder::AstPass<'_, 'b>,
     ) -> crate::result::QueryResult<()> {
         self.array_expr.walk_ast(out.reborrow())?;
         out.push_sql("[");
@@ -124,7 +123,7 @@ impl<C> QueryFragment for UncorrelatedColumn<C>
 where
     C: Column,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_identifier(C::NAME)
     }
 }

@@ -40,13 +40,12 @@ where
 {
 }
 
-impl<S, C, DB> QueryFragment<DB> for AliasedField<S, C>
+impl<S, C> QueryFragment for AliasedField<S, C>
 where
     S: AliasSource,
-    DB: Backend,
     C: Column<Table = S::Target>,
 {
-    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b>) -> QueryResult<()> {
         pass.push_identifier(S::NAME)?;
         pass.push_sql(".");
         pass.push_identifier(C::NAME)?;

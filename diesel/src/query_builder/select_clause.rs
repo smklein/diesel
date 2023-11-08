@@ -105,7 +105,7 @@ impl<T> QueryFragment for SelectClause<T>
 where
     T: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         self.0.walk_ast(pass)
     }
 }
@@ -115,7 +115,7 @@ where
     QS: AsQuerySource,
     <QS::QuerySource as QuerySource>::DefaultSelection: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         self.default_selection.walk_ast(pass)
     }
 }

@@ -52,7 +52,7 @@ impl<T, ST> QueryFragment for Subselect<T, ST>
 where
     T: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.values.walk_ast(out.reborrow())?;
         Ok(())
     }

@@ -194,8 +194,8 @@ where
 #[derive(Debug, Clone, Copy)]
 pub struct OnKeyword;
 
-impl<DB: Backend> nodes::MiddleFragment<DB> for OnKeyword {
-    fn push_sql(&self, mut pass: AstPass<'_, '_, DB>) {
+impl nodes::MiddleFragment for OnKeyword {
+    fn push_sql(&self, mut pass: AstPass<'_, '_>) {
         pass.push_sql(" ON ");
     }
 }
@@ -231,7 +231,7 @@ where
     Right::FromClause: QueryFragment,
     Kind: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.left.from_clause.walk_ast(out.reborrow())?;
         self.kind.walk_ast(out.reborrow())?;
         out.push_sql(" JOIN ");
@@ -311,7 +311,7 @@ where
 pub struct Inner;
 
 impl QueryFragment for Inner {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql(" INNER");
         Ok(())
     }
@@ -322,7 +322,7 @@ impl QueryFragment for Inner {
 pub struct LeftOuter;
 
 impl QueryFragment for LeftOuter {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql(" LEFT OUTER");
         Ok(())
     }
@@ -465,7 +465,7 @@ impl<T: Table> ToInnerJoin for T {
 
 mod private {
     use crate::expression::Expression;
-    use crate::query_builder::{AstPass, DB, QueryFragment, SelectClauseExpression};
+    use crate::query_builder::{AstPass, QueryFragment, SelectClauseExpression};
     use crate::{AppearsInQuery, QueryResult, SelectableExpression};
 
     #[derive(Debug, crate::query_builder::QueryId, Copy, Clone)]
@@ -475,7 +475,7 @@ mod private {
     where
         T: QueryFragment,
     {
-        fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+        fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
             self.0.walk_ast(pass)
         }
     }

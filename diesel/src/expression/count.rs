@@ -66,7 +66,7 @@ impl Expression for CountStar {
 }
 
 impl QueryFragment for CountStar {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("COUNT(*)");
         Ok(())
     }
@@ -139,7 +139,7 @@ where
     T: SqlType + SingleValue,
     E: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("COUNT(DISTINCT ");
         self.expr.walk_ast(out.reborrow())?;
         out.push_sql(")");

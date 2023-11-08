@@ -313,7 +313,7 @@ where
 }
 
 impl<'a, C> QueryFragment for TransactionBuilder<'a, C> {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("BEGIN TRANSACTION");
         if let Some(ref isolation_level) = self.isolation_level {
             isolation_level.walk_ast(out.reborrow())?;
@@ -336,7 +336,7 @@ enum IsolationLevel {
 }
 
 impl QueryFragment for IsolationLevel {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql(" ISOLATION LEVEL ");
         match *self {
             IsolationLevel::ReadCommitted => out.push_sql("READ COMMITTED"),
@@ -354,7 +354,7 @@ enum ReadMode {
 }
 
 impl QueryFragment for ReadMode {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         match *self {
             ReadMode::ReadOnly => out.push_sql(" READ ONLY"),
             ReadMode::ReadWrite => out.push_sql(" READ WRITE"),
@@ -370,7 +370,7 @@ enum Deferrable {
 }
 
 impl QueryFragment for Deferrable {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         match *self {
             Deferrable::Deferrable => out.push_sql(" DEFERRABLE"),
             Deferrable::NotDeferrable => out.push_sql(" NOT DEFERRABLE"),

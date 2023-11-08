@@ -551,7 +551,7 @@ pub(crate) mod private {
     /// impl in a later version. If you as a user encounter, where rustc
     /// suggests adding this a bound to a type implementing `Backend`
     /// consider adding the following bound instead
-    /// `YourQueryType: QueryFragment<DB>` (the concrete bound
+    /// `YourQueryType: QueryFragment` (the concrete bound
     /// is likely mentioned by rustc as part of a `note: …`)
     ///
     /// For any user implementing a custom backend: You likely want to implement

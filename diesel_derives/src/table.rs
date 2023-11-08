@@ -219,7 +219,7 @@ pub(crate) fn expand(input: TableDecl) -> TokenStream {
             pub type SqlType = (#(#column_ty,)*);
 
             /// Helper type for representing a boxed query from this table
-            pub type BoxedQuery<'a, DB, ST = SqlType> = diesel::internal::table_macro::BoxedSelectStatement<'a, ST, diesel::internal::table_macro::FromClause<table>, DB>;
+            pub type BoxedQuery<'a, ST = SqlType> = diesel::internal::table_macro::BoxedSelectStatement<'a, ST, diesel::internal::table_macro::FromClause<table>>;
 
             impl diesel::QuerySource for table {
                 type FromClause = diesel::internal::table_macro::StaticQueryFragmentInstance<table>;
@@ -235,11 +235,10 @@ pub(crate) fn expand(input: TableDecl) -> TokenStream {
                 }
             }
 
-            impl<DB> diesel::query_builder::QueryFragment<DB> for table where
-                DB: diesel::backend::Backend,
-                <table as diesel::internal::table_macro::StaticQueryFragment>::Component: diesel::query_builder::QueryFragment<DB>
+            impl diesel::query_builder::QueryFragment for table where
+                <table as diesel::internal::table_macro::StaticQueryFragment>::Component: diesel::query_builder::QueryFragment
             {
-                fn walk_ast<'b>(&'b self, __diesel_internal_pass: diesel::query_builder::AstPass<'_, 'b, DB>) -> diesel::result::QueryResult<()> {
+                fn walk_ast<'b>(&'b self, __diesel_internal_pass: diesel::query_builder::AstPass<'_, 'b>) -> diesel::result::QueryResult<()> {
                     <table as diesel::internal::table_macro::StaticQueryFragment>::STATIC_COMPONENT.walk_ast(__diesel_internal_pass)
                 }
             }
@@ -353,11 +352,11 @@ pub(crate) fn expand(input: TableDecl) -> TokenStream {
                     type SqlType = diesel::expression::expression_types::NotSelectable;
                 }
 
-                impl<DB: diesel::backend::Backend> diesel::query_builder::QueryFragment<DB> for star where
-                    <table as diesel::QuerySource>::FromClause: diesel::query_builder::QueryFragment<DB>,
+                impl diesel::query_builder::QueryFragment for star where
+                    <table as diesel::QuerySource>::FromClause: diesel::query_builder::QueryFragment,
                 {
                     #[allow(non_snake_case)]
-                    fn walk_ast<'b>(&'b self, mut __diesel_internal_out: diesel::query_builder::AstPass<'_, 'b, DB>) -> diesel::result::QueryResult<()>
+                    fn walk_ast<'b>(&'b self, mut __diesel_internal_out: diesel::query_builder::AstPass<'_, 'b>) -> diesel::result::QueryResult<()>
                     {
                         use diesel::QuerySource;
 
@@ -569,12 +568,11 @@ fn expand_column_def(column_def: &ColumnDef) -> TokenStream {
             type SqlType = #sql_type;
         }
 
-        impl<DB> diesel::query_builder::QueryFragment<DB> for #column_name where
-            DB: diesel::backend::Backend,
-            diesel::internal::table_macro::StaticQueryFragmentInstance<table>: diesel::query_builder::QueryFragment<DB>,
+        impl diesel::query_builder::QueryFragment for #column_name where
+            diesel::internal::table_macro::StaticQueryFragmentInstance<table>: diesel::query_builder::QueryFragment,
         {
             #[allow(non_snake_case)]
-            fn walk_ast<'b>(&'b self, mut __diesel_internal_out: diesel::query_builder::AstPass<'_, 'b, DB>) -> diesel::result::QueryResult<()>
+            fn walk_ast<'b>(&'b self, mut __diesel_internal_out: diesel::query_builder::AstPass<'_, 'b>) -> diesel::result::QueryResult<()>
             {
                 if !__diesel_internal_out.should_skip_from() {
                     const FROM_CLAUSE: diesel::internal::table_macro::StaticQueryFragmentInstance<table> = diesel::internal::table_macro::StaticQueryFragmentInstance::new();
@@ -596,7 +594,7 @@ fn expand_column_def(column_def: &ColumnDef) -> TokenStream {
         }
 
         impl diesel::query_source::UntypedColumn for #column_name {
-            fn walk_ast<DB: diesel::backend::Backend + diesel::backend::DieselReserveSpecialization>(&self, mut __diesel_internal_out: diesel::query_builder::AstPass<'_, '_, DB>) -> diesel::result::QueryResult<()>
+            fn walk_ast(&self, mut __diesel_internal_out: diesel::query_builder::AstPass<'_, '_>) -> diesel::result::QueryResult<()>
             {
                 use diesel::query_builder::QueryFragment;
 

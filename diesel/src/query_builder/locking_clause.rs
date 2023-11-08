@@ -1,4 +1,4 @@
-use crate::query_builder::{AstPass, DB, QueryFragment, QueryId};
+use crate::query_builder::{AstPass, QueryFragment, QueryId};
 use crate::result::QueryResult;
 
 #[derive(Debug, Clone, Copy, QueryId)]
@@ -8,7 +8,7 @@ pub enum AllLockingClauses {
 }
 
 impl QueryFragment for AllLockingClauses {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         match self {
             AllLockingClauses::NoLocking => (),
             AllLockingClauses::Locking(mode, modifier) => {
@@ -31,7 +31,7 @@ pub enum LockMode {
 }
 
 impl QueryFragment for LockMode {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         match self {
             LockMode::Update => out.push_sql(" FOR UPDATE"),
             #[cfg(feature = "postgres")]
@@ -52,7 +52,7 @@ pub enum LockModifier {
 }
 
 impl QueryFragment for LockModifier {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         match self {
             LockModifier::NoModifier => (),
             LockModifier::SkipLocked => out.push_sql(" SKIP LOCKED"),

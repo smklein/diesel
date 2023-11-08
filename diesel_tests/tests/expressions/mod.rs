@@ -157,11 +157,9 @@ where
     type SqlType = T;
 }
 
-impl<T, DB> QueryFragment<DB> for Arbitrary<T>
-where
-    DB: Backend,
+impl<T> QueryFragment for Arbitrary<T>
 {
-    fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b>) -> QueryResult<()> {
         Ok(())
     }
 }

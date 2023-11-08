@@ -1,10 +1,10 @@
 use std::fmt;
 
 use crate::backend::Backend;
-use crate::query_builder::{BindCollector, QueryBuilder};
+use crate::query_builder::{BindCollector, DB, QueryBuilder};
 use crate::result::QueryResult;
 use crate::serialize::ToSql;
-use crate::sql_types::HasSqlType;
+use crate::sql_types::{HasSqlType, TypeMetadata};
 
 #[allow(missing_debug_implementations)]
 /// The primary type used when walking a Diesel AST during query execution.
@@ -21,24 +21,22 @@ use crate::sql_types::HasSqlType;
 /// you to find out what the current pass is. You should simply call the
 /// relevant methods and trust that they will be a no-op if they're not relevant
 /// to the current pass.
-pub struct AstPass<'a, 'b, DB>
+pub struct AstPass<'a, 'b>
 where
-    DB: Backend,
-    DB::QueryBuilder: 'a,
-    DB::MetadataLookup: 'a,
+    <DB as Backend>::QueryBuilder: 'a,
+    <DB as TypeMetadata>::MetadataLookup: 'a,
     'b: 'a,
 {
-    internals: AstPassInternals<'a, 'b, DB>,
+    internals: AstPassInternals<'a, 'b>,
     backend: &'b DB,
 }
 
-impl<'a, 'b, DB> AstPass<'a, 'b, DB>
+impl<'a, 'b> AstPass<'a, 'b>
 where
-    DB: Backend,
     'b: 'a,
 {
     pub(crate) fn to_sql(
-        query_builder: &'a mut DB::QueryBuilder,
+        query_builder: &'a mut <DB as Backend>::QueryBuilder,
         options: &'a mut AstPassToSqlOptions,
         backend: &'b DB,
     ) -> Self {
@@ -49,8 +47,8 @@ where
     }
 
     pub(crate) fn collect_binds(
-        collector: &'a mut DB::BindCollector<'b>,
-        metadata_lookup: &'a mut DB::MetadataLookup,
+        collector: &'a mut <DB as Backend>::BindCollector<'b>,
+        metadata_lookup: &'a mut <DB as TypeMetadata>::MetadataLookup,
         backend: &'b DB,
     ) -> Self {
         AstPass {
@@ -107,7 +105,7 @@ where
     /// done explicitly. This method matches the semantics of what Rust would do
     /// implicitly if you were passing a mutable reference
     #[allow(clippy::explicit_auto_deref)] // clippy is wrong here
-    pub fn reborrow(&'_ mut self) -> AstPass<'_, 'b, DB> {
+    pub fn reborrow(&'_ mut self) -> AstPass<'_, 'b> {
         let internals = match self.internals {
             AstPassInternals::ToSql(ref mut builder, ref mut options) => {
                 AstPassInternals::ToSql(*builder, options)
@@ -162,7 +160,7 @@ where
     /// # Example
     ///
     /// ```rust
-    /// # use diesel::query_builder::{QueryFragment, AstPass, DB};
+    /// # use diesel::query_builder::{QueryFragment, AstPass};
     /// # use diesel::backend::Backend;
     /// # use diesel::QueryResult;
     /// # struct And<Left, Right> { left: Left, right: Right }
@@ -171,7 +169,7 @@ where
     ///     Left: QueryFragment,
     ///     Right: QueryFragment,
     /// {
-    ///     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    ///     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
     ///         self.left.walk_ast(out.reborrow())?;
     ///         out.push_sql(" AND ");
     ///         self.right.walk_ast(out.reborrow())?;
@@ -287,17 +285,16 @@ where
 /// usage of the methods provided rather than matching on the enum directly.
 /// This essentially mimics the capabilities that would be available if
 /// `AstPass` were a trait.
-enum AstPassInternals<'a, 'b, DB>
+enum AstPassInternals<'a, 'b>
 where
-    DB: Backend,
-    DB::QueryBuilder: 'a,
-    DB::MetadataLookup: 'a,
+    <DB as Backend>::QueryBuilder: 'a,
+    <DB as TypeMetadata>::MetadataLookup: 'a,
     'b: 'a,
 {
-    ToSql(&'a mut DB::QueryBuilder, &'a mut AstPassToSqlOptions),
+    ToSql(&'a mut <DB as Backend>::QueryBuilder, &'a mut AstPassToSqlOptions),
     CollectBinds {
-        collector: &'a mut DB::BindCollector<'b>,
-        metadata_lookup: &'a mut DB::MetadataLookup,
+        collector: &'a mut <DB as Backend>::BindCollector<'b>,
+        metadata_lookup: &'a mut <DB as TypeMetadata>::MetadataLookup,
     },
     IsSafeToCachePrepared(&'a mut bool),
     DebugBinds(&'a mut Vec<Box<dyn fmt::Debug + 'b>>),
@@ -318,82 +315,24 @@ pub(crate) struct AstPassToSqlOptions {
 
 /// This is an internal extension trait with methods required for
 /// `#[derive(MultiConnection)]`
-pub trait AstPassHelper<'a, 'b, DB>
+pub trait AstPassHelper<'a, 'b>
 where
-    DB: Backend,
-    DB::QueryBuilder: 'a,
-    DB::MetadataLookup: 'a,
+    <DB as Backend>::QueryBuilder: 'a,
+    <DB as TypeMetadata>::MetadataLookup: 'a,
     'b: 'a,
 {
-    /// This function converts the given `AstPass` instance to
-    /// an `AstPass` instance for another database system. This requires that the
-    /// given instance contains compatible BindCollector/QueryBuilder/… implementations
-    /// for the target backend. We use explicit conversion functions here instead of relaying on
-    /// `From` impls because generating them as part of `#[derive(MultiConnection)]` is not possible
-    /// due to [compiler bugs](https://github.com/rust-lang/rust/issues/100712)
-    fn cast_database<DB2>(
-        self,
-        convert_bind_collector: impl Fn(&'a mut DB::BindCollector<'b>) -> &'a mut DB2::BindCollector<'b>,
-        convert_query_builder: impl Fn(&mut DB::QueryBuilder) -> &mut DB2::QueryBuilder,
-        convert_backend: impl Fn(&DB) -> &DB2,
-        convert_lookup: impl Fn(&'a mut DB::MetadataLookup) -> &'a mut DB2::MetadataLookup,
-    ) -> AstPass<'a, 'b, DB2>
-    where
-        DB2: Backend,
-        DB2::QueryBuilder: 'a,
-        DB2::MetadataLookup: 'a,
-        'b: 'a;
-
     /// This function allows to access the inner bind collector if
     /// this `AstPass` represents a collect binds pass.
-    fn bind_collector(&mut self) -> Option<(&mut DB::BindCollector<'b>, &mut DB::MetadataLookup)>;
+    fn bind_collector(&mut self) -> Option<(&mut <DB as Backend>::BindCollector<'b>, &mut <DB as TypeMetadata>::MetadataLookup)>;
 }
 
-impl<'a, 'b, DB> AstPassHelper<'a, 'b, DB> for AstPass<'a, 'b, DB>
+impl<'a, 'b> AstPassHelper<'a, 'b> for AstPass<'a, 'b>
 where
-    DB: Backend,
-    DB::QueryBuilder: 'a,
-    DB::MetadataLookup: 'a,
+    <DB as Backend>::QueryBuilder: 'a,
+    <DB as TypeMetadata>::MetadataLookup: 'a,
     'b: 'a,
 {
-    fn cast_database<DB2>(
-        self,
-        convert_bind_collector: impl Fn(&'a mut DB::BindCollector<'b>) -> &'a mut DB2::BindCollector<'b>,
-        convert_query_builder: impl Fn(&mut DB::QueryBuilder) -> &mut DB2::QueryBuilder,
-        convert_backend: impl Fn(&DB) -> &DB2,
-        convert_lookup: impl Fn(&'a mut DB::MetadataLookup) -> &'a mut DB2::MetadataLookup,
-    ) -> AstPass<'a, 'b, DB2>
-    where
-        DB2: Backend,
-        DB2::QueryBuilder: 'a,
-        DB2::MetadataLookup: 'a,
-        'b: 'a,
-    {
-        let casted_pass = match self.internals {
-            AstPassInternals::ToSql(qb, opts) => {
-                AstPassInternals::ToSql(convert_query_builder(qb), opts)
-            }
-            AstPassInternals::CollectBinds {
-                collector,
-                metadata_lookup,
-            } => AstPassInternals::CollectBinds {
-                collector: convert_bind_collector(collector),
-                metadata_lookup: convert_lookup(metadata_lookup),
-            },
-            AstPassInternals::IsSafeToCachePrepared(b) => {
-                AstPassInternals::IsSafeToCachePrepared(b)
-            }
-            AstPassInternals::DebugBinds(b) => AstPassInternals::DebugBinds(b),
-            AstPassInternals::IsNoop(b) => AstPassInternals::IsNoop(b),
-        };
-
-        AstPass {
-            internals: casted_pass,
-            backend: convert_backend(self.backend),
-        }
-    }
-
-    fn bind_collector(&mut self) -> Option<(&mut DB::BindCollector<'b>, &mut DB::MetadataLookup)> {
+    fn bind_collector(&mut self) -> Option<(&mut <DB as Backend>::BindCollector<'b>, &mut <DB as TypeMetadata>::MetadataLookup)> {
         if let AstPassInternals::CollectBinds {
             collector,
             metadata_lookup,

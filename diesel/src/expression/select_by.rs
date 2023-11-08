@@ -71,9 +71,10 @@ where
 impl<T> QueryMetadata<SelectBy<T>> for DB
 where
     T: Selectable,
+    DB: QueryMetadata<SqlTypeOf<T::SelectExpression>>,
 {
     fn row_metadata(lookup: &mut Self::MetadataLookup, out: &mut Vec<Option<Self::TypeMetadata>>) {
-        <DB as QueryMetadata<SqlTypeOf<<T as Selectable<DB>>::SelectExpression>>>::row_metadata(
+        <DB as QueryMetadata<SqlTypeOf<<T as Selectable>::SelectExpression>>>::row_metadata(
             lookup, out,
         )
     }
@@ -85,7 +86,7 @@ where
     T::SelectExpression: QueryFragment,
     DB: Backend + DieselReserveSpecialization,
 {
-    fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.selection.walk_ast(out)
     }
 }

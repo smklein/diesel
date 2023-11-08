@@ -14,7 +14,7 @@ where
     T: QueryFragment,
     U: QueryFragment + MaybeEmpty,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.left.walk_ast(out.reborrow())?;
         out.push_sql(" = ANY(");
         self.values.walk_ast(out.reborrow())?;
@@ -28,7 +28,7 @@ where
     T: QueryFragment,
     U: QueryFragment + MaybeEmpty,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.left.walk_ast(out.reborrow())?;
         out.push_sql(" != ALL(");
         self.values.walk_ast(out.reborrow())?;
@@ -43,7 +43,7 @@ where
     Vec<I>: ToSql<Array<ST>>,
     Pg: HasSqlType<ST>,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_bind_param::<Array<ST>, Vec<I>>(&self.values)
     }
 }
@@ -54,7 +54,7 @@ where
     T: QueryFragment,
     U: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.target.walk_ast(out.reborrow())?;
         self.where_clause.walk_ast(out.reborrow())?;
         Ok(())
@@ -65,7 +65,7 @@ impl<S> QueryFragment for OnConflictSelectWrapper<S>
 where
     S: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b, crate::pg::Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.0.walk_ast(out)
     }
 }

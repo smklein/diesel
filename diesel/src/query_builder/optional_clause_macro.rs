@@ -6,7 +6,7 @@ macro_rules! simple_optional_clause {
     ) => {
         use crate::result::QueryResult;
         use crate::query_builder::QueryId;
-        use super::{AstPass, DB, QueryFragment};
+        use super::{AstPass, QueryFragment};
 
         $(#[$clause_meta])*
         #[derive(Debug, Clone, QueryId)]
@@ -26,7 +26,7 @@ macro_rules! simple_optional_clause {
 
         impl QueryFragment for $clause
         {
-            fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()>
+            fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()>
             {
                 match self {
                     $clause::None => (),

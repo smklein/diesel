@@ -22,7 +22,7 @@ impl<T> QueryFragment for DoNothing<T>
 where
     Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
     }
 }
@@ -32,7 +32,7 @@ where
     DB: Backend<OnConflictClause = SD>,
     SD: on_conflict_clause::PgLikeOnConflictClause,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql(" DO NOTHING");
         Ok(())
     }
@@ -58,7 +58,7 @@ impl<T, Tab> QueryFragment for DoUpdate<T, Tab>
 where
     Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
     }
 }
@@ -69,7 +69,7 @@ where
     T: QueryFragment,
     SD: on_conflict_clause::PgLikeOnConflictClause,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
         if self.changeset.is_noop(out.backend())? {
             out.push_sql(" DO NOTHING");
@@ -95,7 +95,7 @@ impl<T> QueryFragment for Excluded<T>
 where
     Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
     }
 }
@@ -106,7 +106,7 @@ where
     T: Column,
     SD: on_conflict_clause::PgLikeOnConflictClause,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("excluded.");
         out.push_identifier(T::NAME)?;
         Ok(())

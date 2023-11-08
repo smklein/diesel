@@ -79,7 +79,7 @@ impl<Tab, V, QId, const HAS_STATIC_QUERY_ID: bool> QueryFragment
 where
     Self: QueryFragment<<DB as SqlDialect>::BatchInsertSupport>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
         <Self as QueryFragment<DB::BatchInsertSupport>>::walk_ast(self, pass)
     }
 }
@@ -91,7 +91,7 @@ where
     ValuesClause<V, Tab>: QueryFragment,
     V: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         if !HAS_STATIC_QUERY_ID {
             out.unsafe_to_cache_prepared();
         }

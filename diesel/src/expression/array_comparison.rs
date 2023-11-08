@@ -90,8 +90,8 @@ impl<T, U> QueryFragment for In<T, U>
 where
     Self: QueryFragment<<DB as SqlDialect>::ArrayComparison>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::ArrayComparison>>::walk_ast(self, pass)
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
+        <Self as QueryFragment<<DB as SqlDialect>::ArrayComparison>>::walk_ast(self, pass)
     }
 }
 
@@ -100,7 +100,7 @@ where
     T: QueryFragment,
     U: QueryFragment + MaybeEmpty,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         if self.values.is_empty() {
             out.push_sql("1=0");
         } else {
@@ -117,8 +117,8 @@ impl<T, U> QueryFragment for NotIn<T, U>
 where
     Self: QueryFragment<<DB as SqlDialect>::ArrayComparison>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::ArrayComparison>>::walk_ast(self, pass)
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
+        <Self as QueryFragment<<DB as SqlDialect>::ArrayComparison>>::walk_ast(self, pass)
     }
 }
 
@@ -128,7 +128,7 @@ where
     T: QueryFragment,
     U: QueryFragment + MaybeEmpty,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         if self.values.is_empty() {
             out.push_sql("1=1");
         } else {
@@ -291,8 +291,8 @@ where
     Self: QueryFragment<<DB as SqlDialect>::ArrayComparison>,
     DB: Backend,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::ArrayComparison>>::walk_ast(self, pass)
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
+        <Self as QueryFragment<<DB as SqlDialect>::ArrayComparison>>::walk_ast(self, pass)
     }
 }
 
@@ -303,7 +303,7 @@ where
     ST: SingleValue,
     I: ToSql<ST>,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
         let mut first = true;
         for value in &self.values {

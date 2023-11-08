@@ -40,7 +40,7 @@ macro_rules! numeric_operation {
             Lhs: QueryFragment,
             Rhs: QueryFragment,
         {
-            fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()>
+            fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()>
             {
                 out.push_sql("(");
                 self.lhs.walk_ast(out.reborrow())?;

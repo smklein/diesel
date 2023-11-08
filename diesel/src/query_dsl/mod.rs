@@ -15,6 +15,7 @@ use crate::connection::Connection;
 use crate::expression::count::CountStar;
 use crate::expression::Expression;
 use crate::helper_types::*;
+use crate::query_builder::DB;
 use crate::query_builder::locking_clause as lock;
 use crate::query_source::{joins, Table};
 use crate::result::QueryResult;
@@ -1225,7 +1226,7 @@ pub trait RunQueryDsl<Conn>: Sized {
     /// ```
     fn execute(self, conn: &mut Conn) -> QueryResult<usize>
     where
-        Conn: Connection,
+        Conn: Connection<Backend = DB>,
         Self: methods::ExecuteDsl<Conn>,
     {
         methods::ExecuteDsl::execute(self, conn)

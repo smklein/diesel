@@ -1,5 +1,4 @@
 use crate::expression::Expression;
-use crate::pg::Pg;
 use crate::query_builder::{AsQuery, AstPass, FromClause, QueryFragment, QueryId, SelectStatement};
 use crate::query_source::QuerySource;
 use crate::result::QueryResult;
@@ -41,7 +40,7 @@ impl<S> QueryFragment for Only<S>
 where
     S: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b>) -> QueryResult<()> {
         pass.push_sql(" ONLY ");
         self.source.walk_ast(pass.reborrow())?;
         Ok(())
@@ -54,7 +53,7 @@ where
     <S as QuerySource>::DefaultSelection: SelectableExpression<Only<S>>,
 {
     type SqlType = <<Self as QuerySource>::DefaultSelection as Expression>::SqlType;
-    type Query = SelectStatement<Pg, FromClause<Self>>;
+    type Query = SelectStatement<FromClause<Self>>;
 
     fn as_query(self) -> Self::Query {
         SelectStatement::simple(self)

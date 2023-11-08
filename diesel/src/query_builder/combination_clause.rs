@@ -3,14 +3,14 @@
 
 use crate::expression::subselect::ValidSubselect;
 use crate::query_builder::insert_statement::InsertFromSelect;
-use crate::query_builder::{AsQuery, AstPass, DB, Query, QueryFragment, QueryId, SelectQuery};
+use crate::query_builder::{AsQuery, AstPass, Query, QueryFragment, QueryId, SelectQuery};
 use crate::{CombineDsl, Insertable, QueryResult, RunQueryDsl, Table};
 
 #[derive(Debug, Clone, Copy, QueryId)]
 pub(crate) struct NoCombinationClause;
 
 impl QueryFragment for NoCombinationClause {
-    fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b>) -> QueryResult<()> {
         Ok(())
     }
 }
@@ -143,7 +143,7 @@ where
     ParenthesisWrapper<Source>: QueryFragment,
     ParenthesisWrapper<Rhs>: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         self.source.walk_ast(out.reborrow())?;
         self.combinator.walk_ast(out.reborrow())?;
         self.duplicate_rule.walk_ast(out.reborrow())?;
@@ -156,7 +156,7 @@ where
 pub struct Union;
 
 impl QueryFragment for Union {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql(" UNION ");
         Ok(())
     }
@@ -167,7 +167,7 @@ impl QueryFragment for Union {
 pub struct Intersect;
 
 impl QueryFragment for Intersect {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql(" INTERSECT ");
         Ok(())
     }
@@ -178,7 +178,7 @@ impl QueryFragment for Intersect {
 pub struct Except;
 
 impl QueryFragment for Except {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql(" EXCEPT ");
         Ok(())
     }
@@ -189,7 +189,7 @@ impl QueryFragment for Except {
 pub struct Distinct;
 
 impl QueryFragment for Distinct {
-    fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b>) -> QueryResult<()> {
         Ok(())
     }
 }
@@ -199,7 +199,7 @@ impl QueryFragment for Distinct {
 pub struct All;
 
 impl QueryFragment for All {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("ALL ");
         Ok(())
     }
@@ -220,7 +220,7 @@ mod postgres {
     use crate::QueryResult;
 
     impl<T: QueryFragment> QueryFragment for ParenthesisWrapper<T> {
-        fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+        fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
             out.push_sql("(");
             self.0.walk_ast(out.reborrow())?;
             out.push_sql(")");

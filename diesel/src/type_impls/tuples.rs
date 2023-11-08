@@ -72,7 +72,7 @@ macro_rules! tuple_impls {
 
             impl<$($T: QueryFragment),+> QueryFragment for ($($T,)+) {
                 #[allow(unused_assignments)]
-                fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()>
+                fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()>
                 {
                     let mut needs_comma = false;
                     $(
@@ -92,7 +92,7 @@ macro_rules! tuple_impls {
             where
                 $($T: ColumnList,)+
             {
-                fn walk_ast(&self, mut out: AstPass<'_, '_, DB>) -> QueryResult<()> {
+                fn walk_ast(&self, mut out: AstPass<'_, '_>) -> QueryResult<()> {
                     $(
                         if $idx != 0 {
                             out.push_sql(", ");
@@ -153,7 +153,7 @@ macro_rules! tuple_impls {
                 Tab: Table,
                 $($T: InsertValues<Tab>,)+
             {
-                fn column_names(&self, mut out: AstPass<'_, '_, DB>) -> QueryResult<()> {
+                fn column_names(&self, mut out: AstPass<'_, '_>) -> QueryResult<()> {
                     let mut needs_comma = false;
                     $(
                         let noop_element = self.$idx.is_noop(out.backend())?;

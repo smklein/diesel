@@ -1,4 +1,3 @@
-use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::expression::helper_types::{Asc, Desc};
 use crate::query_builder::combination_clause::CombinationClause;
 use crate::query_builder::{AstPass, Query, QueryFragment, QueryId};
@@ -40,13 +39,12 @@ where
 
 impl<Source, Expr, Conn> RunQueryDsl<Conn> for PositionalOrderClause<Source, Expr> {}
 
-impl<Source, Expr, DB> QueryFragment<DB> for PositionalOrderClause<Source, Expr>
+impl<Source, Expr, > QueryFragment for PositionalOrderClause<Source, Expr>
 where
-    DB: Backend + DieselReserveSpecialization,
-    Source: QueryFragment<DB>,
-    Expr: QueryFragment<DB>,
+    Source: QueryFragment,
+    Expr: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b>) -> QueryResult<()> {
         self.source.walk_ast(pass.reborrow())?;
         pass.push_sql(" ORDER BY ");
         self.expr.walk_ast(pass)
@@ -56,8 +54,8 @@ where
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct OrderColumn(u32);
 
-impl<DB: Backend> QueryFragment<DB> for OrderColumn {
-    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+impl QueryFragment for OrderColumn {
+    fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b>) -> QueryResult<()> {
         pass.push_sql(&self.0.to_string());
         Ok(())
     }

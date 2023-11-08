@@ -63,8 +63,8 @@ impl<T> QueryFragment for Exists<T>
 where
     Self: QueryFragment<<DB as SqlDialect>::ExistsSyntax>,
 {
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::ExistsSyntax>>::walk_ast(self, pass)
+    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
+        <Self as QueryFragment<<DB as SqlDialect>::ExistsSyntax>>::walk_ast(self, pass)
     }
 }
 
@@ -72,7 +72,7 @@ impl<T> QueryFragment<sql_dialect::exists_syntax::AnsiSqlExistsSyntax> for Exist
 where
     T: QueryFragment,
 {
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("EXISTS (");
         self.subselect.walk_ast(out.reborrow())?;
         out.push_sql(")");
