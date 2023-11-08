@@ -1,6 +1,5 @@
 use std::marker::PhantomData;
 
-use crate::backend::Backend;
 use crate::expression::*;
 use crate::query_builder::*;
 use crate::result::QueryResult;
@@ -55,10 +54,9 @@ where
 {
 }
 
-impl<T, ST, DB> QueryFragment<DB> for Coerce<T, ST>
+impl<T, ST> QueryFragment for Coerce<T, ST>
 where
-    T: QueryFragment<DB>,
-    DB: Backend,
+    T: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         self.expr.walk_ast(pass)

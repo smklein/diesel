@@ -3,7 +3,7 @@ use std::io::Write;
 
 use crate::backend::Backend;
 use crate::deserialize::{self, FromSql, Queryable};
-use crate::query_builder::bind_collector::RawBytesBindCollector;
+use crate::query_builder::DB;
 use crate::serialize::{self, IsNull, Output, ToSql};
 use crate::sql_types::{
     self, BigInt, Binary, Bool, Double, Float, Integer, SingleValue, SmallInt, Text,
@@ -121,80 +121,70 @@ mod foreign_impls {
     struct BinaryArrayProxy<const N: usize>([u8; N]);
 }
 
-impl<ST, DB> FromSql<ST, DB> for String
+impl<ST> FromSql<ST> for String
 where
-    DB: Backend,
-    *const str: FromSql<ST, DB>,
+    *const str: FromSql<ST>,
 {
     #[allow(unsafe_code)] // ptr dereferencing
-    fn from_sql(bytes: DB::RawValue<'_>) -> deserialize::Result<Self> {
-        let str_ptr = <*const str as FromSql<ST, DB>>::from_sql(bytes)?;
+    fn from_sql(bytes: <DB as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
+        let str_ptr = <*const str as FromSql<ST>>::from_sql(bytes)?;
         // We know that the pointer impl will never return null
         let string = unsafe { &*str_ptr };
         Ok(string.to_owned())
     }
 }
 
-impl<DB> ToSql<sql_types::Text, DB> for str
-where
-    for<'a> DB: Backend<BindCollector<'a> = RawBytesBindCollector<DB>>,
+impl ToSql<sql_types::Text> for str
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, DB>) -> serialize::Result {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         out.write_all(self.as_bytes())
             .map(|_| IsNull::No)
             .map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync>)
     }
 }
 
-impl<DB> ToSql<sql_types::Text, DB> for String
+impl ToSql<sql_types::Text> for String
 where
-    DB: Backend,
-    str: ToSql<sql_types::Text, DB>,
+    str: ToSql<sql_types::Text>,
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, DB>) -> serialize::Result {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         (self as &str).to_sql(out)
     }
 }
 
-impl<ST, DB> FromSql<ST, DB> for Vec<u8>
+impl<ST> FromSql<ST> for Vec<u8>
 where
-    DB: Backend,
-    *const [u8]: FromSql<ST, DB>,
+    *const [u8]: FromSql<ST>,
 {
     #[allow(unsafe_code)] // ptr dereferencing
-    fn from_sql(bytes: DB::RawValue<'_>) -> deserialize::Result<Self> {
-        let slice_ptr = <*const [u8] as FromSql<ST, DB>>::from_sql(bytes)?;
+    fn from_sql(bytes: <DB as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
+        let slice_ptr = <*const [u8] as FromSql<ST>>::from_sql(bytes)?;
         // We know that the pointer impl will never return null
         let bytes = unsafe { &*slice_ptr };
         Ok(bytes.to_owned())
     }
 }
 
-impl<DB> ToSql<sql_types::Binary, DB> for Vec<u8>
+impl ToSql<sql_types::Binary> for Vec<u8>
 where
-    DB: Backend,
-    [u8]: ToSql<sql_types::Binary, DB>,
+    [u8]: ToSql<sql_types::Binary>,
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, DB>) -> serialize::Result {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         (self as &[u8]).to_sql(out)
     }
 }
 
-impl<DB, const N: usize> ToSql<sql_types::Binary, DB> for [u8; N]
+impl<const N: usize> ToSql<sql_types::Binary> for [u8; N]
 where
-    DB: Backend,
-    [u8]: ToSql<sql_types::Binary, DB>,
+    [u8]: ToSql<sql_types::Binary>,
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, DB>) -> serialize::Result {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         self.as_slice().to_sql(out)
     }
 }
 
-impl<DB> ToSql<sql_types::Binary, DB> for [u8]
-where
-    for<'a> DB: Backend<BindCollector<'a> = RawBytesBindCollector<DB>>,
-{
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, DB>) -> serialize::Result {
+impl ToSql<sql_types::Binary> for [u8] {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         out.write_all(self)
             .map(|_| IsNull::No)
             .map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync>)
@@ -203,34 +193,31 @@ where
 
 use std::borrow::{Cow, ToOwned};
 use std::fmt;
-impl<'a, T: ?Sized, ST, DB> ToSql<ST, DB> for Cow<'a, T>
+impl<'a, T: ?Sized, ST> ToSql<ST> for Cow<'a, T>
 where
-    T: 'a + ToOwned + ToSql<ST, DB>,
-    DB: Backend,
+    T: 'a + ToOwned + ToSql<ST>,
     Self: fmt::Debug,
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, DB>) -> serialize::Result {
-        ToSql::<ST, DB>::to_sql(&**self, out)
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
+        ToSql::<ST>::to_sql(&**self, out)
     }
 }
 
-impl<'a, T: ?Sized, ST, DB> FromSql<ST, DB> for Cow<'a, T>
+impl<'a, T: ?Sized, ST> FromSql<ST> for Cow<'a, T>
 where
     T: 'a + ToOwned,
-    DB: Backend,
-    T::Owned: FromSql<ST, DB>,
+    T::Owned: FromSql<ST>,
 {
-    fn from_sql(bytes: DB::RawValue<'_>) -> deserialize::Result<Self> {
+    fn from_sql(bytes: <DB as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
         T::Owned::from_sql(bytes).map(Cow::Owned)
     }
 }
 
-impl<'a, T: ?Sized, ST, DB> Queryable<ST, DB> for Cow<'a, T>
+impl<'a, T: ?Sized, ST> Queryable<ST> for Cow<'a, T>
 where
     T: 'a + ToOwned,
     ST: SingleValue,
-    DB: Backend,
-    Self: FromSql<ST, DB>,
+    Self: FromSql<ST>,
 {
     type Row = Self;
 

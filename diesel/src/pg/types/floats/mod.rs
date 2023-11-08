@@ -1,6 +1,6 @@
 use crate::deserialize::{self, FromSql, FromSqlRow};
 use crate::expression::AsExpression;
-use crate::pg::{Pg, PgValue};
+use crate::pg::PgValue;
 use crate::serialize::{self, IsNull, Output, ToSql};
 use crate::sql_types;
 use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
@@ -48,7 +48,7 @@ impl ::std::fmt::Display for InvalidNumericSign {
 impl Error for InvalidNumericSign {}
 
 #[cfg(feature = "postgres_backend")]
-impl FromSql<sql_types::Numeric, Pg> for PgNumeric {
+impl FromSql<sql_types::Numeric> for PgNumeric {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
         let mut bytes = bytes.as_bytes();
         let digit_count = bytes.read_u16::<NetworkEndian>()?;
@@ -78,8 +78,8 @@ impl FromSql<sql_types::Numeric, Pg> for PgNumeric {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl ToSql<sql_types::Numeric, Pg> for PgNumeric {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<sql_types::Numeric> for PgNumeric {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         let sign = match *self {
             PgNumeric::Positive { .. } => 0,
             PgNumeric::Negative { .. } => 0x4000,
@@ -113,7 +113,7 @@ impl ToSql<sql_types::Numeric, Pg> for PgNumeric {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl FromSql<sql_types::Float, Pg> for f32 {
+impl FromSql<sql_types::Float> for f32 {
     fn from_sql(value: PgValue<'_>) -> deserialize::Result<Self> {
         let mut bytes = value.as_bytes();
         debug_assert!(
@@ -133,7 +133,7 @@ impl FromSql<sql_types::Float, Pg> for f32 {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl FromSql<sql_types::Double, Pg> for f64 {
+impl FromSql<sql_types::Double> for f64 {
     fn from_sql(value: PgValue<'_>) -> deserialize::Result<Self> {
         let mut bytes = value.as_bytes();
         debug_assert!(
@@ -153,8 +153,8 @@ impl FromSql<sql_types::Double, Pg> for f64 {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl ToSql<sql_types::Float, Pg> for f32 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<sql_types::Float> for f32 {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         out.write_f32::<NetworkEndian>(*self)
             .map(|_| IsNull::No)
             .map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync>)
@@ -162,8 +162,8 @@ impl ToSql<sql_types::Float, Pg> for f32 {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl ToSql<sql_types::Double, Pg> for f64 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<sql_types::Double> for f64 {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         out.write_f64::<NetworkEndian>(*self)
             .map(|_| IsNull::No)
             .map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync>)

@@ -476,7 +476,7 @@ where
             offset_clause: super::offset_clause::NoOffsetClause,
         },
         super::group_by_clause::NoGroupByClause,
-        super::having_clause::NoHavingClause,
+        super::having_clause::HavingClause::None,
         super::locking_clause::AllLockingClauses::NoLocking,
     )
 }

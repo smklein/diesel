@@ -1,11 +1,11 @@
 use crate::deserialize::{self, FromSql};
-use crate::pg::{Pg, PgValue};
+use crate::pg::PgValue;
 use crate::serialize::{self, IsNull, Output, ToSql};
 use crate::sql_types;
 use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
 
 #[cfg(feature = "postgres_backend")]
-impl FromSql<sql_types::Oid, Pg> for u32 {
+impl FromSql<sql_types::Oid> for u32 {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
         let mut bytes = bytes.as_bytes();
         bytes.read_u32::<NetworkEndian>().map_err(Into::into)
@@ -13,8 +13,8 @@ impl FromSql<sql_types::Oid, Pg> for u32 {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl ToSql<sql_types::Oid, Pg> for u32 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<sql_types::Oid> for u32 {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         out.write_u32::<NetworkEndian>(*self)
             .map(|_| IsNull::No)
             .map_err(Into::into)
@@ -22,7 +22,7 @@ impl ToSql<sql_types::Oid, Pg> for u32 {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl FromSql<sql_types::SmallInt, Pg> for i16 {
+impl FromSql<sql_types::SmallInt> for i16 {
     fn from_sql(value: PgValue<'_>) -> deserialize::Result<Self> {
         let mut bytes = value.as_bytes();
         debug_assert!(
@@ -43,7 +43,7 @@ impl FromSql<sql_types::SmallInt, Pg> for i16 {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl FromSql<sql_types::Integer, Pg> for i32 {
+impl FromSql<sql_types::Integer> for i32 {
     fn from_sql(value: PgValue<'_>) -> deserialize::Result<Self> {
         let mut bytes = value.as_bytes();
         debug_assert!(
@@ -63,7 +63,7 @@ impl FromSql<sql_types::Integer, Pg> for i32 {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl FromSql<sql_types::BigInt, Pg> for i64 {
+impl FromSql<sql_types::BigInt> for i64 {
     fn from_sql(value: PgValue<'_>) -> deserialize::Result<Self> {
         let mut bytes = value.as_bytes();
         debug_assert!(
@@ -83,8 +83,8 @@ impl FromSql<sql_types::BigInt, Pg> for i64 {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl ToSql<sql_types::SmallInt, Pg> for i16 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<sql_types::SmallInt> for i16 {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         out.write_i16::<NetworkEndian>(*self)
             .map(|_| IsNull::No)
             .map_err(|e| Box::new(e) as Box<_>)
@@ -92,8 +92,8 @@ impl ToSql<sql_types::SmallInt, Pg> for i16 {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl ToSql<sql_types::Integer, Pg> for i32 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<sql_types::Integer> for i32 {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         out.write_i32::<NetworkEndian>(*self)
             .map(|_| IsNull::No)
             .map_err(|e| Box::new(e) as Box<_>)
@@ -101,8 +101,8 @@ impl ToSql<sql_types::Integer, Pg> for i32 {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl ToSql<sql_types::BigInt, Pg> for i64 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<sql_types::BigInt> for i64 {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         out.write_i64::<NetworkEndian>(*self)
             .map(|_| IsNull::No)
             .map_err(|e| Box::new(e) as Box<_>)
@@ -118,9 +118,9 @@ mod tests {
     fn i16_to_sql() {
         let mut buffer = Vec::new();
         let mut bytes = Output::test(ByteWrapper(&mut buffer));
-        ToSql::<sql_types::SmallInt, Pg>::to_sql(&1i16, &mut bytes).unwrap();
-        ToSql::<sql_types::SmallInt, Pg>::to_sql(&0i16, &mut bytes).unwrap();
-        ToSql::<sql_types::SmallInt, Pg>::to_sql(&-1i16, &mut bytes).unwrap();
+        ToSql::<sql_types::SmallInt>::to_sql(&1i16, &mut bytes).unwrap();
+        ToSql::<sql_types::SmallInt>::to_sql(&0i16, &mut bytes).unwrap();
+        ToSql::<sql_types::SmallInt>::to_sql(&-1i16, &mut bytes).unwrap();
         assert_eq!(buffer, vec![0, 1, 0, 0, 255, 255]);
     }
 
@@ -128,9 +128,9 @@ mod tests {
     fn i32_to_sql() {
         let mut buffer = Vec::new();
         let mut bytes = Output::test(ByteWrapper(&mut buffer));
-        ToSql::<sql_types::Integer, Pg>::to_sql(&1i32, &mut bytes).unwrap();
-        ToSql::<sql_types::Integer, Pg>::to_sql(&0i32, &mut bytes).unwrap();
-        ToSql::<sql_types::Integer, Pg>::to_sql(&-1i32, &mut bytes).unwrap();
+        ToSql::<sql_types::Integer>::to_sql(&1i32, &mut bytes).unwrap();
+        ToSql::<sql_types::Integer>::to_sql(&0i32, &mut bytes).unwrap();
+        ToSql::<sql_types::Integer>::to_sql(&-1i32, &mut bytes).unwrap();
         assert_eq!(buffer, vec![0, 0, 0, 1, 0, 0, 0, 0, 255, 255, 255, 255]);
     }
 
@@ -138,9 +138,9 @@ mod tests {
     fn i64_to_sql() {
         let mut buffer = Vec::new();
         let mut bytes = Output::test(ByteWrapper(&mut buffer));
-        ToSql::<sql_types::BigInt, Pg>::to_sql(&1i64, &mut bytes).unwrap();
-        ToSql::<sql_types::BigInt, Pg>::to_sql(&0i64, &mut bytes).unwrap();
-        ToSql::<sql_types::BigInt, Pg>::to_sql(&-1i64, &mut bytes).unwrap();
+        ToSql::<sql_types::BigInt>::to_sql(&1i64, &mut bytes).unwrap();
+        ToSql::<sql_types::BigInt>::to_sql(&0i64, &mut bytes).unwrap();
+        ToSql::<sql_types::BigInt>::to_sql(&-1i64, &mut bytes).unwrap();
         assert_eq!(
             buffer,
             vec![

@@ -3,7 +3,6 @@ use std::marker::PhantomData;
 use super::functions::sql_function;
 use super::AsExpression;
 use super::Expression;
-use crate::backend::Backend;
 use crate::query_builder::*;
 use crate::result::QueryResult;
 use crate::sql_types::{BigInt, DieselNumericOps, SingleValue, SqlType};
@@ -66,7 +65,7 @@ impl Expression for CountStar {
     type SqlType = BigInt;
 }
 
-impl<DB: Backend> QueryFragment<DB> for CountStar {
+impl QueryFragment for CountStar {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql("COUNT(*)");
         Ok(())
@@ -135,11 +134,10 @@ where
 {
 }
 
-impl<T, E, DB> QueryFragment<DB> for CountDistinct<T, E>
+impl<T, E> QueryFragment for CountDistinct<T, E>
 where
     T: SqlType + SingleValue,
-    DB: Backend,
-    E: QueryFragment<DB>,
+    E: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql("COUNT(DISTINCT ");

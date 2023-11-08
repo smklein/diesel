@@ -61,9 +61,9 @@ impl<'a, ST: 'static, T> AsExpression<Nullable<Range<ST>>> for &'a (Bound<T>, Bo
 }
 
 #[cfg(feature = "postgres_backend")]
-impl<T, ST> FromSql<Range<ST>, Pg> for (Bound<T>, Bound<T>)
+impl<T, ST> FromSql<Range<ST>> for (Bound<T>, Bound<T>)
 where
-    T: FromSql<ST, Pg>,
+    T: FromSql<ST>,
 {
     fn from_sql(value: PgValue<'_>) -> deserialize::Result<Self> {
         let mut bytes = value.as_bytes();
@@ -100,9 +100,9 @@ where
 }
 
 #[cfg(feature = "postgres_backend")]
-impl<T, ST> Queryable<Range<ST>, Pg> for (Bound<T>, Bound<T>)
+impl<T, ST> Queryable<Range<ST>> for (Bound<T>, Bound<T>)
 where
-    T: FromSql<ST, Pg>,
+    T: FromSql<ST>,
 {
     type Row = Self;
 
@@ -112,11 +112,11 @@ where
 }
 
 #[cfg(feature = "postgres_backend")]
-impl<ST, T> ToSql<Range<ST>, Pg> for (Bound<T>, Bound<T>)
+impl<ST, T> ToSql<Range<ST>> for (Bound<T>, Bound<T>)
 where
-    T: ToSql<ST, Pg>,
+    T: ToSql<ST>,
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         let mut flags = match self.0 {
             Bound::Included(_) => RangeFlags::LB_INC,
             Bound::Excluded(_) => RangeFlags::empty(),
@@ -165,13 +165,13 @@ where
 }
 
 #[cfg(feature = "postgres_backend")]
-impl<ST, T> ToSql<Nullable<Range<ST>>, Pg> for (Bound<T>, Bound<T>)
+impl<ST, T> ToSql<Nullable<Range<ST>>> for (Bound<T>, Bound<T>)
 where
     ST: 'static,
-    (Bound<T>, Bound<T>): ToSql<Range<ST>, Pg>,
+    (Bound<T>, Bound<T>): ToSql<Range<ST>>,
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
-        ToSql::<Range<ST>, Pg>::to_sql(self, out)
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
+        ToSql::<Range<ST>>::to_sql(self, out)
     }
 }
 

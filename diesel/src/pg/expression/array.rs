@@ -65,9 +65,9 @@ where
     type SqlType = sql_types::Array<ST>;
 }
 
-impl<T, ST> QueryFragment<Pg> for ArrayLiteral<T, ST>
+impl<T, ST> QueryFragment for ArrayLiteral<T, ST>
 where
-    T: QueryFragment<Pg>,
+    T: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> crate::result::QueryResult<()> {
         out.push_sql("ARRAY[");

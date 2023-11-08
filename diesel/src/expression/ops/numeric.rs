@@ -1,4 +1,3 @@
-use crate::backend::Backend;
 use crate::expression::{Expression, TypedExpressionType};
 use crate::query_builder::*;
 use crate::result::QueryResult;
@@ -36,11 +35,10 @@ macro_rules! numeric_operation {
             type SqlType = <Lhs::SqlType as sql_types::ops::$name>::Output;
         }
 
-        impl<Lhs, Rhs, DB> QueryFragment<DB> for $name<Lhs, Rhs>
+        impl<Lhs, Rhs> QueryFragment for $name<Lhs, Rhs>
         where
-            DB: Backend,
-            Lhs: QueryFragment<DB>,
-            Rhs: QueryFragment<DB>,
+            Lhs: QueryFragment,
+            Rhs: QueryFragment,
         {
             fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()>
             {

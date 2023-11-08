@@ -8,7 +8,7 @@ pub(crate) use self::insert_from_select::InsertFromSelect;
 pub(crate) use self::private::{Insert, InsertOrIgnore, Replace};
 
 use super::returning_clause::*;
-use crate::backend::{sql_dialect, Backend, DieselReserveSpecialization, SqlDialect};
+use crate::backend::{sql_dialect, SqlDialect};
 use crate::expression::grouped::Grouped;
 use crate::expression::operators::Eq;
 use crate::expression::{Expression, SelectableExpression};
@@ -215,14 +215,13 @@ impl<T: QuerySource, U, C, Op, Ret> InsertStatement<T, InsertFromSelect<U, C>, O
     }
 }
 
-impl<T, U, Op, Ret, DB> QueryFragment<DB> for InsertStatement<T, U, Op, Ret>
+impl<T, U, Op, Ret> QueryFragment for InsertStatement<T, U, Op, Ret>
 where
-    DB: Backend + DieselReserveSpecialization,
     T: Table,
-    T::FromClause: QueryFragment<DB>,
-    U: QueryFragment<DB> + CanInsertInSingleQuery<DB>,
-    Op: QueryFragment<DB>,
-    Ret: QueryFragment<DB>,
+    T::FromClause: QueryFragment,
+    U: QueryFragment + CanInsertInSingleQuery,
+    Op: QueryFragment,
+    Ret: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         if self.records.rows_to_insert() == Some(0) {
@@ -360,7 +359,7 @@ impl<T, Table> UndecoratedInsertRecord<Table> for ValuesClause<T, Table> where
 #[doc(hidden)]
 pub struct DefaultValues;
 
-impl<DB: Backend> CanInsertInSingleQuery<DB> for DefaultValues {
+impl CanInsertInSingleQuery for DefaultValues {
     fn rows_to_insert(&self) -> Option<usize> {
         Some(1)
     }
@@ -382,23 +381,17 @@ impl<'a, Tab> Insertable<Tab> for &'a DefaultValues {
     }
 }
 
-impl<DB> QueryFragment<DB> for DefaultValues
+impl QueryFragment for DefaultValues
 where
-    DB: Backend,
-    Self: QueryFragment<DB, DB::DefaultValueClauseForInsert>,
+    Self: QueryFragment<<DB as SqlDialect>::DefaultValueClauseForInsert>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::DefaultValueClauseForInsert>>::walk_ast(self, pass)
+        <Self as QueryFragment<<DB as SqlDialect>::DefaultValueClauseForInsert>>::walk_ast(self, pass)
     }
 }
 
-impl<DB> QueryFragment<DB, sql_dialect::default_value_clause::AnsiDefaultValueClause>
+impl QueryFragment<sql_dialect::default_value_clause::AnsiDefaultValueClause>
     for DefaultValues
-where
-    DB: Backend
-        + SqlDialect<
-            DefaultValueClauseForInsert = sql_dialect::default_value_clause::AnsiDefaultValueClause,
-        >,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql("DEFAULT VALUES");
@@ -436,22 +429,20 @@ impl<T, Tab> ValuesClause<T, Tab> {
     }
 }
 
-impl<T, Tab, DB> CanInsertInSingleQuery<DB> for ValuesClause<T, Tab>
+impl<T, Tab> CanInsertInSingleQuery for ValuesClause<T, Tab>
 where
-    DB: Backend,
-    T: CanInsertInSingleQuery<DB>,
+    T: CanInsertInSingleQuery,
 {
     fn rows_to_insert(&self) -> Option<usize> {
         self.values.rows_to_insert()
     }
 }
 
-impl<T, Tab, DB> QueryFragment<DB> for ValuesClause<T, Tab>
+impl<T, Tab> QueryFragment for ValuesClause<T, Tab>
 where
-    DB: Backend,
     Tab: Table,
-    T: InsertValues<Tab, DB>,
-    DefaultValues: QueryFragment<DB>,
+    T: InsertValues<Tab>,
+    DefaultValues: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         if self.values.is_noop(out.backend())? {
@@ -468,16 +459,13 @@ where
 }
 
 mod private {
-    use crate::backend::{Backend, DieselReserveSpecialization};
-    use crate::query_builder::{AstPass, QueryFragment, QueryId};
+    use crate::query_builder::{AstPass, DB, QueryFragment, QueryId};
     use crate::QueryResult;
 
     #[derive(Debug, Copy, Clone, QueryId)]
     pub struct Insert;
 
-    impl<DB> QueryFragment<DB> for Insert
-    where
-        DB: Backend + DieselReserveSpecialization,
+    impl QueryFragment for Insert
     {
         fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
             out.push_sql("INSERT");
@@ -489,7 +477,7 @@ mod private {
     pub struct InsertOrIgnore;
 
     #[cfg(feature = "sqlite")]
-    impl QueryFragment<crate::sqlite::Sqlite> for InsertOrIgnore {
+    impl QueryFragment for InsertOrIgnore {
         fn walk_ast<'b>(
             &'b self,
             mut out: AstPass<'_, 'b, crate::sqlite::Sqlite>,
@@ -500,7 +488,7 @@ mod private {
     }
 
     #[cfg(feature = "mysql_backend")]
-    impl QueryFragment<crate::mysql::Mysql> for InsertOrIgnore {
+    impl QueryFragment for InsertOrIgnore {
         fn walk_ast<'b>(
             &'b self,
             mut out: AstPass<'_, 'b, crate::mysql::Mysql>,
@@ -514,7 +502,7 @@ mod private {
     pub struct Replace;
 
     #[cfg(feature = "sqlite")]
-    impl QueryFragment<crate::sqlite::Sqlite> for Replace {
+    impl QueryFragment for Replace {
         fn walk_ast<'b>(
             &'b self,
             mut out: AstPass<'_, 'b, crate::sqlite::Sqlite>,
@@ -525,7 +513,7 @@ mod private {
     }
 
     #[cfg(feature = "mysql_backend")]
-    impl QueryFragment<crate::mysql::Mysql> for Replace {
+    impl QueryFragment for Replace {
         fn walk_ast<'b>(
             &'b self,
             mut out: AstPass<'_, 'b, crate::mysql::Mysql>,

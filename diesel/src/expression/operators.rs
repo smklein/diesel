@@ -552,9 +552,9 @@ postfix_operator!(
 prefix_operator!(Not, " NOT ");
 
 use crate::backend::{sql_dialect, Backend, SqlDialect};
-use crate::expression::{TypedExpressionType};
+use crate::expression::TypedExpressionType;
 use crate::insertable::{ColumnInsertValue, Insertable};
-use crate::query_builder::{QueryFragment, QueryId, ValuesClause};
+use crate::query_builder::{DB, QueryFragment, QueryId, ValuesClause};
 use crate::query_source::Column;
 use crate::sql_types::{DieselNumericOps, SqlType};
 
@@ -611,23 +611,22 @@ where
 
 impl_selectable_expression!(Concat<L, R>);
 
-impl<L, R, DB> QueryFragment<DB> for Concat<L, R>
+impl<L, R> QueryFragment for Concat<L, R>
 where
-    DB: Backend,
-    Self: QueryFragment<DB, DB::ConcatClause>,
+    Self: QueryFragment<<DB as SqlDialect>::ConcatClause>,
 {
     fn walk_ast<'b>(
         &'b self,
         pass: crate::query_builder::AstPass<'_, 'b, DB>,
     ) -> crate::result::QueryResult<()> {
-        <Self as QueryFragment<DB, DB::ConcatClause>>::walk_ast(self, pass)
+        <Self as QueryFragment<DB::ConcatClause>>::walk_ast(self, pass)
     }
 }
 
-impl<L, R, DB> QueryFragment<DB, sql_dialect::concat_clause::ConcatWithPipesClause> for Concat<L, R>
+impl<L, R> QueryFragment<sql_dialect::concat_clause::ConcatWithPipesClause> for Concat<L, R>
 where
-    L: QueryFragment<DB>,
-    R: QueryFragment<DB>,
+    L: QueryFragment,
+    R: QueryFragment,
     DB: Backend + SqlDialect<ConcatClause = sql_dialect::concat_clause::ConcatWithPipesClause>,
 {
     fn walk_ast<'b>(

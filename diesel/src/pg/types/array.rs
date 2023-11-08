@@ -22,9 +22,9 @@ where
 }
 
 #[cfg(feature = "postgres_backend")]
-impl<T, ST> FromSql<Array<ST>, Pg> for Vec<T>
+impl<T, ST> FromSql<Array<ST>> for Vec<T>
 where
-    T: FromSql<ST, Pg>,
+    T: FromSql<ST>,
 {
     fn from_sql(value: PgValue<'_>) -> deserialize::Result<Self> {
         let mut bytes = value.as_bytes();
@@ -89,12 +89,12 @@ array_as_expression!(&'a &'b Vec<T>, Array<ST>);
 array_as_expression!(&'a &'b Vec<T>, Nullable<Array<ST>>);
 
 #[cfg(feature = "postgres_backend")]
-impl<ST, T> ToSql<Array<ST>, Pg> for [T]
+impl<ST, T> ToSql<Array<ST>> for [T]
 where
     Pg: HasSqlType<ST>,
-    T: ToSql<ST, Pg>,
+    T: ToSql<ST>,
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         let num_dimensions = 1;
         out.write_i32::<NetworkEndian>(num_dimensions)?;
         let flags = 0;
@@ -130,35 +130,35 @@ where
 }
 
 #[cfg(feature = "postgres_backend")]
-impl<ST, T> ToSql<Nullable<Array<ST>>, Pg> for [T]
+impl<ST, T> ToSql<Nullable<Array<ST>>> for [T]
 where
-    [T]: ToSql<Array<ST>, Pg>,
+    [T]: ToSql<Array<ST>>,
     ST: 'static,
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
-        ToSql::<Array<ST>, Pg>::to_sql(self, out)
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
+        ToSql::<Array<ST>>::to_sql(self, out)
     }
 }
 
 #[cfg(feature = "postgres_backend")]
-impl<ST, T> ToSql<Array<ST>, Pg> for Vec<T>
+impl<ST, T> ToSql<Array<ST>> for Vec<T>
 where
     ST: 'static,
-    [T]: ToSql<Array<ST>, Pg>,
+    [T]: ToSql<Array<ST>>,
     T: fmt::Debug,
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         (self as &[T]).to_sql(out)
     }
 }
 
 #[cfg(feature = "postgres_backend")]
-impl<ST, T> ToSql<Nullable<Array<ST>>, Pg> for Vec<T>
+impl<ST, T> ToSql<Nullable<Array<ST>>> for Vec<T>
 where
     ST: 'static,
-    Vec<T>: ToSql<Array<ST>, Pg>,
+    Vec<T>: ToSql<Array<ST>>,
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
-        ToSql::<Array<ST>, Pg>::to_sql(self, out)
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
+        ToSql::<Array<ST>>::to_sql(self, out)
     }
 }

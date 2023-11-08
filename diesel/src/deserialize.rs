@@ -5,6 +5,7 @@ use std::result;
 
 use crate::backend::Backend;
 use crate::expression::select_by::SelectBy;
+use crate::query_builder::DB;
 use crate::row::{NamedRow, Row};
 use crate::sql_types::{SingleValue, SqlType, Untyped};
 use crate::Selectable;
@@ -165,6 +166,7 @@ pub type Result<T> = result::Result<T, Box<dyn Error + Send + Sync>>;
 /// # use schema::users;
 /// # use diesel::backend::{self, Backend};
 /// # use diesel::deserialize::{self, Queryable, FromSql};
+/// # use diesel::query_builder::DB;
 /// # use diesel::sql_types::Text;
 /// #
 /// struct LowercaseString(String);
@@ -175,10 +177,9 @@ pub type Result<T> = result::Result<T, Box<dyn Error + Send + Sync>>;
 ///     }
 /// }
 ///
-/// impl<DB> Queryable<Text, DB> for LowercaseString
+/// impl Queryable<Text> for LowercaseString
 /// where
-///     DB: Backend,
-///     String: FromSql<Text, DB>,
+///     String: FromSql<Text>,
 /// {
 ///     type Row = String;
 ///
@@ -228,7 +229,7 @@ pub type Result<T> = result::Result<T, Box<dyn Error + Send + Sync>>;
 ///     name: String,
 /// }
 ///
-/// impl Queryable<users::SqlType, DB> for User {
+/// impl Queryable<users::SqlType> for User {
 ///     type Row = (i32, String);
 ///
 ///     fn build(row: Self::Row) -> deserialize::Result<Self> {
@@ -252,14 +253,11 @@ pub type Result<T> = result::Result<T, Box<dyn Error + Send + Sync>>;
 /// #     Ok(())
 /// # }
 /// ```
-pub trait Queryable<ST, DB>: Sized
-where
-    DB: Backend,
-{
+pub trait Queryable<ST>: Sized {
     /// The Rust type you'd like to map from.
     ///
     /// This is typically a tuple of all of your struct's fields.
-    type Row: FromStaticSqlRow<ST, DB>;
+    type Row: FromStaticSqlRow<ST>;
 
     /// Construct an instance of this type
     fn build(row: Self::Row) -> Result<Self>;
@@ -321,10 +319,9 @@ pub use diesel_derives::Queryable;
 ///     }
 /// }
 ///
-/// impl<DB, ST> FromSql<ST, DB> for LowercaseString
+/// impl<ST> FromSql<ST> for LowercaseString
 /// where
-///     DB: Backend,
-///     String: FromSql<ST, DB>,
+///     String: FromSql<ST>,
 /// {
 ///     fn from_sql(bytes: DB::RawValue<'_>) -> deserialize::Result<Self> {
 ///         String::from_sql(bytes)
@@ -352,10 +349,9 @@ pub use diesel_derives::Queryable;
 /// #     Ok(())
 /// # }
 /// ```
-pub trait QueryableByName<DB>
+pub trait QueryableByName
 where
     Self: Sized,
-    DB: Backend,
 {
     /// Construct an instance of `Self` from the database row
     fn build<'a>(row: &impl NamedRow<'a, DB>) -> Result<Self>;
@@ -370,7 +366,7 @@ pub use diesel_derives::QueryableByName;
 /// existing implementation, rather than reading from `bytes`. (For example, if
 /// you are implementing this for an enum which is represented as an integer in
 /// the database, prefer `i32::from_sql(bytes)` (or the explicit form
-/// `<i32 as FromSql<Integer, DB>>::from_sql(bytes)`) over reading from `bytes`
+/// `<i32 as FromSql<Integer>>::from_sql(bytes)`) over reading from `bytes`
 /// directly)
 ///
 /// Types which implement this trait should also have `#[derive(FromSqlRow)]`
@@ -393,7 +389,7 @@ pub use diesel_derives::QueryableByName;
 /// implementation.
 ///
 /// ```rust
-/// # use diesel::backend::{self, Backend};
+/// # use diesel::backend::{self, Backend, DB};
 /// # use diesel::sql_types::*;
 /// # use diesel::deserialize::{self, FromSql, FromSqlRow};
 /// #
@@ -404,10 +400,9 @@ pub use diesel_derives::QueryableByName;
 ///     B = 2,
 /// }
 ///
-/// impl<DB> FromSql<Integer, DB> for MyEnum
+/// impl FromSql<Integer> for MyEnum
 /// where
-///     DB: Backend,
-///     i32: FromSql<Integer, DB>,
+///     i32: FromSql<Integer>,
 /// {
 ///     fn from_sql(bytes: DB::RawValue<'_>) -> deserialize::Result<Self> {
 ///         match i32::from_sql(bytes)? {
@@ -425,9 +420,9 @@ pub use diesel_derives::QueryableByName;
         note = "Double check your type mappings via the documentation of `{A}`"
     )
 )]
-pub trait FromSql<A, DB: Backend>: Sized {
+pub trait FromSql<A>: Sized {
     /// See the trait documentation.
-    fn from_sql(bytes: DB::RawValue<'_>) -> Result<Self>;
+    fn from_sql(bytes: <DB as Backend>::RawValue<'_>) -> Result<Self>;
 
     /// A specialized variant of `from_sql` for handling null values.
     ///
@@ -437,7 +432,7 @@ pub trait FromSql<A, DB: Backend>: Sized {
     /// If your custom type supports null values you need to provide a
     /// custom implementation.
     #[inline(always)]
-    fn from_nullable_sql(bytes: Option<DB::RawValue<'_>>) -> Result<Self> {
+    fn from_nullable_sql(bytes: Option<<DB as Backend>::RawValue<'_>>) -> Result<Self> {
         match bytes {
             Some(bytes) => Self::from_sql(bytes),
             None => Err(Box::new(crate::result::UnexpectedNullError)),
@@ -458,7 +453,7 @@ pub trait FromSql<A, DB: Backend>: Sized {
                  You need to provide a type that explicitly derives `diesel::deserialize::QueryableByName`",
     )
 )]
-pub trait FromSqlRow<ST, DB: Backend>: Sized {
+pub trait FromSqlRow<ST>: Sized {
     /// See the trait documentation.
     fn build_from_row<'a>(row: &impl Row<'a, DB>) -> Result<Self>;
 }
@@ -472,15 +467,14 @@ pub use diesel_derives::FromSqlRow;
 /// There is normally no need to implement this trait. Diesel provides
 /// wild card impls for all types that implement `FromSql<ST, DB>` or `Queryable<ST, DB>`
 /// where the size of `ST` is known
-pub trait StaticallySizedRow<ST, DB: Backend>: FromSqlRow<ST, DB> {
+pub trait StaticallySizedRow<ST>: FromSqlRow<ST> {
     /// The number of fields that this type will consume.
     const FIELD_COUNT: usize;
 }
 
-impl<DB, T> FromSqlRow<Untyped, DB> for T
+impl<T> FromSqlRow<Untyped> for T
 where
-    DB: Backend,
-    T: QueryableByName<DB>,
+    T: QueryableByName,
 {
     fn build_from_row<'a>(row: &impl Row<'a, DB>) -> Result<Self> {
         T::build(row)
@@ -501,7 +495,7 @@ where
 // are getting conflicting implementation errors for our `FromSqlRow`
 // implementation for tuples and our wild card impl for all types
 // implementing `Queryable`
-pub trait FromStaticSqlRow<ST, DB: Backend>: Sized {
+pub trait FromStaticSqlRow<ST>: Sized {
     /// See the trait documentation
     fn build_from_row<'a>(row: &impl Row<'a, DB>) -> Result<Self>;
 }
@@ -510,19 +504,17 @@ pub trait FromStaticSqlRow<ST, DB: Backend>: Sized {
 pub trait SqlTypeOrSelectable {}
 
 impl<ST> SqlTypeOrSelectable for ST where ST: SqlType + SingleValue {}
-impl<U, DB> SqlTypeOrSelectable for SelectBy<U, DB>
+impl<U> SqlTypeOrSelectable for SelectBy<U>
 where
-    U: Selectable<DB>,
-    DB: Backend,
+    U: Selectable,
 {
 }
 
-impl<T, ST, DB> FromSqlRow<ST, DB> for T
+impl<T, ST> FromSqlRow<ST> for T
 where
-    T: Queryable<ST, DB>,
+    T: Queryable<ST>,
     ST: SqlTypeOrSelectable,
-    DB: Backend,
-    T::Row: FromStaticSqlRow<ST, DB>,
+    T::Row: FromStaticSqlRow<ST>,
 {
     // This inline(always) attribute is here as benchmarks have shown
     // up to 5% reduction in instruction count of having it here
@@ -530,15 +522,14 @@ where
     // A plain inline attribute does not show similar improvements
     #[inline(always)]
     fn build_from_row<'a>(row: &impl Row<'a, DB>) -> Result<Self> {
-        let row = <T::Row as FromStaticSqlRow<ST, DB>>::build_from_row(row)?;
+        let row = <T::Row as FromStaticSqlRow<ST>>::build_from_row(row)?;
         T::build(row)
     }
 }
 
-impl<T, ST, DB> FromStaticSqlRow<ST, DB> for T
+impl<T, ST> FromStaticSqlRow<ST> for T
 where
-    DB: Backend,
-    T: FromSql<ST, DB>,
+    T: FromSql<ST>,
     ST: SingleValue,
 {
     fn build_from_row<'a>(row: &impl Row<'a, DB>) -> Result<Self> {
@@ -569,11 +560,10 @@ where
     }
 }*/
 
-impl<T, ST, DB> StaticallySizedRow<ST, DB> for T
+impl<T, ST> StaticallySizedRow<ST> for T
 where
     ST: SqlTypeOrSelectable + crate::util::TupleSize,
-    T: Queryable<ST, DB>,
-    DB: Backend,
+    T: Queryable<ST>,
 {
     const FIELD_COUNT: usize = <ST as crate::util::TupleSize>::SIZE;
 }

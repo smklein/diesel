@@ -1,4 +1,3 @@
-use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::expression::grouped::Grouped;
 use crate::expression::operators::Eq;
 use crate::expression::AppearsInQuery;
@@ -74,11 +73,10 @@ pub struct Assign<Target, Expr> {
     expr: Expr,
 }
 
-impl<T, U, DB> QueryFragment<DB> for Assign<T, U>
+impl<T, U> QueryFragment for Assign<T, U>
 where
-    DB: Backend,
-    T: QueryFragment<DB>,
-    U: QueryFragment<DB>,
+    T: QueryFragment,
+    U: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         QueryFragment::walk_ast(&self.target, out.reborrow())?;
@@ -108,9 +106,8 @@ pub trait AssignmentTarget {
 #[derive(Debug, Clone, Copy)]
 pub struct ColumnWrapperForUpdate<C>(pub C);
 
-impl<DB, C> QueryFragment<DB> for ColumnWrapperForUpdate<C>
+impl<C> QueryFragment for ColumnWrapperForUpdate<C>
 where
-    DB: Backend + DieselReserveSpecialization,
     C: Column,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {

@@ -2,7 +2,7 @@ use std::io::prelude::*;
 
 use crate::deserialize::{self, FromSql, FromSqlRow};
 use crate::expression::AsExpression;
-use crate::pg::{Pg, PgValue};
+use crate::pg::PgValue;
 use crate::serialize::{self, IsNull, Output, ToSql};
 use crate::sql_types::Uuid;
 
@@ -13,15 +13,15 @@ use crate::sql_types::Uuid;
 struct UuidProxy(uuid::Uuid);
 
 #[cfg(all(feature = "postgres_backend", feature = "uuid"))]
-impl FromSql<Uuid, Pg> for uuid::Uuid {
+impl FromSql<Uuid> for uuid::Uuid {
     fn from_sql(value: PgValue<'_>) -> deserialize::Result<Self> {
         uuid::Uuid::from_slice(value.as_bytes()).map_err(Into::into)
     }
 }
 
 #[cfg(all(feature = "postgres_backend", feature = "uuid"))]
-impl ToSql<Uuid, Pg> for uuid::Uuid {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<Uuid> for uuid::Uuid {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         out.write_all(self.as_bytes())
             .map(|_| IsNull::No)
             .map_err(Into::into)
@@ -40,7 +40,7 @@ fn uuid_to_sql() {
 
     let test_uuid = uuid::Uuid::from_slice(&bytes).unwrap();
     let mut bytes = Output::test(ByteWrapper(&mut buffer));
-    ToSql::<Uuid, Pg>::to_sql(&test_uuid, &mut bytes).unwrap();
+    ToSql::<Uuid>::to_sql(&test_uuid, &mut bytes).unwrap();
     assert_eq!(&buffer, test_uuid.as_bytes());
 }
 
@@ -52,7 +52,7 @@ fn some_uuid_from_sql() {
     ];
     let input_uuid = uuid::Uuid::from_slice(&bytes).unwrap();
     let output_uuid =
-        FromSql::<Uuid, Pg>::from_sql(PgValue::for_test(input_uuid.as_bytes())).unwrap();
+        FromSql::<Uuid>::from_sql(PgValue::for_test(input_uuid.as_bytes())).unwrap();
     assert_eq!(input_uuid, output_uuid);
 }
 

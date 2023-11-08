@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use crate::backend::sql_dialect::on_conflict_clause;
 use crate::backend::Backend;
+use crate::backend::SqlDialect;
 use crate::expression::{AppearsInQuery, Expression};
 use crate::query_builder::*;
 use crate::query_source::*;
@@ -17,17 +18,16 @@ impl<T> DoNothing<T> {
     }
 }
 
-impl<T, DB> QueryFragment<DB> for DoNothing<T>
+impl<T> QueryFragment for DoNothing<T>
 where
-    DB: Backend,
-    Self: QueryFragment<DB, DB::OnConflictClause>,
+    Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::OnConflictClause>>::walk_ast(self, pass)
+        <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
     }
 }
 
-impl<DB, T, SD> QueryFragment<DB, SD> for DoNothing<T>
+impl<T, SD> QueryFragment<SD> for DoNothing<T>
 where
     DB: Backend<OnConflictClause = SD>,
     SD: on_conflict_clause::PgLikeOnConflictClause,
@@ -54,20 +54,19 @@ impl<T, Tab> DoUpdate<T, Tab> {
     }
 }
 
-impl<DB, T, Tab> QueryFragment<DB> for DoUpdate<T, Tab>
+impl<T, Tab> QueryFragment for DoUpdate<T, Tab>
 where
-    DB: Backend,
-    Self: QueryFragment<DB, DB::OnConflictClause>,
+    Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::OnConflictClause>>::walk_ast(self, pass)
+        <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
     }
 }
 
-impl<DB, T, Tab, SD> QueryFragment<DB, SD> for DoUpdate<T, Tab>
+impl<T, Tab, SD> QueryFragment<SD> for DoUpdate<T, Tab>
 where
     DB: Backend<OnConflictClause = SD>,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
     SD: on_conflict_clause::PgLikeOnConflictClause,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
@@ -92,17 +91,16 @@ impl<T> Excluded<T> {
     }
 }
 
-impl<DB, T> QueryFragment<DB> for Excluded<T>
+impl<T> QueryFragment for Excluded<T>
 where
-    DB: Backend,
-    Self: QueryFragment<DB, DB::OnConflictClause>,
+    Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::OnConflictClause>>::walk_ast(self, pass)
+        <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
     }
 }
 
-impl<DB, T, SD> QueryFragment<DB, SD> for Excluded<T>
+impl<T, SD> QueryFragment<SD> for Excluded<T>
 where
     DB: Backend<OnConflictClause = SD>,
     T: Column,

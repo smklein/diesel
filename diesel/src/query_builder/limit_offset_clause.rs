@@ -24,9 +24,9 @@ pub struct LimitOffsetClause<Limit, Offset> {
     doc_cfg,
     doc(cfg(feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes"))
 )]
-pub struct BoxedLimitOffsetClause<'a, DB> {
+pub struct BoxedLimitOffsetClause<'a> {
     /// The limit clause
-    pub limit: Option<Box<dyn QueryFragment<DB> + Send + 'a>>,
+    pub limit: Option<Box<dyn QueryFragment + Send + 'a>>,
     /// The offset clause
-    pub offset: Option<Box<dyn QueryFragment<DB> + Send + 'a>>,
+    pub offset: Option<Box<dyn QueryFragment + Send + 'a>>,
 }

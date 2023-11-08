@@ -264,9 +264,9 @@ impl<C> OrderDecorator for crate::helper_types::Desc<C> {
     type Column = C;
 }
 
-impl<T> QueryFragment<Pg> for DistinctOnClause<T>
+impl<T> QueryFragment for DistinctOnClause<T>
 where
-    T: QueryFragment<Pg>,
+    T: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         out.push_sql("DISTINCT ON (");
@@ -276,17 +276,17 @@ where
     }
 }
 
-impl<ST, F, S, D, W, O, LOf, G, H, Selection> DistinctOnDsl<Selection>
-    for SelectStatement<FromClause<F>, S, D, W, O, LOf, G, H>
+impl<ST, F, S, D, W, O, LOf, G, Selection> DistinctOnDsl<Selection>
+    for SelectStatement<FromClause<F>, S, D, W, O, LOf, G>
 where
     F: QuerySource,
     Selection: SelectableExpression<F>,
     Self: SelectQuery<SqlType = ST>,
     O: ValidOrderingForDistinct<DistinctOnClause<Selection>>,
-    SelectStatement<FromClause<F>, S, DistinctOnClause<Selection>, W, O, LOf, G, H>:
+    SelectStatement<FromClause<F>, S, DistinctOnClause<Selection>, W, O, LOf, G>:
         SelectQuery<SqlType = ST>,
 {
-    type Output = SelectStatement<FromClause<F>, S, DistinctOnClause<Selection>, W, O, LOf, G, H>;
+    type Output = SelectStatement<FromClause<F>, S, DistinctOnClause<Selection>, W, O, LOf, G>;
 
     fn distinct_on(self, selection: Selection) -> Self::Output {
         SelectStatement::new(

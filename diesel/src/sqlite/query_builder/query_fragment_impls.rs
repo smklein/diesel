@@ -11,11 +11,10 @@ use crate::QueryResult;
 // The corresponding impl for`NoWhereClause` is missing because of
 // https://www.sqlite.org/lang_UPSERT.html (Parsing Ambiguity)
 #[cfg(feature = "sqlite")]
-impl<F, S, D, W, O, LOf, G, H, LC> QueryFragment<crate::sqlite::Sqlite>
+impl<F, S, D, W, O, LOf, G, H, LC> QueryFragment
     for OnConflictSelectWrapper<SelectStatement<F, S, D, WhereClause<W>, O, LOf, G, H, LC>>
 where
-    SelectStatement<F, S, D, WhereClause<W>, O, LOf, G, H, LC>:
-        QueryFragment<crate::sqlite::Sqlite>,
+    SelectStatement<F, S, D, WhereClause<W>, O, LOf, G, H, LC>: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b, crate::sqlite::Sqlite>) -> QueryResult<()> {
         self.0.walk_ast(out)
@@ -23,12 +22,11 @@ where
 }
 
 #[cfg(feature = "sqlite")]
-impl<'a, ST, QS, GB> QueryFragment<crate::sqlite::Sqlite>
+impl<'a, ST, QS, GB> QueryFragment
     for OnConflictSelectWrapper<BoxedSelectStatement<'a, ST, QS, crate::sqlite::Sqlite, GB>>
 where
-    BoxedSelectStatement<'a, ST, QS, crate::sqlite::Sqlite, GB>:
-        QueryFragment<crate::sqlite::Sqlite>,
-    QS: QueryFragment<crate::sqlite::Sqlite>,
+    BoxedSelectStatement<'a, ST, QS, GB>: QueryFragment,
+    QS: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, crate::sqlite::Sqlite>) -> QueryResult<()> {
         // https://www.sqlite.org/lang_UPSERT.html (Parsing Ambiguity)

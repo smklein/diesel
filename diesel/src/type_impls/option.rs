@@ -2,17 +2,17 @@ use crate::backend::Backend;
 use crate::deserialize::{self, FromSql, Queryable, QueryableByName};
 use crate::expression::bound::Bound;
 use crate::expression::*;
-use crate::query_builder::QueryId;
+use crate::query_builder::{DB, QueryId};
 use crate::serialize::{self, IsNull, Output, ToSql};
-use crate::sql_types::{is_nullable, HasSqlType, Nullable, SingleValue, SqlType};
+use crate::sql_types::{is_nullable, HasSqlType, Nullable, SingleValue, SqlType, TypeMetadata};
 use crate::NullableExpressionMethods;
 
-impl<T, DB> HasSqlType<Nullable<T>> for DB
+impl<T> HasSqlType<Nullable<T>> for DB
 where
-    DB: Backend + HasSqlType<T>,
+    DB: HasSqlType<T>,
     T: SqlType,
 {
-    fn metadata(lookup: &mut DB::MetadataLookup) -> DB::TypeMetadata {
+    fn metadata(lookup: &mut <DB as TypeMetadata>::MetadataLookup) -> <DB as TypeMetadata>::TypeMetadata {
         <DB as HasSqlType<T>>::metadata(lookup)
     }
 }
@@ -26,17 +26,16 @@ where
     const HAS_STATIC_QUERY_ID: bool = T::HAS_STATIC_QUERY_ID;
 }
 
-impl<T, ST, DB> FromSql<Nullable<ST>, DB> for Option<T>
+impl<T, ST> FromSql<Nullable<ST>> for Option<T>
 where
-    T: FromSql<ST, DB>,
-    DB: Backend,
+    T: FromSql<ST>,
     ST: SqlType<IsNull = is_nullable::NotNull>,
 {
-    fn from_sql(bytes: DB::RawValue<'_>) -> deserialize::Result<Self> {
+    fn from_sql(bytes: <DB as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
         T::from_sql(bytes).map(Some)
     }
 
-    fn from_nullable_sql(bytes: Option<DB::RawValue<'_>>) -> deserialize::Result<Self> {
+    fn from_nullable_sql(bytes: Option<<DB as Backend>::RawValue<'_>>) -> deserialize::Result<Self> {
         match bytes {
             Some(bytes) => T::from_sql(bytes).map(Some),
             None => Ok(None),
@@ -44,13 +43,12 @@ where
     }
 }
 
-impl<T, ST, DB> ToSql<Nullable<ST>, DB> for Option<T>
+impl<T, ST> ToSql<Nullable<ST>> for Option<T>
 where
-    T: ToSql<ST, DB>,
-    DB: Backend,
+    T: ToSql<ST>,
     ST: SqlType<IsNull = is_nullable::NotNull>,
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, DB>) -> serialize::Result {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         if let Some(ref value) = *self {
             value.to_sql(out)
         } else {
@@ -83,10 +81,9 @@ where
     }
 }
 
-impl<T, DB> QueryableByName<DB> for Option<T>
+impl<T> QueryableByName for Option<T>
 where
-    DB: Backend,
-    T: QueryableByName<DB>,
+    T: QueryableByName,
 {
     fn build<'a>(row: &impl crate::row::NamedRow<'a, DB>) -> deserialize::Result<Self> {
         match T::build(row) {
@@ -97,11 +94,10 @@ where
     }
 }
 
-impl<ST, T, DB> Queryable<ST, DB> for Option<T>
+impl<ST, T> Queryable<ST> for Option<T>
 where
     ST: SingleValue<IsNull = is_nullable::IsNullable>,
-    DB: Backend,
-    Self: FromSql<ST, DB>,
+    Self: FromSql<ST>,
 {
     type Row = Self;
 
@@ -110,10 +106,9 @@ where
     }
 }
 
-impl<T, DB> Selectable<DB> for Option<T>
+impl<T> Selectable for Option<T>
 where
-    DB: Backend,
-    T: Selectable<DB>,
+    T: Selectable,
     crate::dsl::Nullable<T::SelectExpression>: Expression,
 {
     type SelectExpression = crate::dsl::Nullable<T::SelectExpression>;

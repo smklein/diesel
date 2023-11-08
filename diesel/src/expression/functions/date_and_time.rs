@@ -1,4 +1,3 @@
-use crate::backend::Backend;
 use crate::expression::coerce::Coerce;
 use crate::expression::functions::sql_function;
 use crate::expression::{AsExpression, Expression};
@@ -16,7 +15,7 @@ impl Expression for now {
     type SqlType = Timestamp;
 }
 
-impl<DB: Backend> QueryFragment<DB> for now {
+impl QueryFragment for now {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql("CURRENT_TIMESTAMP");
         Ok(())
@@ -103,7 +102,7 @@ impl Expression for today {
     type SqlType = Date;
 }
 
-impl<DB: Backend> QueryFragment<DB> for today {
+impl QueryFragment for today {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql("CURRENT_DATE");
         Ok(())

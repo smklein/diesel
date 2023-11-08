@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
-use crate::backend::{sql_dialect, Backend, DieselReserveSpecialization, SqlDialect};
+use crate::backend::{sql_dialect, SqlDialect};
 use crate::expression::grouped::Grouped;
 use crate::expression::{AppearsInQuery, Expression};
 use crate::query_builder::{
-    AstPass, BatchInsert, InsertStatement, NoFromClause, QueryFragment, QueryId,
+    AstPass, BatchInsert, DB, InsertStatement, NoFromClause, QueryFragment, QueryId,
     UndecoratedInsertRecord, ValuesClause,
 };
 use crate::query_source::{Column, Table};
@@ -78,7 +78,7 @@ pub trait Insertable<T> {
 #[doc(inline)]
 pub use diesel_derives::Insertable;
 
-pub trait CanInsertInSingleQuery<DB: Backend> {
+pub trait CanInsertInSingleQuery {
     /// How many rows will this query insert?
     ///
     /// This function should only return `None` when the query is valid on all
@@ -86,36 +86,31 @@ pub trait CanInsertInSingleQuery<DB: Backend> {
     fn rows_to_insert(&self) -> Option<usize>;
 }
 
-impl<'a, T, DB> CanInsertInSingleQuery<DB> for &'a T
+impl<'a, T> CanInsertInSingleQuery for &'a T
 where
-    T: ?Sized + CanInsertInSingleQuery<DB>,
-    DB: Backend,
+    T: ?Sized + CanInsertInSingleQuery,
 {
     fn rows_to_insert(&self) -> Option<usize> {
         (*self).rows_to_insert()
     }
 }
 
-impl<T, U, DB> CanInsertInSingleQuery<DB> for ColumnInsertValue<T, U>
+impl<T, U> CanInsertInSingleQuery for ColumnInsertValue<T, U> {
+    fn rows_to_insert(&self) -> Option<usize> {
+        Some(1)
+    }
+}
+
+impl<V> CanInsertInSingleQuery for DefaultableColumnInsertValue<V>
 where
-    DB: Backend,
+    V: CanInsertInSingleQuery,
 {
     fn rows_to_insert(&self) -> Option<usize> {
         Some(1)
     }
 }
 
-impl<V, DB> CanInsertInSingleQuery<DB> for DefaultableColumnInsertValue<V>
-where
-    DB: Backend,
-    V: CanInsertInSingleQuery<DB>,
-{
-    fn rows_to_insert(&self) -> Option<usize> {
-        Some(1)
-    }
-}
-
-pub trait InsertValues<T: Table, DB: Backend>: QueryFragment<DB> {
+pub trait InsertValues<T: Table>: QueryFragment {
     fn column_names(&self, out: AstPass<'_, '_, DB>) -> QueryResult<()>;
 }
 
@@ -154,13 +149,12 @@ impl<T> Default for DefaultableColumnInsertValue<T> {
     }
 }
 
-impl<Col, Expr, DB> InsertValues<Col::Table, DB>
+impl<Col, Expr> InsertValues<Col::Table>
     for DefaultableColumnInsertValue<ColumnInsertValue<Col, Expr>>
 where
-    DB: Backend + SqlDialect<InsertWithDefaultKeyword = sql_dialect::default_keyword_for_insert::IsoSqlDefaultKeyword>,
     Col: Column,
     Expr: Expression<SqlType = Col::SqlType> + AppearsInQuery<NoFromClause>,
-    Self: QueryFragment<DB>,
+    Self: QueryFragment,
 {
     fn column_names(&self, mut out: AstPass<'_, '_, DB>) -> QueryResult<()> {
         out.push_identifier(Col::NAME)?;
@@ -168,12 +162,11 @@ where
     }
 }
 
-impl<Col, Expr, DB> InsertValues<Col::Table, DB> for ColumnInsertValue<Col, Expr>
+impl<Col, Expr> InsertValues<Col::Table> for ColumnInsertValue<Col, Expr>
 where
-    DB: Backend,
     Col: Column,
     Expr: Expression<SqlType = Col::SqlType> + AppearsInQuery<NoFromClause>,
-    Self: QueryFragment<DB>,
+    Self: QueryFragment,
 {
     fn column_names(&self, mut out: AstPass<'_, '_, DB>) -> QueryResult<()> {
         out.push_identifier(Col::NAME)?;
@@ -181,20 +174,18 @@ where
     }
 }
 
-impl<Expr, DB> QueryFragment<DB> for DefaultableColumnInsertValue<Expr>
+impl<Expr> QueryFragment for DefaultableColumnInsertValue<Expr>
 where
-    DB: Backend,
-    Self: QueryFragment<DB, DB::InsertWithDefaultKeyword>,
+    Self: QueryFragment<<DB as SqlDialect>::InsertWithDefaultKeyword>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         <Self as QueryFragment<DB, DB::InsertWithDefaultKeyword>>::walk_ast(self, pass)
     }
 }
 
-impl<Expr, DB> QueryFragment<DB, sql_dialect::default_keyword_for_insert::IsoSqlDefaultKeyword> for DefaultableColumnInsertValue<Expr>
+impl<Expr> QueryFragment<sql_dialect::default_keyword_for_insert::IsoSqlDefaultKeyword> for DefaultableColumnInsertValue<Expr>
 where
-    DB: Backend + SqlDialect<InsertWithDefaultKeyword = sql_dialect::default_keyword_for_insert::IsoSqlDefaultKeyword>,
-    Expr: QueryFragment<DB>,
+    Expr: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
@@ -207,10 +198,9 @@ where
     }
 }
 
-impl<Col, Expr, DB> QueryFragment<DB> for ColumnInsertValue<Col, Expr>
+impl<Col, Expr> QueryFragment for ColumnInsertValue<Col, Expr>
 where
-    DB: Backend + DieselReserveSpecialization,
-    Expr: QueryFragment<DB>,
+    Expr: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         self.expr.walk_ast(pass)
@@ -218,12 +208,12 @@ where
 }
 
 #[cfg(feature = "sqlite")]
-impl<Col, Expr> InsertValues<Col::Table, crate::sqlite::Sqlite>
+impl<Col, Expr> InsertValues<Col::Table>
     for DefaultableColumnInsertValue<ColumnInsertValue<Col, Expr>>
 where
     Col: Column,
     Expr: Expression<SqlType = Col::SqlType> + AppearsInQuery<NoFromClause>,
-    Self: QueryFragment<crate::sqlite::Sqlite>,
+    Self: QueryFragment,
 {
     fn column_names(&self, mut out: AstPass<'_, '_, crate::sqlite::Sqlite>) -> QueryResult<()> {
         if let Self::Expression(..) = *self {
@@ -236,11 +226,10 @@ where
 #[cfg(feature = "sqlite")]
 impl<Col, Expr>
     QueryFragment<
-        crate::sqlite::Sqlite,
         crate::backend::sql_dialect::default_keyword_for_insert::DoesNotSupportDefaultKeyword,
     > for DefaultableColumnInsertValue<ColumnInsertValue<Col, Expr>>
 where
-    Expr: QueryFragment<crate::sqlite::Sqlite>,
+    Expr: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, crate::sqlite::Sqlite>) -> QueryResult<()> {
         if let Self::Expression(ref inner) = *self {

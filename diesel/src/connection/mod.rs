@@ -369,7 +369,7 @@ where
     )]
     fn execute_returning_count<T>(&mut self, source: &T) -> QueryResult<usize>
     where
-        T: QueryFragment<Self::Backend> + QueryId;
+        T: QueryFragment + QueryId;
 
     /// Get access to the current transaction state of this connection
     ///
@@ -421,7 +421,7 @@ pub trait LoadConnection<B = DefaultLoadingMode>: Connection {
         source: T,
     ) -> QueryResult<Self::Cursor<'conn, 'query>>
     where
-        T: Query + QueryFragment<Self::Backend> + QueryId + 'query,
+        T: Query + QueryFragment + QueryId + 'query,
         Self::Backend: QueryMetadata<T::SqlType>;
 }
 

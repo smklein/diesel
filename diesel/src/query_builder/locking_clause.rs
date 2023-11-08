@@ -1,5 +1,4 @@
-use crate::backend::Backend;
-use crate::query_builder::{AstPass, QueryFragment, QueryId};
+use crate::query_builder::{AstPass, DB, QueryFragment, QueryId};
 use crate::result::QueryResult;
 
 #[derive(Debug, Clone, Copy, QueryId)]
@@ -8,10 +7,7 @@ pub enum AllLockingClauses {
     Locking(LockMode, LockModifier),
 }
 
-impl<DB> QueryFragment<DB> for AllLockingClauses
-where
-    DB: Backend,
-{
+impl QueryFragment for AllLockingClauses {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         match self {
             AllLockingClauses::NoLocking => (),
@@ -34,10 +30,7 @@ pub enum LockMode {
     KeyShare,
 }
 
-impl<DB> QueryFragment<DB> for LockMode
-where
-    DB: Backend,
-{
+impl QueryFragment for LockMode {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         match self {
             LockMode::Update => out.push_sql(" FOR UPDATE"),
@@ -58,10 +51,7 @@ pub enum LockModifier {
     NoWait,
 }
 
-impl<DB> QueryFragment<DB> for LockModifier
-where
-    DB: Backend,
-{
+impl QueryFragment for LockModifier {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         match self {
             LockModifier::NoModifier => (),

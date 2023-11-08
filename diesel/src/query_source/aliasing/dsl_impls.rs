@@ -61,15 +61,15 @@ where
     }
 }
 
-impl<'a, S, DB> BoxedDsl<'a, DB> for Alias<S>
+impl<'a, S> BoxedDsl<'a> for Alias<S>
 where
     Alias<S>: QuerySource + AsQuery<Query = SelectStatement<FromClause<Alias<S>>>>,
-    SelectStatement<FromClause<Alias<S>>>: BoxedDsl<'a, DB>,
+    SelectStatement<FromClause<Alias<S>>>: BoxedDsl<'a>,
     <Alias<S> as QuerySource>::DefaultSelection:
         Expression<SqlType = <Alias<S> as AsQuery>::SqlType>,
     <Alias<S> as AsQuery>::SqlType: TypedExpressionType,
 {
-    type Output = dsl::IntoBoxed<'a, SelectStatement<FromClause<Alias<S>>>, DB>;
+    type Output = dsl::IntoBoxed<'a, SelectStatement<FromClause<Alias<S>>>>;
 
     fn internal_into_boxed(self) -> Self::Output {
         self.as_query().internal_into_boxed()
@@ -77,8 +77,7 @@ where
 }
 
 impl<S> CombineDsl for Alias<S>
-where
-    S: AliasSource,
+where S: AliasSource,
     S::Target: Table,
     Self: AsQuery,
 {

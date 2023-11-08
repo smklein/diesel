@@ -4,7 +4,7 @@ use crate::backend::Backend;
 use crate::connection::{Connection, DefaultLoadingMode, LoadConnection};
 use crate::deserialize::FromSqlRow;
 use crate::expression::QueryMetadata;
-use crate::query_builder::{AsQuery, QueryFragment, QueryId};
+use crate::query_builder::{AsQuery, DB, QueryFragment, QueryId};
 use crate::result::QueryResult;
 
 #[cfg(feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes")]
@@ -39,21 +39,20 @@ pub trait LoadQuery<'query, Conn, U, B = DefaultLoadingMode>: RunQueryDsl<Conn> 
 pub type LoadRet<'conn, 'query, Q, C, U, B = DefaultLoadingMode> =
     <Q as LoadQuery<'query, C, U, B>>::RowIter<'conn>;
 
-impl<'query, Conn, T, U, DB, B> LoadQuery<'query, Conn, U, B> for T
+impl<'query, Conn, T, U, B> LoadQuery<'query, Conn, U, B> for T
 where
-    Conn: Connection<Backend = DB> + LoadConnection<B>,
+    Conn: Connection<Backend=DB> + LoadConnection<B>,
     T: AsQuery + RunQueryDsl<Conn>,
-    T::Query: QueryFragment<DB> + QueryId + 'query,
-    T::SqlType: CompatibleType<U, DB>,
-    DB: Backend + QueryMetadata<T::SqlType> + 'static,
-    U: FromSqlRow<<T::SqlType as CompatibleType<U, DB>>::SqlType, DB> + 'static,
-    <T::SqlType as CompatibleType<U, DB>>::SqlType: 'static,
+    T::Query: QueryFragment + QueryId + 'query,
+    T::SqlType: CompatibleType<U>,
+    DB: QueryMetadata<T::SqlType> + 'static,
+    U: FromSqlRow<<T::SqlType as CompatibleType<U>>::SqlType> + 'static,
+    <T::SqlType as CompatibleType<U>>::SqlType: 'static,
 {
     type RowIter<'conn> = LoadIter<
         U,
         <Conn as LoadConnection<B>>::Cursor<'conn, 'query>,
-        <T::SqlType as CompatibleType<U, DB>>::SqlType,
-        DB,
+        <T::SqlType as CompatibleType<U>>::SqlType,
     > where Conn: 'conn;
 
     fn internal_load(self, conn: &mut Conn) -> QueryResult<Self::RowIter<'_>> {
@@ -71,7 +70,7 @@ where
 /// to call `execute` from generic code.
 ///
 /// [`RunQueryDsl`]: crate::RunQueryDsl
-pub trait ExecuteDsl<Conn: Connection<Backend = DB>, DB: Backend = <Conn as Connection>::Backend>:
+pub trait ExecuteDsl<Conn: Connection<Backend = DB>>:
     Sized
 {
     /// Execute this command
@@ -80,11 +79,10 @@ pub trait ExecuteDsl<Conn: Connection<Backend = DB>, DB: Backend = <Conn as Conn
 
 use crate::result::Error;
 
-impl<Conn, DB, T> ExecuteDsl<Conn, DB> for T
+impl<Conn, T> ExecuteDsl<Conn> for T
 where
     Conn: Connection<Backend = DB>,
-    DB: Backend,
-    T: QueryFragment<DB> + QueryId,
+    T: QueryFragment + QueryId,
 {
     fn execute(query: T, conn: &mut Conn) -> Result<usize, Error> {
         conn.execute_returning_count(&query)
@@ -97,25 +95,24 @@ where
 // be implemented by a third party
 // * LoadIter as it's an implementation detail
 mod private {
-    use crate::backend::Backend;
     use crate::deserialize::FromSqlRow;
     use crate::expression::select_by::SelectBy;
     use crate::expression::{Expression, TypedExpressionType};
+    use crate::query_builder::DB;
     use crate::sql_types::{SqlType, Untyped};
     use crate::{QueryResult, Selectable};
 
     #[allow(missing_debug_implementations)]
-    pub struct LoadIter<U, C, ST, DB> {
+    pub struct LoadIter<U, C, ST> {
         pub(super) cursor: C,
-        pub(super) _marker: std::marker::PhantomData<(ST, U, DB)>,
+        pub(super) _marker: std::marker::PhantomData<(ST, U)>,
     }
 
-    impl<'a, C, U, ST, DB, R> LoadIter<U, C, ST, DB>
+    impl<'a, C, U, ST, R> LoadIter<U, C, ST>
     where
-        DB: Backend,
         C: Iterator<Item = QueryResult<R>>,
         R: crate::row::Row<'a, DB>,
-        U: FromSqlRow<ST, DB>,
+        U: FromSqlRow<ST>,
     {
         pub(super) fn map_row(row: Option<QueryResult<R>>) -> Option<QueryResult<U>> {
             match row? {
@@ -127,12 +124,11 @@ mod private {
         }
     }
 
-    impl<'a, C, U, ST, DB, R> Iterator for LoadIter<U, C, ST, DB>
+    impl<'a, C, U, ST, R> Iterator for LoadIter<U, C, ST>
     where
-        DB: Backend,
         C: Iterator<Item = QueryResult<R>>,
         R: crate::row::Row<'a, DB>,
-        U: FromSqlRow<ST, DB>,
+        U: FromSqlRow<ST>,
     {
         type Item = QueryResult<U>;
 
@@ -163,12 +159,11 @@ mod private {
         }
     }
 
-    impl<'a, C, U, ST, DB, R> ExactSizeIterator for LoadIter<U, C, ST, DB>
+    impl<'a, C, U, ST, R> ExactSizeIterator for LoadIter<U, C, ST>
     where
-        DB: Backend,
         C: ExactSizeIterator + Iterator<Item = QueryResult<R>>,
         R: crate::row::Row<'a, DB>,
-        U: FromSqlRow<ST, DB>,
+        U: FromSqlRow<ST>,
     {
         fn len(&self) -> usize {
             self.cursor.len()
@@ -187,34 +182,31 @@ mod private {
                 in your query `.select({U}::as_select())` to get a better error message",
         )
     )]
-    pub trait CompatibleType<U, DB> {
+    pub trait CompatibleType<U> {
         type SqlType;
     }
 
-    impl<ST, U, DB> CompatibleType<U, DB> for ST
+    impl<ST, U> CompatibleType<U> for ST
     where
-        DB: Backend,
         ST: SqlType + crate::sql_types::SingleValue,
-        U: FromSqlRow<ST, DB>,
+        U: FromSqlRow<ST>,
     {
         type SqlType = ST;
     }
 
-    impl<U, DB> CompatibleType<U, DB> for Untyped
+    impl<U> CompatibleType<U> for Untyped
     where
-        U: FromSqlRow<Untyped, DB>,
-        DB: Backend,
+        U: FromSqlRow<Untyped>,
     {
         type SqlType = Untyped;
     }
 
-    impl<U, DB, E, ST> CompatibleType<U, DB> for SelectBy<U, DB>
+    impl<U, E, ST> CompatibleType<U> for SelectBy<U>
     where
-        DB: Backend,
         ST: SqlType + TypedExpressionType,
-        U: Selectable<DB, SelectExpression = E>,
+        U: Selectable<SelectExpression = E>,
         E: Expression<SqlType = ST>,
-        U: FromSqlRow<ST, DB>,
+        U: FromSqlRow<ST>,
     {
         type SqlType = ST;
     }

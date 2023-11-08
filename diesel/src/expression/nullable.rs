@@ -1,4 +1,3 @@
-use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::expression::TypedExpressionType;
 use crate::expression::*;
 use crate::query_builder::*;
@@ -25,10 +24,9 @@ where
     type SqlType = <T::SqlType as IntoNullable>::Nullable;
 }
 
-impl<T, DB> QueryFragment<DB> for Nullable<T>
+impl<T> QueryFragment for Nullable<T>
 where
-    DB: Backend + DieselReserveSpecialization,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         self.0.walk_ast(pass)

@@ -8,6 +8,8 @@ use std::result;
 use crate::backend::Backend;
 use crate::query_builder::bind_collector::RawBytesBindCollector;
 use crate::query_builder::BindCollector;
+use crate::query_builder::DB;
+use crate::sql_types::TypeMetadata;
 
 #[doc(inline)]
 #[cfg(feature = "postgres_backend")]
@@ -32,20 +34,16 @@ pub enum IsNull {
 
 /// Wraps a buffer to be written by `ToSql` with additional backend specific
 /// utilities.
-pub struct Output<'a, 'b, DB>
-where
-    DB: Backend,
-    DB::MetadataLookup: 'a,
-{
-    out: <DB::BindCollector<'a> as BindCollector<'a, DB>>::Buffer,
-    metadata_lookup: Option<&'b mut DB::MetadataLookup>,
+pub struct Output<'a, 'b> {
+    out: <<DB as Backend>::BindCollector<'a> as BindCollector<'a>>::Buffer,
+    metadata_lookup: Option<&'b mut <DB as TypeMetadata>::MetadataLookup>,
 }
 
-impl<'a, 'b, DB: Backend> Output<'a, 'b, DB> {
+impl<'a, 'b> Output<'a, 'b> {
     /// Construct a new `Output`
     pub fn new(
-        out: <DB::BindCollector<'a> as BindCollector<'a, DB>>::Buffer,
-        metadata_lookup: &'b mut DB::MetadataLookup,
+        out: <<DB as Backend>::BindCollector<'a> as BindCollector<'a>>::Buffer,
+        metadata_lookup: &'b mut <DB as TypeMetadata>::MetadataLookup,
     ) -> Self {
         Output {
             out,
@@ -56,13 +54,13 @@ impl<'a, 'b, DB: Backend> Output<'a, 'b, DB> {
     /// Consume the current `Output` structure to access the inner buffer type
     ///
     /// This function is only useful for people implementing their own Backend.
-    pub fn into_inner(self) -> <DB::BindCollector<'a> as BindCollector<'a, DB>>::Buffer {
+    pub fn into_inner(self) -> <<DB as Backend>::BindCollector<'a> as BindCollector<'a>>::Buffer {
         self.out
     }
 
     /// Returns the backend's mechanism for dynamically looking up type
     /// metadata at runtime, if relevant for the given backend.
-    pub fn metadata_lookup(&mut self) -> &mut DB::MetadataLookup {
+    pub fn metadata_lookup(&mut self) -> &mut <DB as TypeMetadata>::MetadataLookup {
         self.metadata_lookup.as_mut().expect("Lookup is there")
     }
 
@@ -72,17 +70,17 @@ impl<'a, 'b, DB: Backend> Output<'a, 'b, DB> {
     /// for your specific backend for supported types.
     pub fn set_value<V>(&mut self, value: V)
     where
-        V: Into<<DB::BindCollector<'a> as BindCollector<'a, DB>>::Buffer>,
+        V: Into<<<DB as Backend>::BindCollector<'a> as BindCollector<'a>>::Buffer>,
     {
         self.out = value.into();
     }
 }
 
 #[cfg(test)]
-impl<'a, DB: Backend> Output<'a, 'static, DB> {
+impl<'a> Output<'a, 'static> {
     /// Returns a `Output` suitable for testing `ToSql` implementations.
     /// Unsafe to use for testing types which perform dynamic metadata lookup.
-    pub fn test(buffer: <DB::BindCollector<'a> as BindCollector<'a, DB>>::Buffer) -> Self {
+    pub fn test(buffer: <DB::BindCollector<'a> as BindCollector<'a>>::Buffer) -> Self {
         Self {
             out: buffer,
             metadata_lookup: None,
@@ -90,10 +88,7 @@ impl<'a, DB: Backend> Output<'a, 'static, DB> {
     }
 }
 
-impl<'a, 'b, DB> Write for Output<'a, 'b, DB>
-where
-    for<'c> DB: Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
-{
+impl<'a, 'b> Write for Output<'a, 'b> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.out.0.write(buf)
     }
@@ -111,11 +106,8 @@ where
     }
 }
 
-impl<'a, 'b, DB> Output<'a, 'b, DB>
-where
-    for<'c> DB: Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
-{
-    /// Call this method whenever you pass an instance of `Output<DB>` by value.
+impl<'a, 'b> Output<'a, 'b> {
+    /// Call this method whenever you pass an instance of `Output` by value.
     ///
     /// Effectively copies `self`, with a narrower lifetime. When passing a
     /// reference or a mutable reference, this is normally done by rust
@@ -124,7 +116,7 @@ where
     /// done implicitly for references. For structs with lifetimes it must be
     /// done explicitly. This method matches the semantics of what Rust would do
     /// implicitly if you were passing a mutable reference
-    pub fn reborrow<'c>(&'c mut self) -> Output<'c, 'c, DB>
+    pub fn reborrow<'c>(&'c mut self) -> Output<'c, 'c>
     where
         'a: 'c,
     {
@@ -138,11 +130,7 @@ where
     }
 }
 
-impl<'a, 'b, DB> fmt::Debug for Output<'a, 'b, DB>
-where
-    <DB::BindCollector<'a> as BindCollector<'a, DB>>::Buffer: fmt::Debug,
-    DB: Backend,
-{
+impl<'a, 'b> fmt::Debug for Output<'a, 'b> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.out.fmt(f)
     }
@@ -181,6 +169,7 @@ where
 /// ```rust
 /// # use diesel::backend::Backend;
 /// # use diesel::expression::AsExpression;
+/// # use diesel::query_builder::DB;
 /// # use diesel::sql_types::*;
 /// # use diesel::serialize::{self, ToSql, Output};
 /// # use std::io::Write;
@@ -193,10 +182,9 @@ where
 ///     B = 2,
 /// }
 ///
-/// impl<DB> ToSql<Integer, DB> for MyEnum
+/// impl ToSql<Integer> for MyEnum
 /// where
-///     DB: Backend,
-///     i32: ToSql<Integer, DB>,
+///     i32: ToSql<Integer>,
 /// {
 ///     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, DB>) -> serialize::Result {
 ///         match self {
@@ -232,13 +220,13 @@ where
 /// }
 ///
 /// # #[cfg(feature = "postgres")]
-/// impl ToSql<Integer, diesel::pg::Pg> for MyEnum
+/// impl ToSql<Integer> for MyEnum
 /// where
-///     i32: ToSql<Integer, diesel::pg::Pg>,
+///     i32: ToSql<Integer>,
 /// {
 ///     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, diesel::pg::Pg>) -> serialize::Result {
 ///         let v = *self as i32;
-///         <i32 as ToSql<Integer, diesel::pg::Pg>>::to_sql(&v, &mut out.reborrow())
+///         <i32 as ToSql<Integer>::to_sql(&v, &mut out.reborrow())
 ///     }
 /// }
 /// ````
@@ -264,9 +252,9 @@ where
 /// }
 ///
 /// # #[cfg(feature = "sqlite")]
-/// impl ToSql<Integer, diesel::sqlite::Sqlite> for MyEnum
+/// impl ToSql<Integer> for MyEnum
 /// where
-///     i32: ToSql<Integer, diesel::sqlite::Sqlite>,
+///     i32: ToSql<Integer>,
 /// {
 ///     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, diesel::sqlite::Sqlite>) -> serialize::Result {
 ///         out.set_value(*self as i32);
@@ -275,17 +263,16 @@ where
 /// }
 /// ````
 
-pub trait ToSql<A, DB: Backend>: fmt::Debug {
+pub trait ToSql<A>: fmt::Debug {
     /// See the trait documentation.
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, DB>) -> Result;
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> Result;
 }
 
-impl<'a, A, T, DB> ToSql<A, DB> for &'a T
+impl<'a, A, T> ToSql<A> for &'a T
 where
-    DB: Backend,
-    T: ToSql<A, DB> + ?Sized,
+    T: ToSql<A> + ?Sized,
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, DB>) -> Result {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> Result {
         (*self).to_sql(out)
     }
 }

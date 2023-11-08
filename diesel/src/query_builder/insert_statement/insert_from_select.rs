@@ -1,4 +1,3 @@
-use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::expression::{Expression, SelectableExpression};
 use crate::insertable::*;
 use crate::query_builder::*;
@@ -34,20 +33,16 @@ impl<Select, Columns> InsertFromSelect<Select, Columns> {
     }
 }
 
-impl<DB, Select, Columns> CanInsertInSingleQuery<DB> for InsertFromSelect<Select, Columns>
-where
-    DB: Backend,
-{
+impl<Select, Columns> CanInsertInSingleQuery for InsertFromSelect<Select, Columns> {
     fn rows_to_insert(&self) -> Option<usize> {
         None
     }
 }
 
-impl<DB, Select, Columns> QueryFragment<DB> for InsertFromSelect<Select, Columns>
+impl<Select, Columns> QueryFragment for InsertFromSelect<Select, Columns>
 where
-    DB: Backend + DieselReserveSpecialization,
     Columns: ColumnList + Expression,
-    Select: Query<SqlType = Columns::SqlType> + QueryFragment<DB>,
+    Select: Query<SqlType = Columns::SqlType> + QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql("(");

@@ -104,14 +104,13 @@ use std::convert::Into;
 use std::fmt;
 use std::marker::PhantomData;
 
-use crate::backend::Backend;
 use crate::connection::{
     ConnectionSealed, LoadConnection, SimpleConnection, TransactionManager,
     TransactionManagerStatus,
 };
 use crate::expression::QueryMetadata;
 use crate::prelude::*;
-use crate::query_builder::{Query, QueryFragment, QueryId};
+use crate::query_builder::{DB, Query, QueryFragment, QueryId};
 
 /// An r2d2 connection manager for use with Diesel.
 ///
@@ -238,7 +237,7 @@ where
 
     fn execute_returning_count<T>(&mut self, source: &T) -> QueryResult<usize>
     where
-        T: QueryFragment<Self::Backend> + QueryId,
+        T: QueryFragment + QueryId,
     {
         (**self).execute_returning_count(source)
     }
@@ -263,7 +262,7 @@ where
         source: T,
     ) -> QueryResult<Self::Cursor<'conn, 'query>>
     where
-        T: Query + QueryFragment<Self::Backend> + QueryId + 'query,
+        T: Query + QueryFragment + QueryId + 'query,
         Self::Backend: QueryMetadata<T::SqlType>,
     {
         (**self).load(source)
@@ -327,10 +326,7 @@ where
 #[derive(QueryId)]
 pub(crate) struct CheckConnectionQuery;
 
-impl<DB> QueryFragment<DB> for CheckConnectionQuery
-where
-    DB: Backend,
-{
+impl QueryFragment for CheckConnectionQuery {
     fn walk_ast<'b>(
         &'b self,
         mut pass: crate::query_builder::AstPass<'_, 'b, DB>,

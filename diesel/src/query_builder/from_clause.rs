@@ -1,5 +1,5 @@
-use super::{AstPass, QueryFragment, QueryId};
-use crate::backend::Backend;
+use super::{AstPass, DB, QueryFragment, QueryId};
+use crate::backend::SqlDialect;
 use crate::query_source::AppearsInFromClause;
 use crate::{QueryResult, QuerySource};
 
@@ -15,20 +15,17 @@ use crate::{QueryResult, QuerySource};
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct NoFromClause;
 
-impl<DB> QueryFragment<DB> for NoFromClause
+impl QueryFragment for NoFromClause
 where
-    Self: QueryFragment<DB, DB::EmptyFromClauseSyntax>,
-    DB: Backend,
+    Self: QueryFragment<<DB as SqlDialect>::EmptyFromClauseSyntax>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::EmptyFromClauseSyntax>>::walk_ast(self, pass)
+        <Self as QueryFragment<DB::EmptyFromClauseSyntax>>::walk_ast(self, pass)
     }
 }
 
-impl<DB> QueryFragment<DB, crate::backend::sql_dialect::from_clause_syntax::AnsiSqlFromClauseSyntax>
+impl QueryFragment<crate::backend::sql_dialect::from_clause_syntax::AnsiSqlFromClauseSyntax>
     for NoFromClause
-where
-    DB: Backend<EmptyFromClauseSyntax = crate::backend::sql_dialect::from_clause_syntax::AnsiSqlFromClauseSyntax>,
 {
     fn walk_ast<'b>(&'b self, _pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         Ok(())
@@ -119,11 +116,10 @@ impl<F: QuerySource> FromClause<F> {
     }
 }
 
-impl<DB, F> QueryFragment<DB> for FromClause<F>
+impl<F> QueryFragment for FromClause<F>
 where
     F: QuerySource,
-    DB: Backend,
-    F::FromClause: QueryFragment<DB>,
+    F::FromClause: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         pass.push_sql(" FROM ");

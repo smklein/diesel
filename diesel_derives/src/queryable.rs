@@ -29,9 +29,6 @@ pub fn derive(item: DeriveInput) -> Result<TokenStream> {
 
     let (_, ty_generics, _) = item.generics.split_for_impl();
     let mut generics = item.generics.clone();
-    generics
-        .params
-        .push(parse_quote!(__DB: diesel::backend::Backend));
     for id in 0..model.fields().len() {
         let ident = Ident::new(&format!("__ST{id}"), Span::call_site());
         generics.params.push(parse_quote!(#ident));
@@ -40,7 +37,7 @@ pub fn derive(item: DeriveInput) -> Result<TokenStream> {
         let where_clause = generics.where_clause.get_or_insert(parse_quote!(where));
         where_clause
             .predicates
-            .push(parse_quote!((#(#field_ty,)*): FromStaticSqlRow<(#(#sql_type,)*), __DB>));
+            .push(parse_quote!((#(#field_ty,)*): FromStaticSqlRow<(#(#sql_type,)*)>));
     }
     let (impl_generics, _, where_clause) = generics.split_for_impl();
 
@@ -49,7 +46,7 @@ pub fn derive(item: DeriveInput) -> Result<TokenStream> {
         use diesel::row::{Row, Field};
         use std::convert::TryInto;
 
-        impl #impl_generics Queryable<(#(#sql_type,)*), __DB> for #struct_name #ty_generics
+        impl #impl_generics Queryable<(#(#sql_type,)*)> for #struct_name #ty_generics
             #where_clause
         {
             type Row = (#(#field_ty,)*);

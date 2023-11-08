@@ -69,15 +69,14 @@ pub fn derive(item: DeriveInput) -> Result<TokenStream> {
                 }
             }
 
-            impl<#(#lifetimes,)* #(#ty_params,)* __DB,  #(#const_params,)*> diesel::serialize::ToSql<Nullable<#sql_type>, __DB>
+            impl<#(#lifetimes,)* #(#ty_params,)* #(#const_params,)*> diesel::serialize::ToSql<Nullable<#sql_type>>
                 for #struct_ty
             where
-                __DB: diesel::backend::Backend,
-                Self: ToSql<#sql_type, __DB>,
+                Self: ToSql<#sql_type>,
             {
-                fn to_sql<'__b>(&'__b self, out: &mut Output<'__b, '_, __DB>) -> serialize::Result
+                fn to_sql<'__b>(&'__b self, out: &mut Output<'__b, '_>) -> serialize::Result
                 {
-                    ToSql::<#sql_type, __DB>::to_sql(self, out)
+                    ToSql::<#sql_type>::to_sql(self, out)
                 }
             }
         );

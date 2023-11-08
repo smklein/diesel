@@ -28,11 +28,11 @@ use super::order_clause::NoOrderClause;
 use super::select_clause::*;
 use super::where_clause::*;
 use super::NoFromClause;
-use super::{AstPass, Query, QueryFragment};
-use crate::backend::{sql_dialect, Backend};
+use super::{AstPass, DB, Query, QueryFragment};
+use crate::backend::{sql_dialect, SqlDialect};
 use crate::expression::subselect::ValidSubselect;
 use crate::expression::*;
-use crate::query_builder::having_clause::NoHavingClause;
+use crate::query_builder::having_clause::HavingClause;
 use crate::query_builder::limit_offset_clause::LimitOffsetClause;
 use crate::query_builder::{QueryId, SelectQuery};
 use crate::query_dsl::order_dsl::ValidOrderingForDistinct;
@@ -58,7 +58,7 @@ use crate::result::QueryResult;
         locking
     )
 )]
-#[derive(Debug, Clone, Copy, QueryId)]
+#[derive(Debug, Clone, QueryId)]
 #[must_use = "Queries are only executed when calling `load`, `get_result` or similar."]
 pub struct SelectStatement<
     From,
@@ -68,7 +68,6 @@ pub struct SelectStatement<
     Order = NoOrderClause,
     LimitOffset = LimitOffsetClause<NoLimitClause, NoOffsetClause>,
     GroupBy = NoGroupByClause,
-    Having = NoHavingClause,
 > {
     /// The select clause of the query
     pub(crate) select: Select,
@@ -85,7 +84,7 @@ pub struct SelectStatement<
     /// The group by clause of the query
     pub(crate) group_by: GroupBy,
     /// The having clause of the query
-    pub(crate) having: Having,
+    pub(crate) having: HavingClause,
     /// The locking clause of the query
     pub(crate) locking: AllLockingClauses,
 }
@@ -108,8 +107,6 @@ pub trait SelectStatementAccessor {
     type LimitOffset;
     /// The type of the group by clause
     type GroupBy;
-    /// The type of the having clause
-    type Having;
 
     /// Access the select clause
     fn select_clause(&self) -> &Self::Select;
@@ -127,13 +124,13 @@ pub trait SelectStatementAccessor {
     /// Access the group by clause
     fn group_by_clause(&self) -> &Self::GroupBy;
     /// Access the having clause
-    fn having_clause(&self) -> &Self::Having;
+    fn having_clause(&self) -> &HavingClause;
     /// Access the locking clause
     fn locking_clause(&self) -> &AllLockingClauses;
 }
 
-impl<F, S, D, W, O, LOf, G, H> SelectStatementAccessor
-    for SelectStatement<F, S, D, W, O, LOf, G, H>
+impl<F, S, D, W, O, LOf, G> SelectStatementAccessor
+    for SelectStatement<F, S, D, W, O, LOf, G>
 {
     type Select = S;
     type From = F;
@@ -142,7 +139,6 @@ impl<F, S, D, W, O, LOf, G, H> SelectStatementAccessor
     type Order = O;
     type LimitOffset = LOf;
     type GroupBy = G;
-    type Having = H;
 
     fn select_clause(&self) -> &Self::Select {
         &self.select
@@ -172,7 +168,7 @@ impl<F, S, D, W, O, LOf, G, H> SelectStatementAccessor
         &self.group_by
     }
 
-    fn having_clause(&self) -> &Self::Having {
+    fn having_clause(&self) -> &HavingClause {
         &self.having
     }
 
@@ -181,7 +177,7 @@ impl<F, S, D, W, O, LOf, G, H> SelectStatementAccessor
     }
 }
 
-impl<F, S, D, W, O, LOf, G, H> SelectStatement<F, S, D, W, O, LOf, G, H> {
+impl<F, S, D, W, O, LOf, G> SelectStatement<F, S, D, W, O, LOf, G> {
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         select: S,
@@ -191,7 +187,7 @@ impl<F, S, D, W, O, LOf, G, H> SelectStatement<F, S, D, W, O, LOf, G, H> {
         order: O,
         limit_offset: LOf,
         group_by: G,
-        having: H,
+        having: HavingClause,
         locking: AllLockingClauses,
     ) -> Self {
         SelectStatement {
@@ -224,13 +220,13 @@ impl<F: QuerySource> SelectStatement<FromClause<F>> {
                 offset_clause: NoOffsetClause,
             },
             NoGroupByClause,
-            NoHavingClause,
+            HavingClause::None,
             AllLockingClauses::NoLocking,
         )
     }
 }
 
-impl<F, S, D, W, O, LOf, G, H> Query for SelectStatement<F, S, D, W, O, LOf, G, H>
+impl<F, S, D, W, O, LOf, G> Query for SelectStatement<F, S, D, W, O, LOf, G>
 where
     G: ValidGroupByClause,
     S: SelectClauseExpression<F>,
@@ -239,7 +235,7 @@ where
     type SqlType = S::SelectClauseSqlType;
 }
 
-impl<F, S, D, W, O, LOf, G, H> SelectQuery for SelectStatement<F, S, D, W, O, LOf, G, H>
+impl<F, S, D, W, O, LOf, G> SelectQuery for SelectStatement<F, S, D, W, O, LOf, G>
 where
     S: SelectClauseExpression<F>,
     O: ValidOrderingForDistinct<D>,
@@ -247,32 +243,27 @@ where
     type SqlType = S::SelectClauseSqlType;
 }
 
-impl<F, S, D, W, O, LOf, G, H, DB> QueryFragment<DB>
-    for SelectStatement<F, S, D, W, O, LOf, G, H>
+impl<F, S, D, W, O, LOf, G> QueryFragment
+    for SelectStatement<F, S, D, W, O, LOf, G>
 where
-    DB: Backend,
-    Self: QueryFragment<DB, DB::SelectStatementSyntax>,
+    Self: QueryFragment<<DB as SqlDialect>::SelectStatementSyntax>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::SelectStatementSyntax>>::walk_ast(self, pass)
+        <Self as QueryFragment<DB::SelectStatementSyntax>>::walk_ast(self, pass)
     }
 }
 
-impl<F, S, D, W, O, LOf, G, H, DB>
-    QueryFragment<DB, sql_dialect::select_statement_syntax::AnsiSqlSelectStatement>
-    for SelectStatement<F, S, D, W, O, LOf, G, H>
+impl<F, S, D, W, O, LOf, G>
+    QueryFragment<sql_dialect::select_statement_syntax::AnsiSqlSelectStatement>
+    for SelectStatement<F, S, D, W, O, LOf, G>
 where
-    DB: Backend<
-        SelectStatementSyntax = sql_dialect::select_statement_syntax::AnsiSqlSelectStatement,
-    >,
-    S: QueryFragment<DB>,
-    F: QueryFragment<DB>,
-    D: QueryFragment<DB>,
-    W: QueryFragment<DB>,
-    O: QueryFragment<DB>,
-    LOf: QueryFragment<DB>,
-    G: QueryFragment<DB>,
-    H: QueryFragment<DB>,
+    S: QueryFragment,
+    F: QueryFragment,
+    D: QueryFragment,
+    W: QueryFragment,
+    O: QueryFragment,
+    LOf: QueryFragment,
+    G: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql("SELECT ");
@@ -289,8 +280,8 @@ where
     }
 }
 
-impl<S, F, D, W, O, LOf, G, H, QS> ValidSubselect<QS>
-    for SelectStatement<FromClause<F>, S, D, W, O, LOf, G, H>
+impl<S, F, D, W, O, LOf, G, QS> ValidSubselect<QS>
+    for SelectStatement<FromClause<F>, S, D, W, O, LOf, G>
 where
     Self: SelectQuery,
     F: QuerySource,
@@ -300,16 +291,16 @@ where
 {
 }
 
-impl<S, D, W, O, LOf, G, H> ValidSubselect<NoFromClause>
-    for SelectStatement<NoFromClause, S, D, W, O, LOf, G, H>
+impl<S, D, W, O, LOf, G> ValidSubselect<NoFromClause>
+    for SelectStatement<NoFromClause, S, D, W, O, LOf, G>
 where
     Self: SelectQuery,
     W: ValidWhereClause<NoFromClause>,
 {
 }
 
-impl<S, F, D, W, O, LOf, G, H> ValidSubselect<NoFromClause>
-    for SelectStatement<FromClause<F>, S, D, W, O, LOf, G, H>
+impl<S, F, D, W, O, LOf, G> ValidSubselect<NoFromClause>
+    for SelectStatement<FromClause<F>, S, D, W, O, LOf, G>
 where
     Self: SelectQuery,
     F: QuerySource,
@@ -317,8 +308,8 @@ where
 {
 }
 
-impl<S, D, W, O, LOf, G, H, QS> ValidSubselect<QS>
-    for SelectStatement<NoFromClause, S, D, W, O, LOf, G, H>
+impl<S, D, W, O, LOf, G, QS> ValidSubselect<QS>
+    for SelectStatement<NoFromClause, S, D, W, O, LOf, G>
 where
     Self: SelectQuery,
     QS: QuerySource,

@@ -1,19 +1,15 @@
 //! Combine queries using a combinator like `UNION`, `INTERSECT` or `EXPECT`
 //! with or without `ALL` rule for duplicates
 
-use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::expression::subselect::ValidSubselect;
 use crate::query_builder::insert_statement::InsertFromSelect;
-use crate::query_builder::{AsQuery, AstPass, Query, QueryFragment, QueryId, SelectQuery};
+use crate::query_builder::{AsQuery, AstPass, DB, Query, QueryFragment, QueryId, SelectQuery};
 use crate::{CombineDsl, Insertable, QueryResult, RunQueryDsl, Table};
 
 #[derive(Debug, Clone, Copy, QueryId)]
 pub(crate) struct NoCombinationClause;
 
-impl<DB> QueryFragment<DB> for NoCombinationClause
-where
-    DB: Backend + DieselReserveSpecialization,
-{
+impl QueryFragment for NoCombinationClause {
     fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         Ok(())
     }
@@ -139,14 +135,13 @@ where
     }
 }
 
-impl<Combinator, Rule, Source, Rhs, DB: Backend> QueryFragment<DB>
+impl<Combinator, Rule, Source, Rhs> QueryFragment
     for CombinationClause<Combinator, Rule, Source, Rhs>
 where
-    Combinator: QueryFragment<DB>,
-    Rule: QueryFragment<DB>,
-    ParenthesisWrapper<Source>: QueryFragment<DB>,
-    ParenthesisWrapper<Rhs>: QueryFragment<DB>,
-    DB: Backend + SupportsCombinationClause<Combinator, Rule> + DieselReserveSpecialization,
+    Combinator: QueryFragment,
+    Rule: QueryFragment,
+    ParenthesisWrapper<Source>: QueryFragment,
+    ParenthesisWrapper<Rhs>: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         self.source.walk_ast(out.reborrow())?;
@@ -160,10 +155,7 @@ where
 /// Computes the set union of the rows returned by the involved `SELECT` statements using SQL `UNION`
 pub struct Union;
 
-impl<DB> QueryFragment<DB> for Union
-where
-    DB: Backend + DieselReserveSpecialization,
-{
+impl QueryFragment for Union {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql(" UNION ");
         Ok(())
@@ -174,10 +166,7 @@ where
 /// Computes the set intersection of the rows returned by the involved `SELECT` statements using SQL `INTERSECT`
 pub struct Intersect;
 
-impl<DB> QueryFragment<DB> for Intersect
-where
-    DB: Backend + DieselReserveSpecialization,
-{
+impl QueryFragment for Intersect {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql(" INTERSECT ");
         Ok(())
@@ -188,10 +177,7 @@ where
 /// Computes the set difference of the rows returned by the involved `SELECT` statements using SQL `EXCEPT`
 pub struct Except;
 
-impl<DB> QueryFragment<DB> for Except
-where
-    DB: Backend + DieselReserveSpecialization,
-{
+impl QueryFragment for Except {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql(" EXCEPT ");
         Ok(())
@@ -202,10 +188,7 @@ where
 /// Remove duplicate rows in the result, this is the default behavior of `UNION`, `INTERSECT` and `EXCEPT`
 pub struct Distinct;
 
-impl<DB> QueryFragment<DB> for Distinct
-where
-    DB: Backend + DieselReserveSpecialization,
-{
+impl QueryFragment for Distinct {
     fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         Ok(())
     }
@@ -215,10 +198,7 @@ where
 /// Keep duplicate rows in the result
 pub struct All;
 
-impl<DB> QueryFragment<DB> for All
-where
-    DB: Backend + DieselReserveSpecialization,
-{
+impl QueryFragment for All {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql("ALL ");
         Ok(())
@@ -239,7 +219,7 @@ mod postgres {
     use crate::query_builder::{AstPass, QueryFragment};
     use crate::QueryResult;
 
-    impl<T: QueryFragment<Pg>> QueryFragment<Pg> for ParenthesisWrapper<T> {
+    impl<T: QueryFragment> QueryFragment for ParenthesisWrapper<T> {
         fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
             out.push_sql("(");
             self.0.walk_ast(out.reborrow())?;
@@ -263,7 +243,7 @@ mod mysql {
     use crate::query_builder::{AstPass, QueryFragment};
     use crate::QueryResult;
 
-    impl<T: QueryFragment<Mysql>> QueryFragment<Mysql> for ParenthesisWrapper<T> {
+    impl<T: QueryFragment> QueryFragment for ParenthesisWrapper<T> {
         fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Mysql>) -> QueryResult<()> {
             out.push_sql("(");
             self.0.walk_ast(out.reborrow())?;
@@ -283,7 +263,7 @@ mod sqlite {
     use crate::sqlite::Sqlite;
     use crate::QueryResult;
 
-    impl<T: QueryFragment<Sqlite>> QueryFragment<Sqlite> for ParenthesisWrapper<T> {
+    impl<T: QueryFragment> QueryFragment for ParenthesisWrapper<T> {
         fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Sqlite>) -> QueryResult<()> {
             // SQLite does not support parenthesis around this clause
             // we can emulate this by construct a fake outer

@@ -18,9 +18,9 @@ use crate::sql_types::{Date, Time, Timestamp, Timestamptz};
 const PG_EPOCH: PrimitiveDateTime = datetime!(2000-1-1 0:00:00);
 
 #[cfg(all(feature = "time", feature = "postgres_backend"))]
-impl FromSql<Timestamp, Pg> for PrimitiveDateTime {
+impl FromSql<Timestamp> for PrimitiveDateTime {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        let PgTimestamp(offset) = FromSql::<Timestamp, Pg>::from_sql(bytes)?;
+        let PgTimestamp(offset) = FromSql::<Timestamp>::from_sql(bytes)?;
         match PG_EPOCH.checked_add(Duration::microseconds(offset)) {
             Some(v) => Ok(v),
             None => {
@@ -32,63 +32,63 @@ impl FromSql<Timestamp, Pg> for PrimitiveDateTime {
 }
 
 #[cfg(all(feature = "time", feature = "postgres_backend"))]
-impl ToSql<Timestamp, Pg> for PrimitiveDateTime {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<Timestamp> for PrimitiveDateTime {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         let micros = (*self - PG_EPOCH).whole_microseconds();
         if micros > (i64::MAX as i128) {
             let error_message = format!("{self:?} as microseconds is too large to fit in an i64");
             return Err(error_message.into());
         }
         let micros = micros as i64;
-        ToSql::<Timestamp, Pg>::to_sql(&PgTimestamp(micros), &mut out.reborrow())
+        ToSql::<Timestamp>::to_sql(&PgTimestamp(micros), &mut out.reborrow())
     }
 }
 
 #[cfg(all(feature = "time", feature = "postgres_backend"))]
-impl FromSql<Timestamptz, Pg> for PrimitiveDateTime {
+impl FromSql<Timestamptz> for PrimitiveDateTime {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        FromSql::<Timestamp, Pg>::from_sql(bytes)
+        FromSql::<Timestamp>::from_sql(bytes)
     }
 }
 
 #[cfg(all(feature = "time", feature = "postgres_backend"))]
-impl ToSql<Timestamptz, Pg> for PrimitiveDateTime {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
-        ToSql::<Timestamp, Pg>::to_sql(self, out)
+impl ToSql<Timestamptz> for PrimitiveDateTime {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
+        ToSql::<Timestamp>::to_sql(self, out)
     }
 }
 
 #[cfg(all(feature = "time", feature = "postgres_backend"))]
-impl FromSql<Timestamptz, Pg> for OffsetDateTime {
+impl FromSql<Timestamptz> for OffsetDateTime {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        let primitive_date_time = <PrimitiveDateTime as FromSql<Timestamptz, Pg>>::from_sql(bytes)?;
+        let primitive_date_time = <PrimitiveDateTime as FromSql<Timestamptz>>::from_sql(bytes)?;
         Ok(primitive_date_time.assume_utc())
     }
 }
 
 #[cfg(all(feature = "time", feature = "postgres_backend"))]
-impl ToSql<Timestamptz, Pg> for OffsetDateTime {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<Timestamptz> for OffsetDateTime {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         let as_utc = self.to_offset(UtcOffset::UTC);
         let primitive_date_time = PrimitiveDateTime::new(as_utc.date(), as_utc.time());
-        ToSql::<Timestamptz, Pg>::to_sql(&primitive_date_time, &mut out.reborrow())
+        ToSql::<Timestamptz>::to_sql(&primitive_date_time, &mut out.reborrow())
     }
 }
 
 #[cfg(all(feature = "time", feature = "postgres_backend"))]
-impl ToSql<Time, Pg> for NaiveTime {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<Time> for NaiveTime {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         let duration = *self - NaiveTime::MIDNIGHT;
         // microseconds in a day cannot overflow i64
         let micros = duration.whole_microseconds() as i64;
-        ToSql::<Time, Pg>::to_sql(&PgTime(micros), &mut out.reborrow())
+        ToSql::<Time>::to_sql(&PgTime(micros), &mut out.reborrow())
     }
 }
 
 #[cfg(all(feature = "time", feature = "postgres_backend"))]
-impl FromSql<Time, Pg> for NaiveTime {
+impl FromSql<Time> for NaiveTime {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        let PgTime(offset) = FromSql::<Time, Pg>::from_sql(bytes)?;
+        let PgTime(offset) = FromSql::<Time>::from_sql(bytes)?;
         let duration = Duration::microseconds(offset);
         Ok(NaiveTime::MIDNIGHT + duration)
     }
@@ -97,17 +97,17 @@ impl FromSql<Time, Pg> for NaiveTime {
 const PG_EPOCH_DATE: NaiveDate = date!(2000 - 1 - 1);
 
 #[cfg(all(feature = "time", feature = "postgres_backend"))]
-impl ToSql<Date, Pg> for NaiveDate {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<Date> for NaiveDate {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         let days_since_epoch = (*self - PG_EPOCH_DATE).whole_days();
-        ToSql::<Date, Pg>::to_sql(&PgDate(days_since_epoch as i32), &mut out.reborrow())
+        ToSql::<Date>::to_sql(&PgDate(days_since_epoch as i32), &mut out.reborrow())
     }
 }
 
 #[cfg(all(feature = "time", feature = "postgres_backend"))]
-impl FromSql<Date, Pg> for NaiveDate {
+impl FromSql<Date> for NaiveDate {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        let PgDate(offset) = FromSql::<Date, Pg>::from_sql(bytes)?;
+        let PgDate(offset) = FromSql::<Date>::from_sql(bytes)?;
         match PG_EPOCH_DATE.checked_add(Duration::days(i64::from(offset))) {
             Some(date) => Ok(date),
             None => {

@@ -109,7 +109,7 @@ where
     /// Most backends should use [`RawBytesBindCollector`].
     ///
     /// [`RawBytesBindCollector`]: crate::query_builder::bind_collector::RawBytesBindCollector
-    type BindCollector<'a>: crate::query_builder::bind_collector::BindCollector<'a, Self> + 'a;
+    type BindCollector<'a>: crate::query_builder::bind_collector::BindCollector<'a> + 'a;
 }
 
 #[doc(hidden)]
@@ -133,8 +133,8 @@ pub type BindCollector<'a, DB> = <DB as Backend>::BindCollector<'a>;
 /// Each associated type is used to configure the behaviour
 /// of one or more [`QueryFragment`](crate::query_builder::QueryFragment)
 /// implementations by providing
-/// a custom `QueryFragment<YourBackend, YourSpecialSyntaxType>` implementation
-/// to specialize on generic `QueryFragment<DB, DB::AssociatedType>` implementations.
+/// a custom `QueryFragment<YourSpecialSyntaxType>` implementation
+/// to specialize on generic `QueryFragment<DB::AssociatedType>` implementations.
 ///
 #[cfg_attr(
     feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes",

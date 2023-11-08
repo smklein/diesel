@@ -111,9 +111,8 @@ pub trait TypedExpressionType {}
 /// Possible types for []`Expression::SqlType`]
 ///
 pub mod expression_types {
-    use super::{QueryMetadata, TypedExpressionType};
-    use crate::backend::Backend;
-    use crate::sql_types::SingleValue;
+    use super::{DB, QueryMetadata, TypedExpressionType};
+    use crate::sql_types::{SingleValue, TypeMetadata};
 
     /// Query nodes with this expression type do not have a statically at compile
     /// time known expression type.
@@ -140,8 +139,11 @@ pub mod expression_types {
 
     impl<ST> TypedExpressionType for ST where ST: SingleValue {}
 
-    impl<DB: Backend> QueryMetadata<Untyped> for DB {
-        fn row_metadata(_: &mut DB::MetadataLookup, row: &mut Vec<Option<DB::TypeMetadata>>) {
+    impl QueryMetadata<Untyped> for DB {
+        fn row_metadata(
+            _: &mut <DB as TypeMetadata>::MetadataLookup,
+            row: &mut Vec<Option<<DB as TypeMetadata>::TypeMetadata>>,
+        ) {
             row.push(None)
         }
     }
@@ -391,10 +393,7 @@ pub trait SelectableExpression<QS: ?Sized>: AppearsInQuery<QS> {}
 ///     name: String,
 /// }
 ///
-/// impl<DB> Selectable<DB> for User
-/// where
-///     DB: Backend
-/// {
+/// impl Selectable for User {
 ///     type SelectExpression = (users::id, users::name);
 ///
 ///     fn construct_selection() -> Self::SelectExpression {
@@ -597,7 +596,7 @@ pub trait SelectableExpression<QS: ?Sized>: AppearsInQuery<QS> {}
 /// # }
 /// ```
 ///
-pub trait Selectable<DB: Backend> {
+pub trait Selectable {
     /// The expression you'd like to select.
     ///
     /// This is typically a tuple of corresponding to the table columns of your struct's fields.
@@ -613,25 +612,24 @@ pub use diesel_derives::Selectable;
 /// This helper trait provides several methods for
 /// constructing a select or returning clause based on a
 /// [`Selectable`] implementation.
-pub trait SelectableHelper<DB: Backend>: Selectable<DB> + Sized {
+pub trait SelectableHelper: Selectable + Sized {
     /// Construct a select clause based on a [`Selectable`] implementation.
     ///
     /// The returned select clause enforces that you use the same type
     /// for constructing the select clause and for loading the query result into.
-    fn as_select() -> AsSelect<Self, DB>;
+    fn as_select() -> AsSelect<Self>;
 
     /// An alias for `as_select` that can be used with returning clauses
-    fn as_returning() -> AsSelect<Self, DB> {
+    fn as_returning() -> AsSelect<Self> {
         Self::as_select()
     }
 }
 
-impl<T, DB> SelectableHelper<DB> for T
+impl<T> SelectableHelper for T
 where
-    T: Selectable<DB>,
-    DB: Backend,
+    T: Selectable,
 {
-    fn as_select() -> AsSelect<Self, DB> {
+    fn as_select() -> AsSelect<Self> {
         select_by::SelectBy::new()
     }
 }
@@ -644,7 +642,7 @@ pub trait ValidGrouping<GroupByClause> {
 #[doc(inline)]
 pub use diesel_derives::ValidGrouping;
 
-use crate::query_builder::{QueryFragment, QueryId};
+use crate::query_builder::{DB, QueryFragment, QueryId};
 
 /// Helper trait used when boxing expressions.
 ///
@@ -818,28 +816,26 @@ use crate::query_builder::{QueryFragment, QueryId};
 /// #     Ok(())
 /// # }
 /// ```
-pub trait BoxableExpression<QS, DB, GB = ()>
+pub trait BoxableExpression<QS, GB = ()>
 where
-    DB: Backend,
     Self: Expression,
     Self: SelectableExpression<QS>,
-    Self: QueryFragment<DB>,
+    Self: QueryFragment,
     Self: Send,
 {
 }
 
-impl<QS, T, DB, GB> BoxableExpression<QS, DB, GB> for T
+impl<QS, T, GB> BoxableExpression<QS, GB> for T
 where
-    DB: Backend,
     T: Expression,
     T: SelectableExpression<QS>,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
     T: Send,
 {
 }
 
-impl<'a, QS, ST, DB, GB> QueryId
-    for dyn BoxableExpression<QS, DB, GB, SqlType = ST> + 'a
+impl<'a, QS, ST, GB> QueryId
+    for dyn BoxableExpression<QS, GB, SqlType = ST> + 'a
 {
     type QueryId = ();
 

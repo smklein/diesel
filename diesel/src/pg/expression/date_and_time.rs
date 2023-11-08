@@ -34,10 +34,10 @@ where
     type SqlType = Timestamp;
 }
 
-impl<Ts, Tz> QueryFragment<Pg> for AtTimeZone<Ts, Tz>
+impl<Ts, Tz> QueryFragment for AtTimeZone<Ts, Tz>
 where
-    Ts: QueryFragment<Pg>,
-    Tz: QueryFragment<Pg>,
+    Ts: QueryFragment,
+    Tz: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         self.timestamp.walk_ast(out.reborrow())?;

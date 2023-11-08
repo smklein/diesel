@@ -1,4 +1,4 @@
-use crate::backend::{sql_dialect, Backend};
+use crate::backend::{sql_dialect, Backend, SqlDialect};
 use crate::expression::SqlLiteral;
 use crate::query_builder::*;
 use crate::query_source::Column;
@@ -11,11 +11,7 @@ pub trait OnConflictTarget<Table> {}
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct NoConflictTarget;
 
-impl<DB> QueryFragment<DB> for NoConflictTarget
-where
-    DB: Backend,
-    DB::OnConflictClause: sql_dialect::on_conflict_clause::SupportsOnConflictClause,
-{
+impl QueryFragment for NoConflictTarget {
     fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         Ok(())
     }
@@ -27,17 +23,16 @@ impl<Table> OnConflictTarget<Table> for NoConflictTarget {}
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct ConflictTarget<T>(pub T);
 
-impl<DB, T> QueryFragment<DB> for ConflictTarget<T>
+impl<T> QueryFragment for ConflictTarget<T>
 where
-    DB: Backend,
-    Self: QueryFragment<DB, DB::OnConflictClause>,
+    Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::OnConflictClause>>::walk_ast(self, pass)
+        <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
     }
 }
 
-impl<DB, T, SP> QueryFragment<DB, SP> for ConflictTarget<T>
+impl<T, SP> QueryFragment<SP> for ConflictTarget<T>
 where
     DB: Backend<OnConflictClause = SP>,
     SP: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
@@ -53,11 +48,11 @@ where
 
 impl<T> OnConflictTarget<T::Table> for ConflictTarget<T> where T: Column {}
 
-impl<DB, ST, SP> QueryFragment<DB, SP> for ConflictTarget<SqlLiteral<ST>>
+impl<ST, SP> QueryFragment<SP> for ConflictTarget<SqlLiteral<ST>>
 where
     DB: Backend<OnConflictClause = SP>,
     SP: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
-    SqlLiteral<ST>: QueryFragment<DB>,
+    SqlLiteral<ST>: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql(" ");
@@ -68,7 +63,7 @@ where
 
 impl<Tab, ST> OnConflictTarget<Tab> for ConflictTarget<SqlLiteral<ST>> {}
 
-impl<DB, T, SP> QueryFragment<DB, SP> for ConflictTarget<(T,)>
+impl<T, SP> QueryFragment<SP> for ConflictTarget<(T,)>
 where
     DB: Backend<OnConflictClause = SP>,
     SP: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
@@ -91,13 +86,13 @@ macro_rules! on_conflict_tuples {
         }
     )+) => {
         $(
-            impl<_DB, _T, _SP, $($T),*> QueryFragment<_DB, _SP> for ConflictTarget<(_T, $($T),*)> where
-                _DB: Backend<OnConflictClause = _SP>,
+            impl<_T, _SP, $($T),*> QueryFragment<_SP> for ConflictTarget<(_T, $($T),*)> where
+                DB: Backend<OnConflictClause = _SP>,
                 _SP: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
                 _T: Column,
                 $($T: Column<Table=_T::Table>,)*
             {
-                fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, _DB>) -> QueryResult<()>
+                fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()>
                 {
                     out.push_sql(" (");
                     out.push_identifier(_T::NAME)?;

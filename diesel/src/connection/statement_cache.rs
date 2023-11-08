@@ -182,7 +182,7 @@ where
     pub fn cached_statement(
         &mut self,
         maybe_type_id: Option<TypeId>,
-        source: &dyn QueryFragment<DB>,
+        source: &dyn QueryFragment,
         backend: &DB,
         bind_types: &[DB::TypeMetadata],
         prepare_fn: &mut dyn FnMut(&str, PrepareForCache) -> QueryResult<Statement>,
@@ -290,7 +290,7 @@ where
     #[allow(unreachable_pub)]
     pub fn for_source(
         maybe_type_id: Option<TypeId>,
-        source: &dyn QueryFragment<DB>,
+        source: &dyn QueryFragment,
         bind_types: &[DB::TypeMetadata],
         backend: &DB,
     ) -> QueryResult<Self> {
@@ -312,7 +312,7 @@ where
     /// twice if it's already part of the current cache key
     // Note: Intentionally monomorphic over source.
     #[allow(unreachable_pub)]
-    pub fn sql(&self, source: &dyn QueryFragment<DB>, backend: &DB) -> QueryResult<Cow<'_, str>> {
+    pub fn sql(&self, source: &dyn QueryFragment, backend: &DB) -> QueryResult<Cow<'_, str>> {
         match *self {
             StatementCacheKey::Type(_) => Self::construct_sql(source, backend).map(Cow::Owned),
             StatementCacheKey::Sql { ref sql, .. } => Ok(Cow::Borrowed(sql)),

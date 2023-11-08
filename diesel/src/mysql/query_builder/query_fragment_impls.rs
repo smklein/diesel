@@ -8,21 +8,21 @@ use crate::query_builder::upsert::on_conflict_actions::{DoNothing, DoUpdate};
 use crate::query_builder::upsert::on_conflict_clause::OnConflictValues;
 use crate::query_builder::upsert::on_conflict_target::{ConflictTarget, OnConflictTarget};
 use crate::query_builder::where_clause::NoWhereClause;
-use crate::query_builder::{AstPass, QueryFragment};
+use crate::query_builder::{AstPass, DB, QueryFragment};
 use crate::result::QueryResult;
 use crate::{Column, Table};
 
-impl QueryFragment<Mysql, crate::mysql::backend::MysqlStyleDefaultValueClause> for DefaultValues {
+impl QueryFragment<crate::mysql::backend::MysqlStyleDefaultValueClause> for DefaultValues {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Mysql>) -> QueryResult<()> {
         out.push_sql("() VALUES ()");
         Ok(())
     }
 }
 
-impl<L, R> QueryFragment<Mysql, crate::mysql::backend::MysqlConcatClause> for Concat<L, R>
+impl<L, R> QueryFragment<crate::mysql::backend::MysqlConcatClause> for Concat<L, R>
 where
-    L: QueryFragment<Mysql>,
-    R: QueryFragment<Mysql>,
+    L: QueryFragment,
+    R: QueryFragment,
 {
     fn walk_ast<'b>(
         &'b self,
@@ -37,10 +37,10 @@ where
     }
 }
 
-impl<T> QueryFragment<Mysql, crate::mysql::backend::MysqlOnConflictClause> for DoNothing<T>
+impl<T> QueryFragment<crate::mysql::backend::MysqlOnConflictClause> for DoNothing<T>
 where
     T: Table + StaticQueryFragment,
-    T::Component: QueryFragment<Mysql>,
+    T::Component: QueryFragment,
     T::PrimaryKey: Column,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Mysql>) -> QueryResult<()> {
@@ -56,11 +56,11 @@ where
     }
 }
 
-impl<T, Tab> QueryFragment<Mysql, crate::mysql::backend::MysqlOnConflictClause> for DoUpdate<T, Tab>
+impl<T, Tab> QueryFragment<crate::mysql::backend::MysqlOnConflictClause> for DoUpdate<T, Tab>
 where
-    T: QueryFragment<Mysql>,
+    T: QueryFragment,
     Tab: Table + StaticQueryFragment,
-    Tab::Component: QueryFragment<Mysql>,
+    Tab::Component: QueryFragment,
     Tab::PrimaryKey: Column,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Mysql>) -> QueryResult<()> {
@@ -81,13 +81,13 @@ where
     }
 }
 
-impl<Values, Target, Action> QueryFragment<Mysql, MysqlOnConflictClause>
+impl<Values, Target, Action> QueryFragment<MysqlOnConflictClause>
     for OnConflictValues<Values, Target, Action, NoWhereClause>
 where
-    Values: QueryFragment<Mysql>,
-    Target: QueryFragment<Mysql>,
-    Action: QueryFragment<Mysql>,
-    NoWhereClause: QueryFragment<Mysql>,
+    Values: QueryFragment,
+    Target: QueryFragment,
+    Action: QueryFragment,
+    NoWhereClause: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Mysql>) -> QueryResult<()> {
         self.values.walk_ast(out.reborrow())?;
@@ -110,15 +110,15 @@ pub struct DuplicatedKeys;
 
 impl<Tab> OnConflictTarget<Tab> for ConflictTarget<DuplicatedKeys> {}
 
-impl QueryFragment<Mysql, MysqlOnConflictClause> for ConflictTarget<DuplicatedKeys> {
+impl QueryFragment<MysqlOnConflictClause> for ConflictTarget<DuplicatedKeys> {
     fn walk_ast<'b>(&'b self, _out: AstPass<'_, 'b, Mysql>) -> QueryResult<()> {
         Ok(())
     }
 }
 
-impl<S> QueryFragment<crate::mysql::Mysql> for OnConflictSelectWrapper<S>
+impl<S> QueryFragment for OnConflictSelectWrapper<S>
 where
-    S: QueryFragment<crate::mysql::Mysql>,
+    S: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b, crate::mysql::Mysql>) -> QueryResult<()> {
         self.0.walk_ast(out)

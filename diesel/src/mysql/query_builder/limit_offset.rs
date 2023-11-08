@@ -5,15 +5,15 @@ use crate::query_builder::offset_clause::{NoOffsetClause, OffsetClause};
 use crate::query_builder::{AstPass, IntoBoxedClause, QueryFragment};
 use crate::result::QueryResult;
 
-impl QueryFragment<Mysql> for LimitOffsetClause<NoLimitClause, NoOffsetClause> {
+impl QueryFragment for LimitOffsetClause<NoLimitClause, NoOffsetClause> {
     fn walk_ast<'b>(&'b self, _out: AstPass<'_, 'b, Mysql>) -> QueryResult<()> {
         Ok(())
     }
 }
 
-impl<L> QueryFragment<Mysql> for LimitOffsetClause<LimitClause<L>, NoOffsetClause>
+impl<L> QueryFragment for LimitOffsetClause<LimitClause<L>, NoOffsetClause>
 where
-    LimitClause<L>: QueryFragment<Mysql>,
+    LimitClause<L>: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b, Mysql>) -> QueryResult<()> {
         self.limit_clause.walk_ast(out)?;
@@ -21,10 +21,10 @@ where
     }
 }
 
-impl<L, O> QueryFragment<Mysql> for LimitOffsetClause<LimitClause<L>, OffsetClause<O>>
+impl<L, O> QueryFragment for LimitOffsetClause<LimitClause<L>, OffsetClause<O>>
 where
-    LimitClause<L>: QueryFragment<Mysql>,
-    OffsetClause<O>: QueryFragment<Mysql>,
+    LimitClause<L>: QueryFragment,
+    OffsetClause<O>: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Mysql>) -> QueryResult<()> {
         self.limit_clause.walk_ast(out.reborrow())?;
@@ -33,7 +33,7 @@ where
     }
 }
 
-impl<'a> QueryFragment<Mysql> for BoxedLimitOffsetClause<'a, Mysql> {
+impl<'a> QueryFragment for BoxedLimitOffsetClause<'al> {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Mysql>) -> QueryResult<()> {
         match (self.limit.as_ref(), self.offset.as_ref()) {
             (Some(limit), Some(offset)) => {
@@ -63,8 +63,8 @@ impl<'a> QueryFragment<Mysql> for BoxedLimitOffsetClause<'a, Mysql> {
     }
 }
 
-impl<'a> IntoBoxedClause<'a, Mysql> for LimitOffsetClause<NoLimitClause, NoOffsetClause> {
-    type BoxedClause = BoxedLimitOffsetClause<'a, Mysql>;
+impl<'a> IntoBoxedClause<'a> for LimitOffsetClause<NoLimitClause, NoOffsetClause> {
+    type BoxedClause = BoxedLimitOffsetClause<'a>;
 
     fn into_boxed(self) -> Self::BoxedClause {
         BoxedLimitOffsetClause {
@@ -74,11 +74,11 @@ impl<'a> IntoBoxedClause<'a, Mysql> for LimitOffsetClause<NoLimitClause, NoOffse
     }
 }
 
-impl<'a, L> IntoBoxedClause<'a, Mysql> for LimitOffsetClause<LimitClause<L>, NoOffsetClause>
+impl<'a, L> IntoBoxedClause<'a> for LimitOffsetClause<LimitClause<L>, NoOffsetClause>
 where
-    L: QueryFragment<Mysql> + Send + 'a,
+    L: QueryFragment + Send + 'a,
 {
-    type BoxedClause = BoxedLimitOffsetClause<'a, Mysql>;
+    type BoxedClause = BoxedLimitOffsetClause<'a>;
 
     fn into_boxed(self) -> Self::BoxedClause {
         BoxedLimitOffsetClause {
@@ -88,12 +88,12 @@ where
     }
 }
 
-impl<'a, L, O> IntoBoxedClause<'a, Mysql> for LimitOffsetClause<LimitClause<L>, OffsetClause<O>>
+impl<'a, L, O> IntoBoxedClause<'a> for LimitOffsetClause<LimitClause<L>, OffsetClause<O>>
 where
-    L: QueryFragment<Mysql> + Send + 'a,
-    O: QueryFragment<Mysql> + Send + 'a,
+    L: QueryFragment + Send + 'a,
+    O: QueryFragment + Send + 'a,
 {
-    type BoxedClause = BoxedLimitOffsetClause<'a, Mysql>;
+    type BoxedClause = BoxedLimitOffsetClause<'a>;
 
     fn into_boxed(self) -> Self::BoxedClause {
         BoxedLimitOffsetClause {

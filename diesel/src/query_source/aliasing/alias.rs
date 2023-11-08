@@ -1,10 +1,10 @@
 use super::field_alias_mapper::FieldAliasMapper;
 use super::{AliasSource, AliasedField};
 
-use crate::backend::{sql_dialect, Backend};
+use crate::backend::{sql_dialect, SqlDialect};
 use crate::expression::{Expression, SelectableExpression};
 use crate::helper_types::AliasedFields;
-use crate::query_builder::{AsQuery, AstPass, FromClause, QueryFragment, QueryId, SelectStatement};
+use crate::query_builder::{AsQuery, AstPass, DB, FromClause, QueryFragment, QueryId, SelectStatement};
 use crate::query_source::{AppearsInFromClause, Column, Never, QuerySource, Table, TableNotEqual};
 use crate::result::QueryResult;
 
@@ -84,22 +84,20 @@ where
     }
 }
 
-impl<S, DB> QueryFragment<DB> for Alias<S>
+impl<S> QueryFragment for Alias<S>
 where
     S: AliasSource,
-    DB: Backend,
-    Self: QueryFragment<DB, DB::AliasSyntax>,
+    Self: QueryFragment<<DB as SqlDialect>::AliasSyntax>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::AliasSyntax>>::walk_ast(self, pass)
+        <Self as QueryFragment<DB::AliasSyntax>>::walk_ast(self, pass)
     }
 }
 
-impl<S, DB> QueryFragment<DB, sql_dialect::alias_syntax::AsAliasSyntax> for Alias<S>
+impl<S> QueryFragment<sql_dialect::alias_syntax::AsAliasSyntax> for Alias<S>
 where
     S: AliasSource,
-    DB: Backend,
-    S::Target: QueryFragment<DB>,
+    S::Target: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         self.source.target().walk_ast(pass.reborrow())?;

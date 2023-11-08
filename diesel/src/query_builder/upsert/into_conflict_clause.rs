@@ -35,11 +35,11 @@ impl<V, Tab, QId, const STATIC_QUERY_ID: bool> IntoConflictValueClause
     }
 }
 
-impl<F, S, D, W, O, LOf, G, H, Columns> IntoConflictValueClause
-    for InsertFromSelect<SelectStatement<F, S, D, W, O, LOf, G, H>, Columns>
+impl<F, S, D, W, O, LOf, G, Columns> IntoConflictValueClause
+    for InsertFromSelect<SelectStatement<F, S, D, W, O, LOf, G>, Columns>
 {
     type ValueClause = InsertFromSelect<
-        OnConflictSelectWrapper<SelectStatement<F, S, D, W, O, LOf, G, H>>,
+        OnConflictSelectWrapper<SelectStatement<F, S, D, W, O, LOf, G>>,
         Columns,
     >;
 
@@ -52,11 +52,11 @@ impl<F, S, D, W, O, LOf, G, H, Columns> IntoConflictValueClause
     }
 }
 
-impl<'a, ST, QS, DB, GB, Columns> IntoConflictValueClause
-    for InsertFromSelect<BoxedSelectStatement<'a, ST, QS, DB, GB>, Columns>
+impl<'a, ST, QS, GB, Columns> IntoConflictValueClause
+    for InsertFromSelect<BoxedSelectStatement<'a, ST, QS, GB>, Columns>
 {
     type ValueClause = InsertFromSelect<
-        OnConflictSelectWrapper<BoxedSelectStatement<'a, ST, QS, DB, GB>>,
+        OnConflictSelectWrapper<BoxedSelectStatement<'a, ST, QS, GB>>,
         Columns,
     >;
 

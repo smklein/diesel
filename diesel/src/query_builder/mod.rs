@@ -8,6 +8,8 @@
 mod query_id;
 #[macro_use]
 mod clause_macro;
+#[macro_use]
+mod optional_clause_macro;
 
 pub(crate) mod ast_pass;
 pub mod bind_collector;
@@ -193,6 +195,13 @@ pub trait SelectQuery {
     type SqlType;
 }
 
+#[cfg(feature = "postgres")]
+pub type DB = crate::pg::Pg;
+#[cfg(feature = "mysql")]
+pub type DB = crate::mysql::Mysql;
+#[cfg(feature = "sqlite")]
+pub type DB = crate::sqlite::Sqlite;
+
 /// An untyped fragment of SQL.
 ///
 /// This may be a complete SQL command (such as an update statement without a
@@ -202,7 +211,7 @@ pub trait SelectQuery {
 ///
 /// [`ExecuteDsl`]: crate::query_dsl::methods::ExecuteDsl
 /// [`LoadQuery`]: crate::query_dsl::methods::LoadQuery
-pub trait QueryFragment<DB: Backend, SP = self::private::NotSpecialized> {
+pub trait QueryFragment<SP = self::private::NotSpecialized> {
     /// Walk over this `QueryFragment` for all passes.
     ///
     /// This method is where the actual behavior of an AST node is implemented.
@@ -217,7 +226,7 @@ pub trait QueryFragment<DB: Backend, SP = self::private::NotSpecialized> {
     #[diesel_derives::__diesel_public_if(
         feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes"
     )]
-    fn to_sql(&self, out: &mut DB::QueryBuilder, backend: &DB) -> QueryResult<()> {
+    fn to_sql(&self, out: &mut <DB as Backend>::QueryBuilder, backend: &DB) -> QueryResult<()> {
         let mut options = AstPassToSqlOptions::default();
         self.walk_ast(AstPass::to_sql(out, &mut options, backend))
     }
@@ -233,8 +242,8 @@ pub trait QueryFragment<DB: Backend, SP = self::private::NotSpecialized> {
     )]
     fn collect_binds<'b>(
         &'b self,
-        out: &mut DB::BindCollector<'b>,
-        metadata_lookup: &mut DB::MetadataLookup,
+        out: &mut <DB as Backend>::BindCollector<'b>,
+        metadata_lookup: &mut <DB as crate::sql_types::TypeMetadata>::MetadataLookup,
         backend: &'b DB,
     ) -> QueryResult<()> {
         self.walk_ast(AstPass::collect_binds(out, metadata_lookup, backend))
@@ -275,36 +284,33 @@ pub trait QueryFragment<DB: Backend, SP = self::private::NotSpecialized> {
     }
 }
 
-impl<T: ?Sized, DB> QueryFragment<DB> for Box<T>
+impl<T: ?Sized> QueryFragment for Box<T>
 where
-    DB: Backend,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         QueryFragment::walk_ast(&**self, pass)
     }
 }
 
-impl<'a, T: ?Sized, DB> QueryFragment<DB> for &'a T
+impl<'a, T: ?Sized> QueryFragment for &'a T
 where
-    DB: Backend,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         QueryFragment::walk_ast(&**self, pass)
     }
 }
 
-impl<DB: Backend> QueryFragment<DB> for () {
+impl QueryFragment for () {
     fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         Ok(())
     }
 }
 
-impl<T, DB> QueryFragment<DB> for Option<T>
+impl<T> QueryFragment for Option<T>
 where
-    DB: Backend,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         match *self {
@@ -317,7 +323,7 @@ where
 /// A trait used to construct type erased boxed variant of the current query node
 ///
 /// Mainly useful for implementing third party backends
-pub trait IntoBoxedClause<'a, DB> {
+pub trait IntoBoxedClause<'a> {
     /// Resulting type
     type BoxedClause;
 
@@ -405,7 +411,7 @@ impl<T: Query> AsQuery for T {
 /// # }
 /// # }
 /// ```
-pub fn debug_query<DB, T>(query: &T) -> DebugQuery<'_, T, DB> {
+pub fn debug_query<T>(query: &T) -> DebugQuery<'_, T> {
     DebugQuery::new(query)
 }
 

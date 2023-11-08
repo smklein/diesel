@@ -164,7 +164,7 @@ impl Connection for SqliteConnection {
 
     fn execute_returning_count<T>(&mut self, source: &T) -> QueryResult<usize>
     where
-        T: QueryFragment<Self::Backend> + QueryId,
+        T: QueryFragment + QueryId,
     {
         let statement_use = self.prepared_query(source)?;
         statement_use.run()?;
@@ -189,7 +189,7 @@ impl LoadConnection<DefaultLoadingMode> for SqliteConnection {
         source: T,
     ) -> QueryResult<Self::Cursor<'conn, 'query>>
     where
-        T: Query + QueryFragment<Self::Backend> + QueryId + 'query,
+        T: Query + QueryFragment + QueryId + 'query,
         Self::Backend: QueryMetadata<T::SqlType>,
     {
         let statement_use = self.prepared_query(source)?;
@@ -304,7 +304,7 @@ impl SqliteConnection {
 
     fn prepared_query<'a, 'b, T>(&'a mut self, source: T) -> QueryResult<StatementUse<'a, 'b>>
     where
-        T: QueryFragment<Sqlite> + QueryId + 'b,
+        T: QueryFragment + QueryId + 'b,
     {
         let raw_connection = &self.raw_connection;
         let cache = &mut self.statement_cache;

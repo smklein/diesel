@@ -86,7 +86,7 @@ impl<'a, T: QueryId + ?Sized> QueryId for &'a T {
     const HAS_STATIC_QUERY_ID: bool = T::HAS_STATIC_QUERY_ID;
 }
 
-impl<DB> QueryId for dyn QueryFragment<DB> {
+impl QueryId for dyn QueryFragment {
     type QueryId = ();
 
     const HAS_STATIC_QUERY_ID: bool = false;

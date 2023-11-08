@@ -1,9 +1,8 @@
-use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::expression::expression_types::NotSelectable;
 use crate::expression::{TypedExpressionType};
 use crate::pg::Pg;
 use crate::query_builder::update_statement::changeset::AssignmentTarget;
-use crate::query_builder::{AstPass, QueryFragment, QueryId};
+use crate::query_builder::{AstPass, DB, QueryFragment, QueryId};
 use crate::sql_types::{
     Array, Bigint, Binary, Bool, DieselNumericOps, Inet, Integer, Jsonb, SqlType, Text,
 };
@@ -86,10 +85,10 @@ where
 
 impl_selectable_expression!(ArrayIndex<L, R>);
 
-impl<L, R> QueryFragment<Pg> for ArrayIndex<L, R>
+impl<L, R> QueryFragment for ArrayIndex<L, R>
 where
-    L: QueryFragment<Pg>,
-    R: QueryFragment<Pg>,
+    L: QueryFragment,
+    R: QueryFragment,
 {
     fn walk_ast<'b>(
         &'b self,
@@ -121,10 +120,9 @@ where
 #[derive(Debug)]
 pub struct UncorrelatedColumn<C>(C);
 
-impl<C, DB> QueryFragment<DB> for UncorrelatedColumn<C>
+impl<C> QueryFragment for UncorrelatedColumn<C>
 where
     C: Column,
-    DB: Backend + DieselReserveSpecialization,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_identifier(C::NAME)

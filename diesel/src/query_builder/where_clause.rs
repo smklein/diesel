@@ -1,6 +1,5 @@
 use super::from_clause::AsQuerySource;
 use super::*;
-use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::expression::grouped::Grouped;
 use crate::expression::operators::{And, Or};
 use crate::expression::*;
@@ -31,10 +30,7 @@ pub trait WhereOr<Predicate> {
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct NoWhereClause;
 
-impl<DB> QueryFragment<DB> for NoWhereClause
-where
-    DB: Backend + DieselReserveSpecialization,
-{
+impl QueryFragment for NoWhereClause {
     fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         Ok(())
     }
@@ -64,7 +60,7 @@ where
     }
 }
 
-impl<'a, DB> From<NoWhereClause> for BoxedWhereClause<'a, DB> {
+impl<'a> From<NoWhereClause> for BoxedWhereClause<'a> {
     fn from(_: NoWhereClause) -> Self {
         BoxedWhereClause::None
     }
@@ -74,10 +70,9 @@ impl<'a, DB> From<NoWhereClause> for BoxedWhereClause<'a, DB> {
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct WhereClause<Expr>(Expr);
 
-impl<DB, Expr> QueryFragment<DB> for WhereClause<Expr>
+impl<Expr> QueryFragment for WhereClause<Expr>
 where
-    DB: Backend + DieselReserveSpecialization,
-    Expr: QueryFragment<DB>,
+    Expr: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql(" WHERE ");
@@ -114,10 +109,9 @@ where
     }
 }
 
-impl<'a, DB, Predicate> From<WhereClause<Predicate>> for BoxedWhereClause<'a, DB>
+impl<'a, Predicate> From<WhereClause<Predicate>> for BoxedWhereClause<'a>
 where
-    DB: Backend,
-    Predicate: QueryFragment<DB> + Send + 'a,
+    Predicate: QueryFragment + Send + 'a,
 {
     fn from(where_clause: WhereClause<Predicate>) -> Self {
         BoxedWhereClause::Where(Box::new(where_clause.0))
@@ -143,15 +137,12 @@ impl<Expr> ValidWhereClause<NoFromClause> for WhereClause<Expr> where
 }
 
 #[allow(missing_debug_implementations)] // We can't...
-pub enum BoxedWhereClause<'a, DB> {
-    Where(Box<dyn QueryFragment<DB> + Send + 'a>),
+pub enum BoxedWhereClause<'a> {
+    Where(Box<dyn QueryFragment + Send + 'a>),
     None,
 }
 
-impl<'a, DB> QueryFragment<DB> for BoxedWhereClause<'a, DB>
-where
-    DB: Backend + DieselReserveSpecialization,
-{
+impl<'a> QueryFragment for BoxedWhereClause<'a> {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         match *self {
             BoxedWhereClause::Where(ref where_clause) => {
@@ -163,17 +154,16 @@ where
     }
 }
 
-impl<'a, DB> QueryId for BoxedWhereClause<'a, DB> {
+impl<'a> QueryId for BoxedWhereClause<'a> {
     type QueryId = ();
 
     const HAS_STATIC_QUERY_ID: bool = false;
 }
 
-impl<'a, DB, Predicate> WhereAnd<Predicate> for BoxedWhereClause<'a, DB>
+impl<'a, Predicate> WhereAnd<Predicate> for BoxedWhereClause<'a>
 where
-    DB: Backend + 'a,
-    Predicate: QueryFragment<DB> + Send + 'a,
-    Grouped<And<Box<dyn QueryFragment<DB> + Send + 'a>, Predicate>>: QueryFragment<DB>,
+    Predicate: QueryFragment + Send + 'a,
+    Grouped<And<Box<dyn QueryFragment + Send + 'a>, Predicate>>: QueryFragment,
 {
     type Output = Self;
 
@@ -187,11 +177,10 @@ where
     }
 }
 
-impl<'a, DB, Predicate> WhereOr<Predicate> for BoxedWhereClause<'a, DB>
+impl<'a, Predicate> WhereOr<Predicate> for BoxedWhereClause<'a>
 where
-    DB: Backend + 'a,
-    Predicate: QueryFragment<DB> + Send + 'a,
-    Grouped<Or<Box<dyn QueryFragment<DB> + Send + 'a>, Predicate>>: QueryFragment<DB>,
+    Predicate: QueryFragment + Send + 'a,
+    Grouped<Or<Box<dyn QueryFragment + Send + 'a>, Predicate>>: QueryFragment,
 {
     type Output = Self;
 

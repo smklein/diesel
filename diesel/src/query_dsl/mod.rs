@@ -11,7 +11,6 @@
 //! [expression_methods]: super::expression_methods
 //! [dsl]: super::dsl
 
-use crate::backend::Backend;
 use crate::connection::Connection;
 use crate::expression::count::CountStar;
 use crate::expression::Expression;
@@ -1084,7 +1083,7 @@ pub trait QueryDsl: Sized {
     /// #
     /// # fn main() {
     /// #     let connection = &mut establish_connection();
-    /// fn users_by_name(name: &str) -> users::BoxedQuery<DB> {
+    /// fn users_by_name(name: &str) -> users::BoxedQuery {
     ///     users::table.filter(users::name.eq(name)).into_boxed()
     /// }
     ///
@@ -1092,10 +1091,9 @@ pub trait QueryDsl: Sized {
     /// assert_eq!(Ok(2), users_by_name("Tess").select(users::id).first(connection));
     /// # }
     /// ```
-    fn into_boxed<'a, DB>(self) -> IntoBoxed<'a, Self, DB>
+    fn into_boxed<'a>(self) -> IntoBoxed<'a, Self>
     where
-        DB: Backend,
-        Self: methods::BoxedDsl<'a, DB>,
+        Self: methods::BoxedDsl<'a>,
     {
         methods::BoxedDsl::internal_into_boxed(self)
     }

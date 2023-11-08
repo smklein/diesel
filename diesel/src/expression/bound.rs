@@ -1,7 +1,6 @@
 use std::marker::PhantomData;
 
 use super::*;
-use crate::backend::Backend;
 use crate::query_builder::*;
 use crate::result::QueryResult;
 use crate::serialize::ToSql;
@@ -31,10 +30,10 @@ where
     type SqlType = T;
 }
 
-impl<T, U, DB> QueryFragment<DB> for Bound<T, U>
+impl<T, U> QueryFragment for Bound<T, U>
 where
-    DB: Backend + HasSqlType<T>,
-    U: ToSql<T, DB>,
+    DB: HasSqlType<T>,
+    U: ToSql<T>,
 {
     fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         pass.push_bind_param(&self.item)?;

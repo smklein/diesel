@@ -1,6 +1,5 @@
 use super::{AppearsInFromClause, Plus, QuerySource};
 use crate::backend::Backend;
-use crate::backend::DieselReserveSpecialization;
 use crate::expression::grouped::Grouped;
 use crate::expression::nullable::Nullable;
 use crate::expression::SelectableExpression;
@@ -224,14 +223,13 @@ where
     }
 }
 
-impl<Left, Right, Kind, DB> QueryFragment<DB> for Join<Left, Right, Kind>
+impl<Left, Right, Kind> QueryFragment for Join<Left, Right, Kind>
 where
-    DB: Backend + DieselReserveSpecialization,
     Left: QuerySource,
-    Left::FromClause: QueryFragment<DB>,
+    Left::FromClause: QueryFragment,
     Right: QuerySource,
-    Right::FromClause: QueryFragment<DB>,
-    Kind: QueryFragment<DB>,
+    Right::FromClause: QueryFragment,
+    Kind: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         self.left.from_clause.walk_ast(out.reborrow())?;
@@ -312,10 +310,7 @@ where
 #[derive(Debug, Clone, Copy, Default, QueryId)]
 pub struct Inner;
 
-impl<DB> QueryFragment<DB> for Inner
-where
-    DB: Backend + DieselReserveSpecialization,
-{
+impl QueryFragment for Inner {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql(" INNER");
         Ok(())
@@ -326,10 +321,7 @@ where
 #[derive(Debug, Clone, Copy, Default, QueryId)]
 pub struct LeftOuter;
 
-impl<DB> QueryFragment<DB> for LeftOuter
-where
-    DB: Backend + DieselReserveSpecialization,
-{
+impl QueryFragment for LeftOuter {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql(" LEFT OUTER");
         Ok(())
@@ -472,18 +464,16 @@ impl<T: Table> ToInnerJoin for T {
 }
 
 mod private {
-    use crate::backend::Backend;
     use crate::expression::Expression;
-    use crate::query_builder::{AstPass, QueryFragment, SelectClauseExpression};
+    use crate::query_builder::{AstPass, DB, QueryFragment, SelectClauseExpression};
     use crate::{AppearsInQuery, QueryResult, SelectableExpression};
 
     #[derive(Debug, crate::query_builder::QueryId, Copy, Clone)]
     pub struct SkipSelectableExpressionBoundCheckWrapper<T>(pub(super) T);
 
-    impl<DB, T> QueryFragment<DB> for SkipSelectableExpressionBoundCheckWrapper<T>
+    impl<T> QueryFragment for SkipSelectableExpressionBoundCheckWrapper<T>
     where
-        T: QueryFragment<DB>,
-        DB: Backend,
+        T: QueryFragment,
     {
         fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
             self.0.walk_ast(pass)

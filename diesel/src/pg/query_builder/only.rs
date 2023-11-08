@@ -37,9 +37,9 @@ where
     }
 }
 
-impl<S> QueryFragment<Pg> for Only<S>
+impl<S> QueryFragment for Only<S>
 where
-    S: QueryFragment<Pg>,
+    S: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut pass: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         pass.push_sql(" ONLY ");
@@ -54,7 +54,7 @@ where
     <S as QuerySource>::DefaultSelection: SelectableExpression<Only<S>>,
 {
     type SqlType = <<Self as QuerySource>::DefaultSelection as Expression>::SqlType;
-    type Query = SelectStatement<FromClause<Self>>;
+    type Query = SelectStatement<Pg, FromClause<Self>>;
 
     fn as_query(self) -> Self::Query {
         SelectStatement::simple(self)

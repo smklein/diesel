@@ -547,8 +547,7 @@ mod test {
 
             fn execute_returning_count<T>(&mut self, _source: &T) -> QueryResult<usize>
             where
-                T: crate::query_builder::QueryFragment<Self::Backend>
-                    + crate::query_builder::QueryId,
+                T: crate::query_builder::QueryFragment + crate::query_builder::QueryId,
             {
                 self.next_results.pop_front().expect("No next result")
             }

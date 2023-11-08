@@ -4,10 +4,9 @@ use crate::query_builder::{AstPass, QueryFragment};
 use crate::result::QueryResult;
 use crate::sqlite::backend::SqliteReturningClause;
 
-impl<Expr, DB> QueryFragment<DB, SqliteReturningClause> for ReturningClause<Expr>
+impl<Expr> QueryFragment<SqliteReturningClause> for ReturningClause<Expr>
 where
-    DB: Backend<ReturningClause = SqliteReturningClause>,
-    Expr: QueryFragment<DB>,
+    Expr: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.skip_from(true);

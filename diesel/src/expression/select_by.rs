@@ -8,15 +8,14 @@ use crate::query_builder::*;
 use crate::result::QueryResult;
 
 #[derive(Debug)]
-pub struct SelectBy<T: Selectable<DB>, DB: Backend> {
+pub struct SelectBy<T: Selectable> {
     selection: T::SelectExpression,
-    p: std::marker::PhantomData<(T, DB)>,
+    p: std::marker::PhantomData<T>,
 }
 
-impl<T, DB> Clone for SelectBy<T, DB>
+impl<T> Clone for SelectBy<T>
 where
-    DB: Backend,
-    T: Selectable<DB>,
+    T: Selectable,
 {
     fn clone(&self) -> Self {
         Self {
@@ -26,18 +25,16 @@ where
     }
 }
 
-impl<T, DB> Copy for SelectBy<T, DB>
+impl<T> Copy for SelectBy<T>
 where
-    T: Selectable<DB>,
-    DB: Backend,
+    T: Selectable,
     T::SelectExpression: Copy,
 {
 }
 
-impl<T, E, DB> QueryId for SelectBy<T, DB>
+impl<T, E> QueryId for SelectBy<T>
 where
-    DB: Backend,
-    T: Selectable<DB, SelectExpression = E>,
+    T: Selectable<SelectExpression = E>,
     E: QueryId + Expression,
 {
     type QueryId = E::QueryId;
@@ -45,10 +42,9 @@ where
     const HAS_STATIC_QUERY_ID: bool = E::HAS_STATIC_QUERY_ID;
 }
 
-impl<T, DB> SelectBy<T, DB>
+impl<T> SelectBy<T>
 where
-    T: Selectable<DB>,
-    DB: Backend,
+    T: Selectable,
 {
     pub(crate) fn new() -> Self {
         Self {
@@ -58,27 +54,23 @@ where
     }
 }
 
-impl<T, E, DB> Expression for SelectBy<T, DB>
+impl<T, E> Expression for SelectBy<T>
 where
-    DB: Backend,
-    T: Selectable<DB, SelectExpression = E>,
+    T: Selectable<SelectExpression = E>,
     E: QueryId + Expression,
 {
-    type SqlType = SelectBy<T, DB>;
+    type SqlType = SelectBy<T>;
 }
 
-impl<T, DB> TypedExpressionType for SelectBy<T, DB>
+impl<T> TypedExpressionType for SelectBy<T>
 where
-    T: Selectable<DB>,
-    DB: Backend,
+    T: Selectable,
 {
 }
 
-impl<T, DB> QueryMetadata<SelectBy<T, DB>> for DB
+impl<T> QueryMetadata<SelectBy<T>> for DB
 where
-    DB: Backend,
-    T: Selectable<DB>,
-    DB: QueryMetadata<SqlTypeOf<T::SelectExpression>>,
+    T: Selectable,
 {
     fn row_metadata(lookup: &mut Self::MetadataLookup, out: &mut Vec<Option<Self::TypeMetadata>>) {
         <DB as QueryMetadata<SqlTypeOf<<T as Selectable<DB>>::SelectExpression>>>::row_metadata(
@@ -87,10 +79,10 @@ where
     }
 }
 
-impl<T, DB> QueryFragment<DB> for SelectBy<T, DB>
+impl<T> QueryFragment for SelectBy<T>
 where
-    T: Selectable<DB>,
-    T::SelectExpression: QueryFragment<DB>,
+    T: Selectable,
+    T::SelectExpression: QueryFragment,
     DB: Backend + DieselReserveSpecialization,
 {
     fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
@@ -98,19 +90,17 @@ where
     }
 }
 
-impl<T, QS, DB> SelectableExpression<QS> for SelectBy<T, DB>
+impl<T, QS> SelectableExpression<QS> for SelectBy<T>
 where
-    DB: Backend,
-    T: Selectable<DB>,
+    T: Selectable,
     T::SelectExpression: SelectableExpression<QS>,
     Self: AppearsInQuery<QS>,
 {
 }
 
-impl<T, QS, DB> AppearsInQuery<QS> for SelectBy<T, DB>
+impl<T, QS> AppearsInQuery<QS> for SelectBy<T>
 where
-    DB: Backend,
-    T: Selectable<DB>,
+    T: Selectable,
     T::SelectExpression: AppearsInQuery<QS>,
     Self: Expression,
 {

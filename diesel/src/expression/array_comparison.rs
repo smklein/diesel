@@ -10,7 +10,7 @@ use crate::expression::{
 };
 use crate::query_builder::combination_clause::CombinationClause;
 use crate::query_builder::{
-    AstPass, BoxedSelectStatement, QueryFragment, QueryId, SelectQuery, SelectStatement,
+    AstPass, BoxedSelectStatement, DB, QueryFragment, QueryId, SelectQuery, SelectStatement,
 };
 use crate::result::QueryResult;
 use crate::serialize::ToSql;
@@ -86,22 +86,19 @@ where
     type SqlType = Bool;
 }
 
-impl<T, U, DB> QueryFragment<DB> for In<T, U>
+impl<T, U> QueryFragment for In<T, U>
 where
-    DB: Backend,
-    Self: QueryFragment<DB, DB::ArrayComparison>,
+    Self: QueryFragment<<DB as SqlDialect>::ArrayComparison>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::ArrayComparison>>::walk_ast(self, pass)
+        <Self as QueryFragment<DB::ArrayComparison>>::walk_ast(self, pass)
     }
 }
 
-impl<T, U, DB> QueryFragment<DB, sql_dialect::array_comparison::AnsiSqlArrayComparison> for In<T, U>
+impl<T, U> QueryFragment<sql_dialect::array_comparison::AnsiSqlArrayComparison> for In<T, U>
 where
-    DB: Backend
-        + SqlDialect<ArrayComparison = sql_dialect::array_comparison::AnsiSqlArrayComparison>,
-    T: QueryFragment<DB>,
-    U: QueryFragment<DB> + MaybeEmpty,
+    T: QueryFragment,
+    U: QueryFragment + MaybeEmpty,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         if self.values.is_empty() {
@@ -116,23 +113,20 @@ where
     }
 }
 
-impl<T, U, DB> QueryFragment<DB> for NotIn<T, U>
+impl<T, U> QueryFragment for NotIn<T, U>
 where
-    DB: Backend,
-    Self: QueryFragment<DB, DB::ArrayComparison>,
+    Self: QueryFragment<<DB as SqlDialect>::ArrayComparison>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::ArrayComparison>>::walk_ast(self, pass)
+        <Self as QueryFragment<DB::ArrayComparison>>::walk_ast(self, pass)
     }
 }
 
-impl<T, U, DB> QueryFragment<DB, sql_dialect::array_comparison::AnsiSqlArrayComparison>
+impl<T, U> QueryFragment<sql_dialect::array_comparison::AnsiSqlArrayComparison>
     for NotIn<T, U>
 where
-    DB: Backend
-        + SqlDialect<ArrayComparison = sql_dialect::array_comparison::AnsiSqlArrayComparison>,
-    T: QueryFragment<DB>,
-    U: QueryFragment<DB> + MaybeEmpty,
+    T: QueryFragment,
+    U: QueryFragment + MaybeEmpty,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         if self.values.is_empty() {
@@ -202,8 +196,8 @@ pub trait MaybeEmpty {
     fn is_empty(&self) -> bool;
 }
 
-impl<ST, F, S, D, W, O, LOf, G, H> AsInExpression<ST>
-    for SelectStatement<F, S, D, W, O, LOf, G, H>
+impl<ST, F, S, D, W, O, LOf, G> AsInExpression<ST>
+    for SelectStatement<F, S, D, W, O, LOf, G>
 where
     ST: SqlType + TypedExpressionType,
     Subselect<Self, ST>: Expression<SqlType = ST>,
@@ -216,10 +210,10 @@ where
     }
 }
 
-impl<'a, ST, QS, DB, GB> AsInExpression<ST> for BoxedSelectStatement<'a, ST, QS, DB, GB>
+impl<'a, ST, QS, GB> AsInExpression<ST> for BoxedSelectStatement<'a, ST, QS, GB>
 where
     ST: SqlType + TypedExpressionType,
-    Subselect<BoxedSelectStatement<'a, ST, QS, DB, GB>, ST>: Expression<SqlType = ST>,
+    Subselect<BoxedSelectStatement<'a, ST, QS, GB>, ST>: Expression<SqlType = ST>,
 {
     type InExpression = Subselect<Self, ST>;
 
@@ -292,24 +286,22 @@ where
 {
 }
 
-impl<ST, I, DB> QueryFragment<DB> for Many<ST, I>
+impl<ST, I> QueryFragment for Many<ST, I>
 where
-    Self: QueryFragment<DB, DB::ArrayComparison>,
+    Self: QueryFragment<<DB as SqlDialect>::ArrayComparison>,
     DB: Backend,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::ArrayComparison>>::walk_ast(self, pass)
+        <Self as QueryFragment<DB::ArrayComparison>>::walk_ast(self, pass)
     }
 }
 
-impl<ST, I, DB> QueryFragment<DB, sql_dialect::array_comparison::AnsiSqlArrayComparison>
+impl<ST, I> QueryFragment<sql_dialect::array_comparison::AnsiSqlArrayComparison>
     for Many<ST, I>
 where
-    DB: Backend
-        + HasSqlType<ST>
-        + SqlDialect<ArrayComparison = sql_dialect::array_comparison::AnsiSqlArrayComparison>,
+    DB: HasSqlType<ST>,
     ST: SingleValue,
-    I: ToSql<ST, DB>,
+    I: ToSql<ST>,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();

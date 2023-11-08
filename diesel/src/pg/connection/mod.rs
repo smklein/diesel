@@ -174,7 +174,7 @@ impl Connection for PgConnection {
     }
     fn execute_returning_count<T>(&mut self, source: &T) -> QueryResult<usize>
     where
-        T: QueryFragment<Pg> + QueryId,
+        T: QueryFragment + QueryId,
     {
         update_transaction_manager_status(
             self.with_prepared_query(source, |query, params, conn| {
@@ -210,7 +210,7 @@ where
         source: T,
     ) -> QueryResult<Self::Cursor<'conn, 'query>>
     where
-        T: Query + QueryFragment<Self::Backend> + QueryId + 'query,
+        T: Query + QueryFragment + QueryId + 'query,
         Self::Backend: QueryMetadata<T::SqlType>,
     {
         self.with_prepared_query(&source, |stmt, params, conn| {
@@ -339,7 +339,7 @@ impl PgConnection {
         TransactionBuilder::new(self)
     }
 
-    fn with_prepared_query<'conn, T: QueryFragment<Pg> + QueryId, R>(
+    fn with_prepared_query<'conn, T: QueryFragment + QueryId, R>(
         &'conn mut self,
         source: &'_ T,
         f: impl FnOnce(

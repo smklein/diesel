@@ -1,6 +1,7 @@
 //! Types related to managing bind parameters during query construction.
 
 use crate::backend::Backend;
+use crate::query_builder::DB;
 use crate::result::Error::SerializationError;
 use crate::result::QueryResult;
 use crate::serialize::{IsNull, Output, ToSql};
@@ -19,7 +20,7 @@ pub(crate) use self::private::ByteWrapper;
 /// the query builder will use [`AstPass::push_bind_param`] instead.
 ///
 /// [`AstPass::push_bind_param`]: crate::query_builder::AstPass::push_bind_param()
-pub trait BindCollector<'a, DB: TypeMetadata>: Sized {
+pub trait BindCollector<'a>: Sized {
     /// The internal buffer type used by this bind collector
     type Buffer;
 
@@ -27,11 +28,11 @@ pub trait BindCollector<'a, DB: TypeMetadata>: Sized {
     fn push_bound_value<T, U>(
         &mut self,
         bind: &'a U,
-        metadata_lookup: &mut DB::MetadataLookup,
+        metadata_lookup: &mut <DB as TypeMetadata>::MetadataLookup,
     ) -> QueryResult<()>
     where
-        DB: Backend + HasSqlType<T>,
-        U: ToSql<T, DB> + ?Sized + 'a;
+        DB: HasSqlType<T>,
+        U: ToSql<T> + ?Sized + 'a;
 }
 
 #[derive(Debug)]
@@ -76,7 +77,7 @@ impl<DB: Backend + TypeMetadata> RawBytesBindCollector<DB> {
     }
 }
 
-impl<'a, DB> BindCollector<'a, DB> for RawBytesBindCollector<DB>
+impl<'a> BindCollector<'a> for RawBytesBindCollector<DB>
 where
     for<'b> DB: Backend<BindCollector<'b> = Self> + TypeMetadata,
 {
@@ -85,11 +86,11 @@ where
     fn push_bound_value<T, U>(
         &mut self,
         bind: &U,
-        metadata_lookup: &mut DB::MetadataLookup,
+        metadata_lookup: &mut <DB as TypeMetadata>::MetadataLookup,
     ) -> QueryResult<()>
     where
         DB: HasSqlType<T>,
-        U: ToSql<T, DB> + ?Sized,
+        U: ToSql<T> + ?Sized,
     {
         let mut bytes = Vec::new();
         let is_null = {

@@ -1,7 +1,7 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::deserialize::{self, FromSql};
-use crate::pg::{Pg, PgValue};
+use crate::pg::PgValue;
 use crate::serialize::{self, Output, ToSql};
 use crate::sql_types;
 
@@ -11,8 +11,8 @@ fn pg_epoch() -> SystemTime {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl ToSql<sql_types::Timestamp, Pg> for SystemTime {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<sql_types::Timestamp> for SystemTime {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         let (before_epoch, duration) = match self.duration_since(pg_epoch()) {
             Ok(duration) => (false, duration),
             Err(time_err) => (true, time_err.duration()),
@@ -22,14 +22,14 @@ impl ToSql<sql_types::Timestamp, Pg> for SystemTime {
         } else {
             duration_to_usecs(duration) as i64
         };
-        ToSql::<sql_types::BigInt, Pg>::to_sql(&time_since_epoch, &mut out.reborrow())
+        ToSql::<sql_types::BigInt>::to_sql(&time_since_epoch, &mut out.reborrow())
     }
 }
 
 #[cfg(feature = "postgres_backend")]
-impl FromSql<sql_types::Timestamp, Pg> for SystemTime {
+impl FromSql<sql_types::Timestamp> for SystemTime {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        let usecs_passed = <i64 as FromSql<sql_types::BigInt, Pg>>::from_sql(bytes)?;
+        let usecs_passed = <i64 as FromSql<sql_types::BigInt>>::from_sql(bytes)?;
         let before_epoch = usecs_passed < 0;
         let time_passed = usecs_to_duration(usecs_passed.unsigned_abs());
 

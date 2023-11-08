@@ -3,12 +3,12 @@ use crate::query_builder::limit_offset_clause::{BoxedLimitOffsetClause, LimitOff
 use crate::query_builder::{AstPass, IntoBoxedClause, QueryFragment};
 use crate::result::QueryResult;
 
-impl<'a, L, O> IntoBoxedClause<'a, Pg> for LimitOffsetClause<L, O>
+impl<'a, L, O> IntoBoxedClause<'a> for LimitOffsetClause<L, O>
 where
-    L: QueryFragment<Pg> + Send + 'a,
-    O: QueryFragment<Pg> + Send + 'a,
+    L: QueryFragment + Send + 'a,
+    O: QueryFragment + Send + 'a,
 {
-    type BoxedClause = BoxedLimitOffsetClause<'a, Pg>;
+    type BoxedClause = BoxedLimitOffsetClause<'a>;
 
     fn into_boxed(self) -> Self::BoxedClause {
         BoxedLimitOffsetClause {
@@ -18,7 +18,7 @@ where
     }
 }
 
-impl<'a> QueryFragment<Pg> for BoxedLimitOffsetClause<'a, Pg> {
+impl<'a> QueryFragment for BoxedLimitOffsetClause<'a> {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         if let Some(ref limit) = self.limit {
             limit.walk_ast(out.reborrow())?;
@@ -30,10 +30,10 @@ impl<'a> QueryFragment<Pg> for BoxedLimitOffsetClause<'a, Pg> {
     }
 }
 
-impl<L, O> QueryFragment<Pg> for LimitOffsetClause<L, O>
+impl<L, O> QueryFragment for LimitOffsetClause<L, O>
 where
-    L: QueryFragment<Pg>,
-    O: QueryFragment<Pg>,
+    L: QueryFragment,
+    O: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         self.limit_clause.walk_ast(out.reborrow())?;

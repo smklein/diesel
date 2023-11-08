@@ -48,10 +48,9 @@ where
 {
 }
 
-impl<T, ST, DB> QueryFragment<DB> for Subselect<T, ST>
+impl<T, ST> QueryFragment for Subselect<T, ST>
 where
-    DB: Backend,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         self.values.walk_ast(out.reborrow())?;

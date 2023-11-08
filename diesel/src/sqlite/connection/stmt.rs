@@ -228,7 +228,7 @@ struct BoundStatement<'stmt, 'query> {
     // We use a boxed queryfragment here just to erase the
     // generic type, we use NonNull to communicate
     // that this is a shared buffer
-    query: Option<NonNull<dyn QueryFragment<Sqlite> + 'query>>,
+    query: Option<NonNull<dyn QueryFragment + 'query>>,
     // we need to store any owned bind values separately, as they are not
     // contained in the query itself. We use NonNull to
     // communicate that this is a shared buffer
@@ -241,7 +241,7 @@ impl<'stmt, 'query> BoundStatement<'stmt, 'query> {
         query: T,
     ) -> QueryResult<BoundStatement<'stmt, 'query>>
     where
-        T: QueryFragment<Sqlite> + QueryId + 'query,
+        T: QueryFragment + QueryId + 'query,
     {
         // Don't use a trait object here to prevent using a virtual function call
         // For sqlite this can introduce a measurable overhead
@@ -261,7 +261,7 @@ impl<'stmt, 'query> BoundStatement<'stmt, 'query> {
 
         ret.bind_buffers(binds)?;
 
-        let query = query as Box<dyn QueryFragment<Sqlite> + 'query>;
+        let query = query as Box<dyn QueryFragment + 'query>;
         ret.query = NonNull::new(Box::into_raw(query));
 
         Ok(ret)
@@ -373,7 +373,7 @@ impl<'stmt, 'query> StatementUse<'stmt, 'query> {
         query: T,
     ) -> QueryResult<StatementUse<'stmt, 'query>>
     where
-        T: QueryFragment<Sqlite> + QueryId + 'query,
+        T: QueryFragment + QueryId + 'query,
     {
         Ok(Self {
             statement: BoundStatement::bind(statement, query)?,

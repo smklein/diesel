@@ -2,7 +2,7 @@ use std::convert::TryInto;
 use std::io::prelude::*;
 
 use crate::deserialize::{self, FromSql};
-use crate::pg::{Pg, PgValue};
+use crate::pg::PgValue;
 use crate::serialize::{self, IsNull, Output, ToSql};
 use crate::sql_types::MacAddr;
 
@@ -19,7 +19,7 @@ mod foreign_derives {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl FromSql<MacAddr, Pg> for [u8; 6] {
+impl FromSql<MacAddr> for [u8; 6] {
     fn from_sql(value: PgValue<'_>) -> deserialize::Result<Self> {
         value
             .as_bytes()
@@ -29,8 +29,8 @@ impl FromSql<MacAddr, Pg> for [u8; 6] {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl ToSql<MacAddr, Pg> for [u8; 6] {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<MacAddr> for [u8; 6] {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         out.write_all(&self[..])
             .map(|_| IsNull::No)
             .map_err(Into::into)
@@ -44,7 +44,7 @@ fn macaddr_roundtrip() {
     let mut buffer = Vec::new();
     let mut bytes = Output::test(ByteWrapper(&mut buffer));
     let input_address = [0x52, 0x54, 0x00, 0xfb, 0xc6, 0x16];
-    ToSql::<MacAddr, Pg>::to_sql(&input_address, &mut bytes).unwrap();
+    ToSql::<MacAddr>::to_sql(&input_address, &mut bytes).unwrap();
     let output_address: [u8; 6] = FromSql::from_sql(PgValue::for_test(&buffer)).unwrap();
     assert_eq!(input_address, output_address);
 }

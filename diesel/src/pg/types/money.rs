@@ -3,7 +3,7 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 use crate::deserialize::{self, FromSql, FromSqlRow};
 use crate::expression::AsExpression;
-use crate::pg::{Pg, PgValue};
+use crate::pg::PgValue;
 use crate::serialize::{self, Output, ToSql};
 use crate::sql_types::{BigInt, Money};
 
@@ -23,16 +23,16 @@ use crate::sql_types::{BigInt, Money};
 pub struct PgMoney(pub i64);
 
 #[cfg(feature = "postgres_backend")]
-impl FromSql<Money, Pg> for PgMoney {
+impl FromSql<Money> for PgMoney {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        FromSql::<BigInt, Pg>::from_sql(bytes).map(PgMoney)
+        FromSql::<BigInt>::from_sql(bytes).map(PgMoney)
     }
 }
 
 #[cfg(feature = "postgres_backend")]
-impl ToSql<Money, Pg> for PgMoney {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
-        ToSql::<BigInt, Pg>::to_sql(&self.0, out)
+impl ToSql<Money> for PgMoney {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
+        ToSql::<BigInt>::to_sql(&self.0, out)
     }
 }
 

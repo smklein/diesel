@@ -3,7 +3,6 @@ pub(super) mod target;
 
 use self::target::UpdateTarget;
 
-use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::dsl::{Filter, IntoBoxed};
 use crate::expression::{
     AppearsInQuery, Expression, SelectableExpression,
@@ -62,8 +61,8 @@ pub struct UpdateStatement<T: QuerySource, U, V = SetNotCalled, Ret = NoReturnin
 }
 
 /// An `UPDATE` statement with a boxed `WHERE` clause.
-pub type BoxedUpdateStatement<'a, DB, T, V = SetNotCalled, Ret = NoReturningClause> =
-    UpdateStatement<T, BoxedWhereClause<'a, DB>, V, Ret>;
+pub type BoxedUpdateStatement<'a, T, V = SetNotCalled, Ret = NoReturningClause> =
+    UpdateStatement<T, BoxedWhereClause<'a>, V, Ret>;
 
 impl<T: QuerySource, U, V, Ret> UpdateStatement<T, U, V, Ret> {
     /// Adds the given predicate to the `WHERE` clause of the statement being
@@ -144,10 +143,9 @@ impl<T: QuerySource, U, V, Ret> UpdateStatement<T, U, V, Ret> {
     /// #     Ok(())
     /// # }
     /// ```
-    pub fn into_boxed<'a, DB>(self) -> IntoBoxed<'a, Self, DB>
+    pub fn into_boxed<'a>(self) -> IntoBoxed<'a, Self>
     where
-        DB: Backend,
-        Self: BoxedDsl<'a, DB>,
+        Self: BoxedDsl<'a>,
     {
         BoxedDsl::internal_into_boxed(self)
     }
@@ -171,12 +169,12 @@ where
     }
 }
 
-impl<'a, T, U, V, Ret, DB> BoxedDsl<'a, DB> for UpdateStatement<T, U, V, Ret>
+impl<'a, T, U, V, Ret> BoxedDsl<'a> for UpdateStatement<T, U, V, Ret>
 where
     T: QuerySource,
-    U: Into<BoxedWhereClause<'a, DB>>,
+    U: Into<BoxedWhereClause<'a>>,
 {
-    type Output = BoxedUpdateStatement<'a, DB, T, V, Ret>;
+    type Output = BoxedUpdateStatement<'a, T, V, Ret>;
 
     fn internal_into_boxed(self) -> Self::Output {
         UpdateStatement {
@@ -188,14 +186,13 @@ where
     }
 }
 
-impl<T, U, V, Ret, DB> QueryFragment<DB> for UpdateStatement<T, U, V, Ret>
+impl<T, U, V, Ret> QueryFragment for UpdateStatement<T, U, V, Ret>
 where
-    DB: Backend + DieselReserveSpecialization,
     T: Table,
-    T::FromClause: QueryFragment<DB>,
-    U: QueryFragment<DB>,
-    V: QueryFragment<DB>,
-    Ret: QueryFragment<DB>,
+    T::FromClause: QueryFragment,
+    U: QueryFragment,
+    V: QueryFragment,
+    Ret: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         if self.values.is_noop(out.backend())? {

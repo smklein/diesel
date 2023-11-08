@@ -1,4 +1,3 @@
-use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::dsl::{Filter, IntoBoxed, OrFilter};
 use crate::expression::{AppearsInQuery, SelectableExpression};
 use crate::query_builder::returning_clause::*;
@@ -73,8 +72,8 @@ where
 }
 
 /// A `DELETE` statement with a boxed `WHERE` clause
-pub type BoxedDeleteStatement<'a, DB, T, Ret = NoReturningClause> =
-    DeleteStatement<T, BoxedWhereClause<'a, DB>, Ret>;
+pub type BoxedDeleteStatement<'a, T, Ret = NoReturningClause> =
+    DeleteStatement<T, BoxedWhereClause<'a>, Ret>;
 
 impl<T: QuerySource, U> DeleteStatement<T, U, NoReturningClause> {
     pub(crate) fn new(table: T, where_clause: U) -> Self {
@@ -194,10 +193,9 @@ impl<T: QuerySource, U> DeleteStatement<T, U, NoReturningClause> {
     /// #     Ok(())
     /// # }
     /// ```
-    pub fn into_boxed<'a, DB>(self) -> IntoBoxed<'a, Self, DB>
+    pub fn into_boxed<'a>(self) -> IntoBoxed<'a, Self>
     where
-        DB: Backend,
-        Self: BoxedDsl<'a, DB>,
+        Self: BoxedDsl<'a>,
     {
         BoxedDsl::internal_into_boxed(self)
     }
@@ -237,12 +235,12 @@ where
     }
 }
 
-impl<'a, T, U, Ret, DB> BoxedDsl<'a, DB> for DeleteStatement<T, U, Ret>
+impl<'a, T, U, Ret> BoxedDsl<'a> for DeleteStatement<T, U, Ret>
 where
-    U: Into<BoxedWhereClause<'a, DB>>,
+    U: Into<BoxedWhereClause<'a>>,
     T: QuerySource,
 {
-    type Output = BoxedDeleteStatement<'a, DB, T, Ret>;
+    type Output = BoxedDeleteStatement<'a, T, Ret>;
 
     fn internal_into_boxed(self) -> Self::Output {
         DeleteStatement {
@@ -253,13 +251,12 @@ where
     }
 }
 
-impl<T, U, Ret, DB> QueryFragment<DB> for DeleteStatement<T, U, Ret>
+impl<T, U, Ret> QueryFragment for DeleteStatement<T, U, Ret>
 where
-    DB: Backend + DieselReserveSpecialization,
     T: Table,
-    FromClause<T>: QueryFragment<DB>,
-    U: QueryFragment<DB>,
-    Ret: QueryFragment<DB>,
+    FromClause<T>: QueryFragment,
+    U: QueryFragment,
+    Ret: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql("DELETE ");

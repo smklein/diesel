@@ -162,15 +162,14 @@ where
     /// # Example
     ///
     /// ```rust
-    /// # use diesel::query_builder::{QueryFragment, AstPass};
+    /// # use diesel::query_builder::{QueryFragment, AstPass, DB};
     /// # use diesel::backend::Backend;
     /// # use diesel::QueryResult;
     /// # struct And<Left, Right> { left: Left, right: Right }
-    /// impl<Left, Right, DB> QueryFragment<DB> for And<Left, Right>
+    /// impl<Left, Right> QueryFragment for And<Left, Right>
     /// where
-    ///     DB: Backend,
-    ///     Left: QueryFragment<DB>,
-    ///     Right: QueryFragment<DB>,
+    ///     Left: QueryFragment,
+    ///     Right: QueryFragment,
     /// {
     ///     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
     ///         self.left.walk_ast(out.reborrow())?;
@@ -210,7 +209,7 @@ where
     pub fn push_bind_param<T, U>(&mut self, bind: &'b U) -> QueryResult<()>
     where
         DB: HasSqlType<T>,
-        U: ToSql<T, DB> + ?Sized,
+        U: ToSql<T> + ?Sized,
     {
         match self.internals {
             AstPassInternals::ToSql(ref mut out, _) => out.push_bind_param(),
@@ -238,7 +237,7 @@ where
     pub(crate) fn push_bind_param_value_only<T, U>(&mut self, bind: &'b U) -> QueryResult<()>
     where
         DB: HasSqlType<T>,
-        U: ToSql<T, DB> + ?Sized,
+        U: ToSql<T> + ?Sized,
     {
         match self.internals {
             AstPassInternals::CollectBinds { .. } | AstPassInternals::DebugBinds(..) => {

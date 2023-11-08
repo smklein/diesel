@@ -5,15 +5,15 @@ use crate::query_builder::{AstPass, IntoBoxedClause, QueryFragment};
 use crate::result::QueryResult;
 use crate::sqlite::Sqlite;
 
-impl QueryFragment<Sqlite> for LimitOffsetClause<NoLimitClause, NoOffsetClause> {
+impl QueryFragment for LimitOffsetClause<NoLimitClause, NoOffsetClause> {
     fn walk_ast<'b>(&'b self, _out: AstPass<'_, 'b, Sqlite>) -> QueryResult<()> {
         Ok(())
     }
 }
 
-impl<L> QueryFragment<Sqlite> for LimitOffsetClause<LimitClause<L>, NoOffsetClause>
+impl<L> QueryFragment for LimitOffsetClause<LimitClause<L>, NoOffsetClause>
 where
-    LimitClause<L>: QueryFragment<Sqlite>,
+    LimitClause<L>: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b, Sqlite>) -> QueryResult<()> {
         self.limit_clause.walk_ast(out)?;
@@ -21,9 +21,9 @@ where
     }
 }
 
-impl<O> QueryFragment<Sqlite> for LimitOffsetClause<NoLimitClause, OffsetClause<O>>
+impl<O> QueryFragment for LimitOffsetClause<NoLimitClause, OffsetClause<O>>
 where
-    OffsetClause<O>: QueryFragment<Sqlite>,
+    OffsetClause<O>: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Sqlite>) -> QueryResult<()> {
         // Sqlite requires a limit clause in front of any offset clause
@@ -35,10 +35,10 @@ where
     }
 }
 
-impl<L, O> QueryFragment<Sqlite> for LimitOffsetClause<LimitClause<L>, OffsetClause<O>>
+impl<L, O> QueryFragment for LimitOffsetClause<LimitClause<L>, OffsetClause<O>>
 where
-    LimitClause<L>: QueryFragment<Sqlite>,
-    OffsetClause<O>: QueryFragment<Sqlite>,
+    LimitClause<L>: QueryFragment,
+    OffsetClause<O>: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Sqlite>) -> QueryResult<()> {
         self.limit_clause.walk_ast(out.reborrow())?;
@@ -47,7 +47,7 @@ where
     }
 }
 
-impl<'a> QueryFragment<Sqlite> for BoxedLimitOffsetClause<'a, Sqlite> {
+impl<'a> QueryFragment for BoxedLimitOffsetClause<'a, Sqlite> {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Sqlite>) -> QueryResult<()> {
         match (self.limit.as_ref(), self.offset.as_ref()) {
             (Some(limit), Some(offset)) => {
@@ -84,7 +84,7 @@ impl<'a> IntoBoxedClause<'a, Sqlite> for LimitOffsetClause<NoLimitClause, NoOffs
 
 impl<'a, L> IntoBoxedClause<'a, Sqlite> for LimitOffsetClause<LimitClause<L>, NoOffsetClause>
 where
-    L: QueryFragment<Sqlite> + Send + 'a,
+    L: QueryFragment + Send + 'a,
 {
     type BoxedClause = BoxedLimitOffsetClause<'a, Sqlite>;
 
@@ -98,7 +98,7 @@ where
 
 impl<'a, O> IntoBoxedClause<'a, Sqlite> for LimitOffsetClause<NoLimitClause, OffsetClause<O>>
 where
-    O: QueryFragment<Sqlite> + Send + 'a,
+    O: QueryFragment + Send + 'a,
 {
     type BoxedClause = BoxedLimitOffsetClause<'a, Sqlite>;
 
@@ -112,8 +112,8 @@ where
 
 impl<'a, L, O> IntoBoxedClause<'a, Sqlite> for LimitOffsetClause<LimitClause<L>, OffsetClause<O>>
 where
-    L: QueryFragment<Sqlite> + Send + 'a,
-    O: QueryFragment<Sqlite> + Send + 'a,
+    L: QueryFragment + Send + 'a,
+    O: QueryFragment + Send + 'a,
 {
     type BoxedClause = BoxedLimitOffsetClause<'a, Sqlite>;
 

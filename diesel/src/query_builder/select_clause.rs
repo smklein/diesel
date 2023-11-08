@@ -1,5 +1,4 @@
 use super::from_clause::AsQuerySource;
-use crate::backend::Backend;
 use crate::expression::{Expression, SelectableExpression};
 use crate::query_builder::*;
 use crate::query_source::QuerySource;
@@ -102,21 +101,19 @@ where
     type SelectClauseSqlType = <Self::Selection as Expression>::SqlType;
 }
 
-impl<T, DB> QueryFragment<DB> for SelectClause<T>
+impl<T> QueryFragment for SelectClause<T>
 where
-    DB: Backend,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         self.0.walk_ast(pass)
     }
 }
 
-impl<QS, DB> QueryFragment<DB> for DefaultSelectClause<QS>
+impl<QS> QueryFragment for DefaultSelectClause<QS>
 where
-    DB: Backend,
     QS: AsQuerySource,
-    <QS::QuerySource as QuerySource>::DefaultSelection: QueryFragment<DB>,
+    <QS::QuerySource as QuerySource>::DefaultSelection: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         self.default_selection.walk_ast(pass)

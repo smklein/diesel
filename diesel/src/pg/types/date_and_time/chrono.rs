@@ -6,7 +6,7 @@ use self::chrono::{DateTime, Duration, Local, NaiveDate, NaiveDateTime, NaiveTim
 
 use super::{PgDate, PgTime, PgTimestamp};
 use crate::deserialize::{self, FromSql};
-use crate::pg::{Pg, PgValue};
+use crate::pg::PgValue;
 use crate::serialize::{self, Output, ToSql};
 use crate::sql_types::{Date, Time, Timestamp, Timestamptz};
 
@@ -19,9 +19,9 @@ fn pg_epoch() -> NaiveDateTime {
 }
 
 #[cfg(all(feature = "chrono", feature = "postgres_backend"))]
-impl FromSql<Timestamp, Pg> for NaiveDateTime {
+impl FromSql<Timestamp> for NaiveDateTime {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        let PgTimestamp(offset) = FromSql::<Timestamp, Pg>::from_sql(bytes)?;
+        let PgTimestamp(offset) = FromSql::<Timestamp>::from_sql(bytes)?;
         match pg_epoch().checked_add_signed(Duration::microseconds(offset)) {
             Some(v) => Ok(v),
             None => {
@@ -33,8 +33,8 @@ impl FromSql<Timestamp, Pg> for NaiveDateTime {
 }
 
 #[cfg(all(feature = "chrono", feature = "postgres_backend"))]
-impl ToSql<Timestamp, Pg> for NaiveDateTime {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<Timestamp> for NaiveDateTime {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         let time = match (self.signed_duration_since(pg_epoch())).num_microseconds() {
             Some(time) => time,
             None => {
@@ -43,44 +43,44 @@ impl ToSql<Timestamp, Pg> for NaiveDateTime {
                 return Err(error_message.into());
             }
         };
-        ToSql::<Timestamp, Pg>::to_sql(&PgTimestamp(time), &mut out.reborrow())
+        ToSql::<Timestamp>::to_sql(&PgTimestamp(time), &mut out.reborrow())
     }
 }
 
 #[cfg(all(feature = "chrono", feature = "postgres_backend"))]
-impl FromSql<Timestamptz, Pg> for NaiveDateTime {
+impl FromSql<Timestamptz> for NaiveDateTime {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        FromSql::<Timestamp, Pg>::from_sql(bytes)
+        FromSql::<Timestamp>::from_sql(bytes)
     }
 }
 
 #[cfg(all(feature = "chrono", feature = "postgres_backend"))]
-impl ToSql<Timestamptz, Pg> for NaiveDateTime {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
-        ToSql::<Timestamp, Pg>::to_sql(self, out)
+impl ToSql<Timestamptz> for NaiveDateTime {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
+        ToSql::<Timestamp>::to_sql(self, out)
     }
 }
 
 #[cfg(all(feature = "chrono", feature = "postgres_backend"))]
-impl FromSql<Timestamptz, Pg> for DateTime<Utc> {
+impl FromSql<Timestamptz> for DateTime<Utc> {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        let naive_date_time = <NaiveDateTime as FromSql<Timestamptz, Pg>>::from_sql(bytes)?;
+        let naive_date_time = <NaiveDateTime as FromSql<Timestamptz>>::from_sql(bytes)?;
         Ok(Utc.from_utc_datetime(&naive_date_time))
     }
 }
 
 #[cfg(all(feature = "chrono", feature = "postgres_backend"))]
-impl FromSql<Timestamptz, Pg> for DateTime<Local> {
+impl FromSql<Timestamptz> for DateTime<Local> {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        let naive_date_time = <NaiveDateTime as FromSql<Timestamptz, Pg>>::from_sql(bytes)?;
+        let naive_date_time = <NaiveDateTime as FromSql<Timestamptz>>::from_sql(bytes)?;
         Ok(Local::from_utc_datetime(&Local, &naive_date_time))
     }
 }
 
 #[cfg(all(feature = "chrono", feature = "postgres_backend"))]
-impl<TZ: TimeZone> ToSql<Timestamptz, Pg> for DateTime<TZ> {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
-        ToSql::<Timestamptz, Pg>::to_sql(&self.naive_utc(), &mut out.reborrow())
+impl<TZ: TimeZone> ToSql<Timestamptz> for DateTime<TZ> {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
+        ToSql::<Timestamptz>::to_sql(&self.naive_utc(), &mut out.reborrow())
     }
 }
 
@@ -89,20 +89,20 @@ fn midnight() -> NaiveTime {
 }
 
 #[cfg(all(feature = "chrono", feature = "postgres_backend"))]
-impl ToSql<Time, Pg> for NaiveTime {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<Time> for NaiveTime {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         let duration = self.signed_duration_since(midnight());
         match duration.num_microseconds() {
-            Some(offset) => ToSql::<Time, Pg>::to_sql(&PgTime(offset), &mut out.reborrow()),
+            Some(offset) => ToSql::<Time>::to_sql(&PgTime(offset), &mut out.reborrow()),
             None => unreachable!(),
         }
     }
 }
 
 #[cfg(all(feature = "chrono", feature = "postgres_backend"))]
-impl FromSql<Time, Pg> for NaiveTime {
+impl FromSql<Time> for NaiveTime {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        let PgTime(offset) = FromSql::<Time, Pg>::from_sql(bytes)?;
+        let PgTime(offset) = FromSql::<Time>::from_sql(bytes)?;
         let duration = Duration::microseconds(offset);
         Ok(midnight() + duration)
     }
@@ -113,17 +113,17 @@ fn pg_epoch_date() -> NaiveDate {
 }
 
 #[cfg(all(feature = "chrono", feature = "postgres_backend"))]
-impl ToSql<Date, Pg> for NaiveDate {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<Date> for NaiveDate {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
         let days_since_epoch = self.signed_duration_since(pg_epoch_date()).num_days();
-        ToSql::<Date, Pg>::to_sql(&PgDate(days_since_epoch as i32), &mut out.reborrow())
+        ToSql::<Date>::to_sql(&PgDate(days_since_epoch as i32), &mut out.reborrow())
     }
 }
 
 #[cfg(all(feature = "chrono", feature = "postgres_backend"))]
-impl FromSql<Date, Pg> for NaiveDate {
+impl FromSql<Date> for NaiveDate {
     fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        let PgDate(offset) = FromSql::<Date, Pg>::from_sql(bytes)?;
+        let PgDate(offset) = FromSql::<Date>::from_sql(bytes)?;
         match pg_epoch_date().checked_add_signed(Duration::days(i64::from(offset))) {
             Some(date) => Ok(date),
             None => {

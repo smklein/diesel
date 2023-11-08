@@ -1,5 +1,4 @@
 use crate::associations::BelongsTo;
-use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::deserialize::{
     self, FromSqlRow, FromStaticSqlRow, Queryable, SqlTypeOrSelectable, StaticallySizedRow,
 };
@@ -14,7 +13,7 @@ use crate::query_dsl::load_dsl::CompatibleType;
 use crate::query_source::*;
 use crate::result::QueryResult;
 use crate::row::*;
-use crate::sql_types::{HasSqlType, IntoNullable, Nullable, OneIsNullable, SqlType};
+use crate::sql_types::{HasSqlType, IntoNullable, Nullable, OneIsNullable, SqlType, TypeMetadata};
 use crate::util::{TupleAppend, TupleSize};
 
 impl<T> TupleSize for T
@@ -31,11 +30,10 @@ macro_rules! tuple_impls {
         }
     )+) => {
         $(
-            impl<$($T),+, __DB> HasSqlType<($($T,)+)> for __DB where
-                $(__DB: HasSqlType<$T>),+,
-                __DB: Backend,
+            impl<$($T),+> HasSqlType<($($T,)+)> for DB where
+                $(DB: HasSqlType<$T>),+,
             {
-                fn metadata(_: &mut __DB::MetadataLookup) -> __DB::TypeMetadata {
+                fn metadata(_: &mut <DB as TypeMetadata>::MetadataLookup) -> <DB as TypeMetadata>::TypeMetadata {
                     unreachable!("Tuples should never implement `ToSql` directly");
                 }
             }
@@ -61,10 +59,9 @@ macro_rules! tuple_impls {
                 type Nullable = Nullable<($($T,)*)>;
             }
 
-            impl<$($T,)+ __DB> Selectable<__DB> for ($($T,)+)
+            impl<$($T,)+> Selectable for ($($T,)+)
             where
-                __DB: Backend,
-                $($T: Selectable<__DB>),+,
+                $($T: Selectable),+,
             {
                 type SelectExpression = ($($T::SelectExpression,)+);
 
@@ -73,9 +70,9 @@ macro_rules! tuple_impls {
                 }
             }
 
-            impl<$($T: QueryFragment<__DB>),+, __DB: Backend> QueryFragment<__DB> for ($($T,)+) {
+            impl<$($T: QueryFragment),+> QueryFragment for ($($T,)+) {
                 #[allow(unused_assignments)]
-                fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, __DB>) -> QueryResult<()>
+                fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()>
                 {
                     let mut needs_comma = false;
                     $(
@@ -95,7 +92,7 @@ macro_rules! tuple_impls {
             where
                 $($T: ColumnList,)+
             {
-                fn walk_ast<__DB: Backend + DieselReserveSpecialization>(&self, mut out: AstPass<'_, '_, __DB>) -> QueryResult<()> {
+                fn walk_ast(&self, mut out: AstPass<'_, '_, DB>) -> QueryResult<()> {
                     $(
                         if $idx != 0 {
                             out.push_sql(", ");
@@ -118,10 +115,9 @@ macro_rules! tuple_impls {
             {
             }
 
-            impl<$($T,)+ __DB> CanInsertInSingleQuery<__DB> for ($($T,)+)
+            impl<$($T,)+ > CanInsertInSingleQuery for ($($T,)+)
             where
-                __DB: Backend,
-                $($T: CanInsertInSingleQuery<__DB>,)+
+                $($T: CanInsertInSingleQuery,)+
             {
                 fn rows_to_insert(&self) -> Option<usize> {
                     $(debug_assert_eq!(self.$idx.rows_to_insert(), Some(1));)+
@@ -152,13 +148,12 @@ macro_rules! tuple_impls {
             }
 
             #[allow(unused_assignments)]
-            impl<$($T,)+ Tab, __DB> InsertValues<Tab, __DB> for ($($T,)+)
+            impl<$($T,)+ Tab> InsertValues<Tab> for ($($T,)+)
             where
                 Tab: Table,
-                __DB: Backend,
-                $($T: InsertValues<Tab, __DB>,)+
+                $($T: InsertValues<Tab>,)+
             {
-                fn column_names(&self, mut out: AstPass<'_, '_, __DB>) -> QueryResult<()> {
+                fn column_names(&self, mut out: AstPass<'_, '_, DB>) -> QueryResult<()> {
                     let mut needs_comma = false;
                     $(
                         let noop_element = self.$idx.is_noop(out.backend())?;
@@ -171,8 +166,7 @@ macro_rules! tuple_impls {
                         }
                     )+
                     Ok(())
-                }
-            }
+                } }
 
             impl<__T, $($ST,)* Tab> Insertable<Tab> for InsertableOptionHelper<__T, ($($ST,)*)>
             where
@@ -248,9 +242,8 @@ macro_rules! tuple_impls {
 
             impl_sql_type!($($T,)*);
 
-            impl<$($T,)* __DB, $($ST,)*> Queryable<($($ST,)*), __DB> for ($($T,)*)
-            where __DB: Backend,
-                  Self: FromStaticSqlRow<($($ST,)*), __DB>,
+            impl<$($T,)*  $($ST,)*> Queryable<($($ST,)*)> for ($($T,)*)
+            where Self: FromStaticSqlRow<($($ST,)*)>,
             {
                 type Row = Self;
 
@@ -259,17 +252,16 @@ macro_rules! tuple_impls {
                 }
             }
 
-            impl<__T, $($ST,)*  __DB> FromStaticSqlRow<Nullable<($($ST,)*)>, __DB> for Option<__T> where
-                __DB: Backend,
+            impl<__T, $($ST,)*> FromStaticSqlRow<Nullable<($($ST,)*)>> for Option<__T> where
                 ($($ST,)*): SqlType,
-                __T: FromSqlRow<($($ST,)*), __DB>,
+                __T: FromSqlRow<($($ST,)*)>,
             {
 
                 #[allow(non_snake_case, unused_variables, unused_mut)]
-                fn build_from_row<'a>(row: &impl Row<'a, __DB>)
+                fn build_from_row<'a>(row: &impl Row<'a, DB>)
                                       -> deserialize::Result<Self>
                 {
-                    match <__T as FromSqlRow<($($ST,)*), __DB>>::build_from_row(row) {
+                    match <__T as FromSqlRow<($($ST,)*)>>::build_from_row(row) {
                         Ok(v) => Ok(Some(v)),
                         Err(e) if e.is::<crate::result::UnexpectedNullError>() => Ok(None),
                         Err(e) => Err(e)
@@ -277,9 +269,8 @@ macro_rules! tuple_impls {
                 }
             }
 
-            impl<__T,  __DB, $($ST,)*> Queryable<Nullable<($($ST,)*)>, __DB> for Option<__T>
-            where __DB: Backend,
-                  Self: FromStaticSqlRow<Nullable<($($ST,)*)>, __DB>,
+            impl<__T, $($ST,)*> Queryable<Nullable<($($ST,)*)>> for Option<__T>
+            where Self: FromStaticSqlRow<Nullable<($($ST,)*)>>,
                   ($($ST,)*): SqlType,
             {
                 type Row = Self;
@@ -302,53 +293,48 @@ macro_rules! tuple_impls {
                 const SIZE: usize = $($T::SIZE +)* 0;
             }
 
-            impl<$($T,)* __DB> QueryMetadata<($($T,)*)> for __DB
-            where __DB: Backend,
-                 $(__DB: QueryMetadata<$T>,)*
+            impl<$($T,)*> QueryMetadata<($($T,)*)> for DB
+            where $(DB: QueryMetadata<$T>,)*
             {
-                fn row_metadata(lookup: &mut Self::MetadataLookup, row: &mut Vec<Option<__DB::TypeMetadata>>) {
+                fn row_metadata(lookup: &mut Self::MetadataLookup, row: &mut Vec<Option<<DB as TypeMetadata>::TypeMetadata>>) {
                     $(
-                        <__DB as QueryMetadata<$T>>::row_metadata(lookup, row);
+                        <DB as QueryMetadata<$T>>::row_metadata(lookup, row);
                     )*
                 }
             }
 
-            impl<$($T,)* __DB> QueryMetadata<Nullable<($($T,)*)>> for __DB
-            where __DB: Backend,
-                  $(__DB: QueryMetadata<$T>,)*
+            impl<$($T,)*> QueryMetadata<Nullable<($($T,)*)>> for DB
+            where $(DB: QueryMetadata<$T>,)*
             {
-                fn row_metadata(lookup: &mut Self::MetadataLookup, row: &mut Vec<Option<__DB::TypeMetadata>>) {
+                fn row_metadata(lookup: &mut Self::MetadataLookup, row: &mut Vec<Option<<DB as TypeMetadata>::TypeMetadata>>) {
                     $(
-                        <__DB as QueryMetadata<$T>>::row_metadata(lookup, row);
+                        <DB as QueryMetadata<$T>>::row_metadata(lookup, row);
                     )*
                 }
             }
 
-            impl<$($T,)* __DB> deserialize::QueryableByName< __DB> for ($($T,)*)
-            where __DB: Backend,
-            $($T: deserialize::QueryableByName<__DB>,)*
+            impl<$($T,)*> deserialize::QueryableByName for ($($T,)*)
+            where $($T: deserialize::QueryableByName,)*
             {
-                fn build<'a>(row: &impl NamedRow<'a, __DB>) -> deserialize::Result<Self> {
+                fn build<'a>(row: &impl NamedRow<'a, DB>) -> deserialize::Result<Self> {
                     Ok(($(
-                        <$T as deserialize::QueryableByName<__DB>>::build(row)?,
+                        <$T as deserialize::QueryableByName>::build(row)?,
                     )*))
                 }
             }
 
-            impl<__T, $($ST,)* __DB> CompatibleType<__T, __DB> for ($($ST,)*)
+            impl<__T, $($ST,)*> CompatibleType<__T> for ($($ST,)*)
             where
-                __DB: Backend,
-                __T: FromSqlRow<($($ST,)*), __DB>,
+                __T: FromSqlRow<($($ST,)*)>,
             {
                 type SqlType = Self;
             }
 
-            impl<__T, $($ST,)* __DB> CompatibleType<Option<__T>, __DB> for Nullable<($($ST,)*)>
+            impl<__T, $($ST,)*> CompatibleType<Option<__T>> for Nullable<($($ST,)*)>
             where
-                __DB: Backend,
-                ($($ST,)*): CompatibleType<__T, __DB>
+                ($($ST,)*): CompatibleType<__T>
             {
-                type SqlType = Nullable<<($($ST,)*) as CompatibleType<__T, __DB>>::SqlType>;
+                type SqlType = Nullable<<($($ST,)*) as CompatibleType<__T>>::SqlType>;
             }
 
             impl<$($ST,)*> SqlTypeOrSelectable for ($($ST,)*)
@@ -364,14 +350,13 @@ macro_rules! tuple_impls {
 
 macro_rules! impl_from_sql_row {
     (($T1: ident,), ($ST1: ident,)) => {
-        impl<$T1, $ST1, __DB> crate::deserialize::FromStaticSqlRow<($ST1,), __DB> for ($T1,) where
-            __DB: Backend,
-            $ST1: CompatibleType<$T1, __DB>,
-            $T1: FromSqlRow<<$ST1 as CompatibleType<$T1, __DB>>::SqlType, __DB>,
+        impl<$T1, $ST1> crate::deserialize::FromStaticSqlRow<($ST1,)> for ($T1,) where
+            $ST1: CompatibleType<$T1>,
+            $T1: FromSqlRow<<$ST1 as CompatibleType<$T1>>::SqlType>,
         {
 
             #[allow(non_snake_case, unused_variables, unused_mut)]
-            fn build_from_row<'a>(row: &impl Row<'a, __DB>)
+            fn build_from_row<'a>(row: &impl Row<'a, DB>)
                                                        -> deserialize::Result<Self>
             {
                 Ok(($T1::build_from_row(row)?,))
@@ -379,15 +364,14 @@ macro_rules! impl_from_sql_row {
         }
     };
     (($T1: ident, $($T: ident,)*), ($ST1: ident, $($ST: ident,)*)) => {
-        impl<$T1, $($T,)* $($ST,)* __DB> FromSqlRow<($($ST,)* crate::sql_types::Untyped), __DB> for ($($T,)* $T1)
-        where __DB: Backend,
-              $T1: FromSqlRow<crate::sql_types::Untyped, __DB>,
+        impl<$T1, $($T,)* $($ST,)*> FromSqlRow<($($ST,)* crate::sql_types::Untyped)> for ($($T,)* $T1)
+        where $T1: FromSqlRow<crate::sql_types::Untyped>,
             $(
-                $T: FromSqlRow<$ST, __DB> + StaticallySizedRow<$ST, __DB>,
+                $T: FromSqlRow<$ST> + StaticallySizedRow<$ST>,
         )*
         {
             #[allow(non_snake_case, unused_variables, unused_mut)]
-            fn build_from_row<'a>(full_row: &impl Row<'a, __DB>)
+            fn build_from_row<'a>(full_row: &impl Row<'a, DB>)
                 -> deserialize::Result<Self>
             {
                 let field_count = full_row.field_count();
@@ -405,19 +389,18 @@ macro_rules! impl_from_sql_row {
             }
         }
 
-        impl<$T1, $ST1, $($T,)* $($ST,)* __DB> FromStaticSqlRow<($($ST,)* $ST1,), __DB> for ($($T,)* $T1,) where
-            __DB: Backend,
-            $ST1: CompatibleType<$T1, __DB>,
-            $T1: FromSqlRow<<$ST1 as CompatibleType<$T1, __DB>>::SqlType, __DB>,
+        impl<$T1, $ST1, $($T,)* $($ST,)*> FromStaticSqlRow<($($ST,)* $ST1,)> for ($($T,)* $T1,) where
+            $ST1: CompatibleType<$T1>,
+            $T1: FromSqlRow<<$ST1 as CompatibleType<$T1>>::SqlType>,
             $(
-                $ST: CompatibleType<$T, __DB>,
-                $T: FromSqlRow<<$ST as CompatibleType<$T, __DB>>::SqlType, __DB> + StaticallySizedRow<<$ST as CompatibleType<$T, __DB>>::SqlType, __DB>,
+                $ST: CompatibleType<$T>,
+                $T: FromSqlRow<<$ST as CompatibleType<$T>>::SqlType> + StaticallySizedRow<<$ST as CompatibleType<$T>>::SqlType>,
             )*
 
         {
 
             #[allow(non_snake_case, unused_variables, unused_mut)]
-            fn build_from_row<'a>(full_row: &impl Row<'a, __DB>)
+            fn build_from_row<'a>(full_row: &impl Row<'a, DB>)
                 -> deserialize::Result<Self>
             {
                 let field_count = full_row.field_count();
@@ -426,7 +409,7 @@ macro_rules! impl_from_sql_row {
                 $(
                     let row = full_row.partial_row(static_field_count..static_field_count + $T::FIELD_COUNT);
                     static_field_count += $T::FIELD_COUNT;
-                    let $T = <$T as FromSqlRow<<$ST as CompatibleType<$T, __DB>>::SqlType, __DB>>::build_from_row(&row)?;
+                    let $T = <$T as FromSqlRow<<$ST as CompatibleType<$T>>::SqlType>>::build_from_row(&row)?;
                 )*
 
                 let row = full_row.partial_row(static_field_count..field_count);

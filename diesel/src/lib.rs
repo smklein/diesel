@@ -120,7 +120,7 @@
 //!    model structs:
 //!    This error indicates a type mismatch between the field you are trying to update and the actual
 //!    database type. Double check your type mapping.
-//! * `the trait bound SomeLargeType: QueryFragment<Sqlite, SomeMarkerType> is not satisfied` while
+//! * `the trait bound SomeLargeType: QueryFragment<SomeMarkerType> is not satisfied` while
 //!    trying to execute a query.
 //!    This error message indicates that a given query is not supported by your backend. This usually
 //!    means that you are trying to use SQL features from one SQL dialect on a different database
@@ -428,7 +428,7 @@ pub mod helper_types {
     >;
 
     /// Represents the return type of [`.into_boxed::<'a, DB>()`](crate::prelude::QueryDsl::into_boxed)
-    pub type IntoBoxed<'a, Source, DB> = <Source as BoxedDsl<'a, DB>>::Output;
+    pub type IntoBoxed<'a, Source> = <Source as BoxedDsl<'a>>::Output;
 
     /// Represents the return type of [`.distinct()`](crate::prelude::QueryDsl::distinct)
     pub type Distinct<Source> = <Source as DistinctDsl>::Output;

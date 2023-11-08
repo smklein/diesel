@@ -1,7 +1,7 @@
 //! This module contains the query dsl node definition
 //! for `EXISTS` expressions
 
-use crate::backend::{sql_dialect, Backend, SqlDialect};
+use crate::backend::{sql_dialect, SqlDialect};
 use crate::expression::subselect::Subselect;
 use crate::expression::{AppearsInQuery, Expression, SelectableExpression};
 use crate::helper_types::exists;
@@ -59,20 +59,18 @@ where
     type SqlType = Bool;
 }
 
-impl<T, DB> QueryFragment<DB> for Exists<T>
+impl<T> QueryFragment for Exists<T>
 where
-    DB: Backend,
-    Self: QueryFragment<DB, DB::ExistsSyntax>,
+    Self: QueryFragment<<DB as SqlDialect>::ExistsSyntax>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::ExistsSyntax>>::walk_ast(self, pass)
+        <Self as QueryFragment<DB::ExistsSyntax>>::walk_ast(self, pass)
     }
 }
 
-impl<T, DB> QueryFragment<DB, sql_dialect::exists_syntax::AnsiSqlExistsSyntax> for Exists<T>
+impl<T> QueryFragment<sql_dialect::exists_syntax::AnsiSqlExistsSyntax> for Exists<T>
 where
-    DB: Backend + SqlDialect<ExistsSyntax = sql_dialect::exists_syntax::AnsiSqlExistsSyntax>,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql("EXISTS (");

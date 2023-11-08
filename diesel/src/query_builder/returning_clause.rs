@@ -1,15 +1,12 @@
-use super::{AstPass, QueryFragment};
-use crate::backend::{Backend, DieselReserveSpecialization};
+use super::{AstPass, DB, QueryFragment};
+use crate::backend::SqlDialect;
 use crate::query_builder::QueryId;
 use crate::result::QueryResult;
 
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct NoReturningClause;
 
-impl<DB> QueryFragment<DB> for NoReturningClause
-where
-    DB: Backend + DieselReserveSpecialization,
-{
+impl QueryFragment for NoReturningClause {
     fn walk_ast<'b>(&'b self, _: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         Ok(())
     }
@@ -27,24 +24,20 @@ where
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct ReturningClause<Expr>(pub Expr);
 
-impl<Expr, DB> QueryFragment<DB> for ReturningClause<Expr>
+impl<Expr> QueryFragment for ReturningClause<Expr>
 where
-    DB: Backend,
-    Self: QueryFragment<DB, DB::ReturningClause>,
+    Self: QueryFragment<<DB as SqlDialect>::ReturningClause>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b, DB>) -> QueryResult<()> {
-        <Self as QueryFragment<DB, DB::ReturningClause>>::walk_ast(self, pass)
+        <Self as QueryFragment<DB::ReturningClause>>::walk_ast(self, pass)
     }
 }
 
-impl<Expr, DB>
-    QueryFragment<DB, crate::backend::sql_dialect::returning_clause::PgLikeReturningClause>
+impl<Expr>
+    QueryFragment<crate::backend::sql_dialect::returning_clause::PgLikeReturningClause>
     for ReturningClause<Expr>
 where
-    DB: Backend<
-        ReturningClause = crate::backend::sql_dialect::returning_clause::PgLikeReturningClause,
-    >,
-    Expr: QueryFragment<DB>,
+    Expr: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, DB>) -> QueryResult<()> {
         out.push_sql(" RETURNING ");

@@ -77,10 +77,10 @@ pub trait Row<'a, DB: Backend>:
     fn get_value<ST, T, I>(&self, idx: I) -> crate::deserialize::Result<T>
     where
         Self: RowIndex<I>,
-        T: FromSql<ST, DB>,
+        T: FromSql<ST>,
     {
         let field = self.get(idx).ok_or(crate::result::UnexpectedEndOfRow)?;
-        <T as FromSql<ST, DB>>::from_nullable_sql(field.value())
+        <T as FromSql<ST>>::from_nullable_sql(field.value())
     }
 
     /// Returns a wrapping row that allows only to access fields, where the index is part of
@@ -129,7 +129,7 @@ pub trait NamedRow<'a, DB: Backend>: Row<'a, DB> {
     /// this function is undefined.
     fn get<ST, T>(&self, column_name: &str) -> deserialize::Result<T>
     where
-        T: FromSql<ST, DB>;
+        T: FromSql<ST>;
 }
 
 impl<'a, R, DB> NamedRow<'a, DB> for R
@@ -139,7 +139,7 @@ where
 {
     fn get<ST, T>(&self, column_name: &str) -> deserialize::Result<T>
     where
-        T: FromSql<ST, DB>,
+        T: FromSql<ST>,
     {
         let field = Row::get(self, column_name)
             .ok_or_else(|| format!("Column `{column_name}` was not present in query"))?;

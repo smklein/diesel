@@ -20,9 +20,9 @@ macro_rules! tuple_impls {
         }
     )+) => {$(
         #[cfg(feature = "postgres_backend")]
-        impl<$($T,)+ $($ST,)+> FromSql<Record<($($ST,)+)>, Pg> for ($($T,)+)
+        impl<$($T,)+ $($ST,)+> FromSql<Record<($($ST,)+)>> for ($($T,)+)
         where
-            $($T: FromSql<$ST, Pg>,)+
+            $($T: FromSql<$ST>,)+
         {
             // Yes, we're relying on the order of evaluation of subexpressions
             // but the only other option would be to use `mem::uninitialized`
@@ -70,8 +70,8 @@ macro_rules! tuple_impls {
         }
 
         #[cfg(feature = "postgres_backend")]
-        impl<$($T,)+ $($ST,)+> Queryable<Record<($($ST,)+)>, Pg> for ($($T,)+)
-        where Self: FromSql<Record<($($ST,)+)>, Pg>
+        impl<$($T,)+ $($ST,)+> Queryable<Record<($($ST,)+)>> for ($($T,)+)
+        where Self: FromSql<Record<($($ST,)+)>>
         {
             type Row = Self;
 
@@ -99,10 +99,10 @@ macro_rules! tuple_impls {
         #[cfg(feature = "postgres_backend")]
         impl<$($T,)+ $($ST,)+> WriteTuple<($($ST,)+)> for ($($T,)+)
         where
-            $($T: ToSql<$ST, Pg>,)+
+            $($T: ToSql<$ST>,)+
             $(Pg: HasSqlType<$ST>),+
         {
-            fn write_tuple(&self, out: &mut Output<'_, '_, Pg>) -> serialize::Result {
+            fn write_tuple(&self, out: &mut Output<'_, '_>) -> serialize::Result {
                 let mut buffer = Vec::new();
                 out.write_i32::<NetworkEndian>($Tuple)?;
 
@@ -135,9 +135,9 @@ diesel_derives::__diesel_for_each_tuple!(tuple_impls);
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct PgTuple<T>(T);
 
-impl<T> QueryFragment<Pg> for PgTuple<T>
+impl<T> QueryFragment for PgTuple<T>
 where
-    T: QueryFragment<Pg>,
+    T: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         out.push_sql("(");
@@ -232,8 +232,8 @@ mod tests {
         #[diesel(sql_type = MyType)]
         struct MyStruct<'a>(i32, &'a str);
 
-        impl<'a> ToSql<MyType, Pg> for MyStruct<'a> {
-            fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+        impl<'a> ToSql<MyType> for MyStruct<'a> {
+            fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
                 WriteTuple::<(Integer, Text)>::write_tuple(&(self.0, self.1), out)
             }
         }

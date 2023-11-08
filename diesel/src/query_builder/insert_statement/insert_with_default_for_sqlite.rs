@@ -22,11 +22,11 @@ impl<'a, T, V, QId, Op, Ret, const STATIC_QUERY_ID: bool> DebugQueryHelper<Yes>
         Sqlite,
     >
 where
-    V: QueryFragment<Sqlite>,
+    V: QueryFragment,
     T: Copy + QuerySource,
     Op: Copy,
     Ret: Copy,
-    for<'b> InsertStatement<T, &'b ValuesClause<V, T>, Op, Ret>: QueryFragment<Sqlite>,
+    for<'b> InsertStatement<T, &'b ValuesClause<V, T>, Op, Ret>: QueryFragment,
 {
     fn fmt_debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut statements = vec![String::from("BEGIN")];
@@ -235,8 +235,8 @@ impl<V, T, QId, C, Op, const STATIC_QUERY_ID: bool> ExecuteDsl<C, Sqlite>
 where
     C: Connection<Backend = Sqlite>,
     T: Table + Copy + QueryId + 'static,
-    T::FromClause: QueryFragment<Sqlite>,
-    Op: Copy + QueryId + QueryFragment<Sqlite>,
+    T::FromClause: QueryFragment,
+    Op: Copy + QueryId + QueryFragment,
     V: InsertValues<T, Sqlite> + CanInsertInSingleQuery<Sqlite> + QueryId,
 {
     fn execute((Yes, query): Self, conn: &mut C) -> QueryResult<usize> {
@@ -258,11 +258,11 @@ pub struct SqliteBatchInsertWrapper<V, T, QId, const STATIC_QUERY_ID: bool>(
     BatchInsert<V, T, QId, STATIC_QUERY_ID>,
 );
 
-impl<V, Tab, QId, const STATIC_QUERY_ID: bool> QueryFragment<Sqlite>
+impl<V, Tab, QId, const STATIC_QUERY_ID: bool> QueryFragment
     for SqliteBatchInsertWrapper<Vec<ValuesClause<V, Tab>>, Tab, QId, STATIC_QUERY_ID>
 where
-    ValuesClause<V, Tab>: QueryFragment<Sqlite>,
-    V: QueryFragment<Sqlite>,
+    ValuesClause<V, Tab>: QueryFragment,
+    V: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Sqlite>) -> QueryResult<()> {
         if !STATIC_QUERY_ID {
@@ -328,10 +328,10 @@ impl<V, T, QId, C, Op, const STATIC_QUERY_ID: bool> ExecuteDsl<C, Sqlite>
 where
     C: Connection<Backend = Sqlite>,
     T: Table + QueryId + 'static,
-    T::FromClause: QueryFragment<Sqlite>,
-    Op: QueryFragment<Sqlite> + QueryId,
+    T::FromClause: QueryFragment,
+    Op: QueryFragment + QueryId,
     SqliteBatchInsertWrapper<V, T, QId, STATIC_QUERY_ID>:
-        QueryFragment<Sqlite> + QueryId + CanInsertInSingleQuery<Sqlite>,
+        QueryFragment + QueryId + CanInsertInSingleQuery<Sqlite>,
 {
     fn execute((No, query): Self, conn: &mut C) -> QueryResult<usize> {
         let query = InsertStatement {

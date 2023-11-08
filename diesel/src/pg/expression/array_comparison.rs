@@ -82,9 +82,9 @@ where
     type SqlType = ST;
 }
 
-impl<Expr> QueryFragment<Pg> for Any<Expr>
+impl<Expr> QueryFragment for Any<Expr>
 where
-    Expr: QueryFragment<Pg>,
+    Expr: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         out.push_sql("ANY(");
@@ -116,9 +116,9 @@ where
     type SqlType = ST;
 }
 
-impl<Expr> QueryFragment<Pg> for All<Expr>
+impl<Expr> QueryFragment for All<Expr>
 where
-    Expr: QueryFragment<Pg>,
+    Expr: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         out.push_sql("ALL(");
@@ -151,8 +151,8 @@ where
     }
 }
 
-impl<ST, F, S, D, W, O, LOf, G, H> AsArrayExpression<ST>
-    for SelectStatement<F, S, D, W, O, LOf, G, H>
+impl<ST, F, S, D, W, O, LOf, G> AsArrayExpression<ST>
+    for SelectStatement<F, S, D, W, O, LOf, G>
 where
     ST: 'static,
     Self: SelectQuery<SqlType = ST>,
@@ -164,7 +164,7 @@ where
     }
 }
 
-impl<'a, ST, QS, DB, GB> AsArrayExpression<ST> for BoxedSelectStatement<'a, ST, QS, DB, GB>
+impl<'a, ST, QS, GB> AsArrayExpression<ST> for BoxedSelectStatement<'a, ST, QS, GB>
 where
     ST: 'static,
     Self: SelectQuery<SqlType = ST>,

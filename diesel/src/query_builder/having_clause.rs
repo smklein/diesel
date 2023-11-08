@@ -1,1 +1,1 @@
-simple_clause!(NoHavingClause, HavingClause, " HAVING ");
+simple_optional_clause!(HavingClause, " HAVING ");

@@ -1,7 +1,5 @@
-use super::{AstPass, QueryBuilder, QueryFragment};
-use crate::backend::Backend;
+use super::{AstPass, DB, QueryFragment};
 use std::fmt::{self, Debug, Display};
-use std::marker::PhantomData;
 
 /// A struct that implements `fmt::Display` and `fmt::Debug` to show the SQL
 /// representation of a query.
@@ -13,46 +11,40 @@ use std::marker::PhantomData;
 /// See [`debug_query`] for usage examples.
 ///
 /// [`debug_query`]: crate::query_builder::debug_query()
-pub struct DebugQuery<'a, T: 'a, DB> {
+pub struct DebugQuery<'a, T: 'a> {
     pub(crate) query: &'a T,
-    _marker: PhantomData<DB>,
 }
 
-impl<'a, T, DB> DebugQuery<'a, T, DB> {
+impl<'a, T> DebugQuery<'a, T> {
     pub(crate) fn new(query: &'a T) -> Self {
         DebugQuery {
             query,
-            _marker: PhantomData,
         }
     }
 }
 
-impl<'a, T, DB> Display for DebugQuery<'a, T, DB>
+impl<'a, T> Display for DebugQuery<'a, T>
 where
-    DB: Backend + Default,
-    DB::QueryBuilder: Default,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut query_builder = DB::QueryBuilder::default();
         let backend = DB::default();
-        QueryFragment::<DB>::to_sql(self.query, &mut query_builder, &backend)
+        QueryFragment::to_sql(self.query, &mut query_builder, &backend)
             .map_err(|_| fmt::Error)?;
-        let debug_binds = DebugBinds::<_, DB>::new(self.query);
+        let debug_binds = DebugBinds::<_>::new(self.query);
         write!(f, "{} -- binds: {:?}", query_builder.finish(), debug_binds)
     }
 }
 
-impl<'a, T, DB> Debug for DebugQuery<'a, T, DB>
+impl<'a, T> Debug for DebugQuery<'a, T>
 where
-    DB: Backend + Default,
-    DB::QueryBuilder: Default,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut query_builder = DB::QueryBuilder::default();
         let backend = DB::default();
-        QueryFragment::<DB>::to_sql(self.query, &mut query_builder, &backend)
+        QueryFragment::to_sql(self.query, &mut query_builder, &backend)
             .map_err(|_| fmt::Error)?;
         let debug_binds = DebugBinds::<_, DB>::new(self.query);
         f.debug_struct("Query")
@@ -64,24 +56,21 @@ where
 
 /// A struct that implements `fmt::Debug` by walking the given AST and writing
 /// the `fmt::Debug` implementation of each bind parameter.
-pub(crate) struct DebugBinds<'a, T: 'a, DB> {
+pub(crate) struct DebugBinds<'a, T: 'a> {
     query: &'a T,
-    _marker: PhantomData<DB>,
 }
 
-impl<'a, T, DB> DebugBinds<'a, T, DB> {
+impl<'a, T> DebugBinds<'a, T> {
     fn new(query: &'a T) -> Self {
         DebugBinds {
             query,
-            _marker: PhantomData,
         }
     }
 }
 
-impl<'a, T, DB> Debug for DebugBinds<'a, T, DB>
+impl<'a, T> Debug for DebugBinds<'a, T>
 where
-    DB: Backend + Default,
-    T: QueryFragment<DB>,
+    T: QueryFragment,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let backend = DB::default();

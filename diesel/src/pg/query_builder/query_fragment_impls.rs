@@ -9,10 +9,10 @@ use crate::result::QueryResult;
 use crate::serialize::ToSql;
 use crate::sql_types::{HasSqlType, SingleValue};
 
-impl<T, U> QueryFragment<Pg, PgStyleArrayComparison> for In<T, U>
+impl<T, U> QueryFragment<PgStyleArrayComparison> for In<T, U>
 where
-    T: QueryFragment<Pg>,
-    U: QueryFragment<Pg> + MaybeEmpty,
+    T: QueryFragment,
+    U: QueryFragment + MaybeEmpty,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         self.left.walk_ast(out.reborrow())?;
@@ -23,10 +23,10 @@ where
     }
 }
 
-impl<T, U> QueryFragment<Pg, PgStyleArrayComparison> for NotIn<T, U>
+impl<T, U> QueryFragment<PgStyleArrayComparison> for NotIn<T, U>
 where
-    T: QueryFragment<Pg>,
-    U: QueryFragment<Pg> + MaybeEmpty,
+    T: QueryFragment,
+    U: QueryFragment + MaybeEmpty,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         self.left.walk_ast(out.reborrow())?;
@@ -37,10 +37,10 @@ where
     }
 }
 
-impl<ST, I> QueryFragment<Pg, PgStyleArrayComparison> for Many<ST, I>
+impl<ST, I> QueryFragment<PgStyleArrayComparison> for Many<ST, I>
 where
     ST: SingleValue,
-    Vec<I>: ToSql<Array<ST>, Pg>,
+    Vec<I>: ToSql<Array<ST>>,
     Pg: HasSqlType<ST>,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
@@ -48,11 +48,11 @@ where
     }
 }
 
-impl<T, U> QueryFragment<Pg, crate::pg::backend::PgOnConflictClause>
+impl<T, U> QueryFragment<crate::pg::backend::PgOnConflictClause>
     for DecoratedConflictTarget<T, U>
 where
-    T: QueryFragment<Pg>,
-    U: QueryFragment<Pg>,
+    T: QueryFragment,
+    U: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         self.target.walk_ast(out.reborrow())?;
@@ -61,9 +61,9 @@ where
     }
 }
 
-impl<S> QueryFragment<crate::pg::Pg> for OnConflictSelectWrapper<S>
+impl<S> QueryFragment for OnConflictSelectWrapper<S>
 where
-    S: QueryFragment<crate::pg::Pg>,
+    S: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, out: AstPass<'_, 'b, crate::pg::Pg>) -> QueryResult<()> {
         self.0.walk_ast(out)

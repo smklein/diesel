@@ -4,6 +4,7 @@ use crate::backend::Backend;
 use crate::connection::{BoxableConnection, Connection};
 use crate::deserialize::{FromSql, FromSqlRow};
 use crate::expression::AsExpression;
+use crate::query_builder::DB;
 use crate::result::QueryResult;
 use crate::serialize::ToSql;
 use crate::sql_types::Text;
@@ -32,25 +33,23 @@ impl<'a> MigrationVersion<'a> {
     }
 }
 
-impl<'a, DB> FromSql<Text, DB> for MigrationVersion<'a>
+impl<'a> FromSql<Text> for MigrationVersion<'a>
 where
-    String: FromSql<Text, DB>,
-    DB: Backend,
+    String: FromSql<Text>,
 {
-    fn from_sql(bytes: DB::RawValue<'_>) -> crate::deserialize::Result<Self> {
+    fn from_sql(bytes: <DB as Backend>::RawValue<'_>) -> crate::deserialize::Result<Self> {
         let s = String::from_sql(bytes)?;
         Ok(Self(Cow::Owned(s)))
     }
 }
 
-impl<'a, DB> ToSql<Text, DB> for MigrationVersion<'a>
+impl<'a> ToSql<Text> for MigrationVersion<'a>
 where
-    Cow<'a, str>: ToSql<Text, DB>,
-    DB: Backend,
+    Cow<'a, str>: ToSql<Text>,
 {
     fn to_sql<'b>(
         &'b self,
-        out: &mut crate::serialize::Output<'b, '_, DB>,
+        out: &mut crate::serialize::Output<'b, '_>,
     ) -> crate::serialize::Result {
         self.0.to_sql(out)
     }
