@@ -57,11 +57,13 @@ where
     }
 }
 
+type OnConflictClause = <DB as SqlDialect>::OnConflictClause;
+
 impl<T, U> QueryFragment for DecoratedConflictTarget<T, U>
 where
-    Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
+    Self: QueryFragment<OnConflictClause>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
+        <Self as QueryFragment<OnConflictClause>>::walk_ast(self, pass)
     }
 }

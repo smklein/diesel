@@ -1,6 +1,5 @@
 use self::private::LoadIter;
 use super::RunQueryDsl;
-use crate::backend::Backend;
 use crate::connection::{Connection, DefaultLoadingMode, LoadConnection};
 use crate::deserialize::FromSqlRow;
 use crate::expression::QueryMetadata;
@@ -98,7 +97,6 @@ mod private {
     use crate::deserialize::FromSqlRow;
     use crate::expression::select_by::SelectBy;
     use crate::expression::{Expression, TypedExpressionType};
-    use crate::query_builder::DB;
     use crate::sql_types::{SqlType, Untyped};
     use crate::{QueryResult, Selectable};
 
@@ -111,7 +109,7 @@ mod private {
     impl<'a, C, U, ST, R> LoadIter<U, C, ST>
     where
         C: Iterator<Item = QueryResult<R>>,
-        R: crate::row::Row<'a, DB>,
+        R: crate::row::Row<'a>,
         U: FromSqlRow<ST>,
     {
         pub(super) fn map_row(row: Option<QueryResult<R>>) -> Option<QueryResult<U>> {
@@ -127,7 +125,7 @@ mod private {
     impl<'a, C, U, ST, R> Iterator for LoadIter<U, C, ST>
     where
         C: Iterator<Item = QueryResult<R>>,
-        R: crate::row::Row<'a, DB>,
+        R: crate::row::Row<'a>,
         U: FromSqlRow<ST>,
     {
         type Item = QueryResult<U>;
@@ -162,7 +160,7 @@ mod private {
     impl<'a, C, U, ST, R> ExactSizeIterator for LoadIter<U, C, ST>
     where
         C: ExactSizeIterator + Iterator<Item = QueryResult<R>>,
-        R: crate::row::Row<'a, DB>,
+        R: crate::row::Row<'a>,
         U: FromSqlRow<ST>,
     {
         fn len(&self) -> usize {

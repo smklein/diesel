@@ -41,7 +41,6 @@ mod diesel_public_if;
 mod from_sql_row;
 mod identifiable;
 mod insertable;
-mod multiconnection;
 mod query_id;
 mod queryable;
 mod queryable_by_name;
@@ -357,12 +356,11 @@ pub fn derive_identifiable(input: TokenStream) -> TokenStream {
 ///     }
 /// }
 ///
-/// impl<DB> ToSql<sql_types::Text, DB> for UppercaseString
+/// impl ToSql<sql_types::Text> for UppercaseString
 ///     where
-///         DB: Backend,
-///         String: ToSql<sql_types::Text, DB>,
+///         String: ToSql<sql_types::Text>,
 /// {
-///     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, DB>) -> serialize::Result {
+///     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
 ///         self.0.to_sql(out)
 ///     }
 /// }
@@ -537,10 +535,9 @@ pub fn derive_query_id(input: TokenStream) -> TokenStream {
 ///     }
 /// }
 ///
-/// impl<DB> Queryable<Text, DB> for LowercaseString
+/// impl Queryable<Text> for LowercaseString
 /// where
-///     DB: Backend,
-///     String: FromSql<Text, DB>
+///     String: FromSql<Text>
 /// {
 ///
 ///     type Row = String;
@@ -592,9 +589,9 @@ pub fn derive_query_id(input: TokenStream) -> TokenStream {
 ///     name: String,
 /// }
 ///
-/// impl Queryable<users::SqlType, DB> for User
+/// impl Queryable<users::SqlType> for User
 /// where
-///    (i32, String): FromSqlRow<users::SqlType, DB>,
+///    (i32, String): FromSqlRow<users::SqlType>,
 /// {
 ///     type Row = (i32, String);
 ///
@@ -741,10 +738,9 @@ pub fn derive_queryable(input: TokenStream) -> TokenStream {
 ///     }
 /// }
 ///
-/// impl<DB, ST> FromSql<ST, DB> for LowercaseString
+/// impl<ST> FromSql<ST> for LowercaseString
 /// where
-///     DB: Backend,
-///     String: FromSql<ST, DB>,
+///     String: FromSql<ST>,
 /// {
 ///     fn from_sql(bytes: DB::RawValue<'_>) -> deserialize::Result<Self> {
 ///         String::from_sql(bytes)
@@ -791,13 +787,12 @@ pub fn derive_queryable(input: TokenStream) -> TokenStream {
 ///     name: String,
 /// }
 ///
-/// impl<DB> QueryableByName<DB> for User
+/// impl QueryableByName for User
 /// where
-///     DB: Backend,
-///     i32: FromSql<diesel::dsl::SqlTypeOf<users::id>, DB>,
-///     String: FromSql<diesel::dsl::SqlTypeOf<users::name>, DB>,
+///     i32: FromSql<diesel::dsl::SqlTypeOf<users::id>>,
+///     String: FromSql<diesel::dsl::SqlTypeOf<users::name>>,
 /// {
-///     fn build<'a>(row: &impl NamedRow<'a, DB>) -> deserialize::Result<Self> {
+///     fn build<'a>(row: &impl NamedRow<'a>) -> deserialize::Result<Self> {
 ///         let id = NamedRow::get::<diesel::dsl::SqlTypeOf<users::id>, _>(row, "id")?;
 ///         let name = NamedRow::get::<diesel::dsl::SqlTypeOf<users::name>, _>(row, "name")?;
 ///
@@ -1489,7 +1484,7 @@ pub fn __diesel_public_if(attrs: TokenStream, input: TokenStream) -> TokenStream
 /// ----------
 ///
 /// ```ignore
-/// pub type BoxedQuery<'a, DB, ST = SqlType> = BoxedSelectStatement<'a, ST, table, DB>;
+/// pub type BoxedQuery<'a, ST = SqlType> = BoxedSelectStatement<'a, ST, table>;
 /// ```
 #[proc_macro]
 pub fn table_proc(input: TokenStream) -> TokenStream {
@@ -1503,98 +1498,6 @@ pub fn table_proc(input: TokenStream) -> TokenStream {
         }
         .into(),
     }
-}
-
-/// This derives implements [`diesel::Connection`] and related traits for an enum of
-/// connections to different databases.
-///
-/// By applying this derive to such an enum, you can use the enum as a connection type in
-/// any location all the inner connections are valid. This derive supports enum
-/// variants containing a single tuple field. Each tuple field type must implement
-/// `diesel::Connection` and a number of related traits. Connection types form Diesel itself
-/// as well as third party connection types are supported by this derive.
-///
-/// The implementation of [`diesel::Connection::establish`] tries to establish
-/// a new connection with the given connection string in the order the connections
-/// are specified in the enum. If one connection fails, it tries the next one and so on.
-/// That means that as soon as more than one connection type accepts a certain connection
-/// string the first matching type in your enum will always establish the connection. This
-/// is especially important if one of the connection types is [`diesel::SqliteConnection`]
-/// as this connection type accepts arbitrary paths. It should normally place as last entry
-/// in your enum. If you want control of which connection type is created, just construct the
-/// corresponding enum manually by first establishing the connection via the inner type and then
-/// wrap the result into the enum.
-///
-/// # Example
-/// ```
-/// # extern crate diesel;
-/// # use diesel::result::QueryResult;
-/// use diesel::prelude::*;
-///
-/// #[derive(diesel::MultiConnection)]
-/// pub enum AnyConnection {
-/// #   #[cfg(feature = "postgres")]
-///     Postgresql(diesel::PgConnection),
-/// #   #[cfg(feature = "mysql")]
-///     Mysql(diesel::MysqlConnection),
-/// #   #[cfg(feature = "sqlite")]
-///     Sqlite(diesel::SqliteConnection),
-/// }
-///
-/// diesel::table! {
-///     users {
-///         id -> Integer,
-///         name -> Text,
-///     }
-/// }
-///
-/// fn use_multi(conn: &mut AnyConnection) -> QueryResult<()> {
-///    // Use the connection enum as any other connection type
-///    // for inserting/updating/loading/…
-///    diesel::insert_into(users::table)
-///        .values(users::name.eq("Sean"))
-///        .execute(conn)?;
-///
-///    let users = users::table.load::<(i32, String)>(conn)?;
-///
-///    // Match on the connection type to access
-///    // the inner connection. This allows us then to use
-///    // backend specific methods.
-/// #    #[cfg(feature = "postgres")]
-///    if let AnyConnection::Postgresql(ref mut conn) = conn {
-///        // perform a postgresql specific query here
-///        let users = users::table.load::<(i32, String)>(conn)?;
-///    }
-///
-///    Ok(())
-/// }
-///
-/// # fn main() {}
-/// ```
-///
-/// # Limitations
-///
-/// The derived connection implementation can only cover the common subset of
-/// all inner connection types. So, if one backend doesn't support certain SQL features,
-/// like for example, returning clauses, the whole connection implementation doesn't
-/// support this feature. In addition, only a limited set of SQL types is supported:
-///
-/// * `diesel::sql_types::SmallInt`
-/// * `diesel::sql_types::Integer`
-/// * `diesel::sql_types::BigInt`
-/// * `diesel::sql_types::Double`
-/// * `diesel::sql_types::Float`
-/// * `diesel::sql_types::Text`
-/// * `diesel::sql_types::Date`
-/// * `diesel::sql_types::Time`
-/// * `diesel::sql_types::Timestamp`
-///
-/// Support for additional types can be added by providing manual implementations of
-/// `HasSqlType`, `FromSql` and `ToSql` for the corresponding type + the generated
-/// database backend.
-#[proc_macro_derive(MultiConnection)]
-pub fn derive_multiconnection(input: TokenStream) -> TokenStream {
-    multiconnection::derive(syn::parse_macro_input!(input)).into()
 }
 
 /// Automatically annotates return type of a query fragment function

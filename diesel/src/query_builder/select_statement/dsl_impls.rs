@@ -456,7 +456,7 @@ where
             self.order.into(),
             self.limit_offset.into_boxed(),
             self.group_by,
-            Box::new(self.having),
+            self.having,
         )
     }
 }
@@ -484,7 +484,7 @@ where
             self.order.into(),
             self.limit_offset.into_boxed(),
             self.group_by,
-            Box::new(self.having),
+            self.having,
         )
     }
 }
@@ -624,6 +624,8 @@ impl<F, S, D, W, O, LOf, G, Predicate> HavingDsl<Predicate>
 where
     Predicate: AppearsInQuery<F>,
     Predicate: Expression,
+    Predicate: QueryFragment,
+    Predicate: Send + 'static,
     Predicate::SqlType: BoolOrNullableBool,
 {
     type Output = SelectStatement<F, S, D, W, O, LOf, GroupByClause<G>>;
@@ -637,7 +639,7 @@ where
             self.order,
             self.limit_offset,
             self.group_by,
-            HavingClause::Some(predicate),
+            HavingClause::new(predicate),
             self.locking,
         )
     }

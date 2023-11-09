@@ -1,7 +1,6 @@
 use std::marker::PhantomData;
 
 use super::Query;
-use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::connection::Connection;
 use crate::query_builder::{AstPass, DB, QueryFragment, QueryId};
 use crate::query_dsl::RunQueryDsl;

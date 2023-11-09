@@ -1,6 +1,5 @@
 use super::{Alias, AliasSource};
 
-use crate::backend::Backend;
 use crate::dsl;
 use crate::expression::{
     AppearsInQuery, AsExpression, Expression, SelectableExpression,

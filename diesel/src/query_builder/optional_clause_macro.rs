@@ -9,16 +9,17 @@ macro_rules! simple_optional_clause {
         use super::{AstPass, QueryFragment};
 
         $(#[$clause_meta])*
-        #[derive(Debug, Clone, QueryId)]
+        #[derive(QueryId)]
+        #[allow(missing_debug_implementations)]
         pub enum $clause {
             None,
             Some(Box<dyn QueryFragment + Send>),
         }
 
         impl $clause {
-            pub fn new<Expr>(expr: Expr) -> Self
+            pub fn new<Expr: 'static>(expr: Expr) -> Self
             where
-                Expr: QueryFragment,
+                Expr: QueryFragment + Send,
             {
                 Self::Some(Box::new(expr))
             }

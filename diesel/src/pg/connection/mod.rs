@@ -295,22 +295,6 @@ impl crate::r2d2::R2D2Connection for PgConnection {
     }
 }
 
-impl MultiConnectionHelper for PgConnection {
-    fn to_any<'a>(
-        lookup: &mut <Self::Backend as crate::sql_types::TypeMetadata>::MetadataLookup,
-    ) -> &mut (dyn std::any::Any + 'a) {
-        lookup.as_any()
-    }
-
-    fn from_any(
-        lookup: &mut dyn std::any::Any,
-    ) -> Option<&mut <Self::Backend as crate::sql_types::TypeMetadata>::MetadataLookup> {
-        lookup
-            .downcast_mut::<Self>()
-            .map(|conn| conn as &mut dyn super::PgMetadataLookup)
-    }
-}
-
 impl PgConnection {
     /// Build a transaction, specifying additional details such as isolation level
     ///
@@ -348,7 +332,7 @@ impl PgConnection {
             &'conn mut ConnectionAndTransactionManager,
         ) -> QueryResult<R>,
     ) -> QueryResult<R> {
-        let mut bind_collector = RawBytesBindCollector::<Pg>::new();
+        let mut bind_collector = RawBytesBindCollector::new();
         source.collect_binds(&mut bind_collector, self, &Pg)?;
         let binds = bind_collector.binds;
         let metadata = bind_collector.metadata;
@@ -392,7 +376,7 @@ mod private {
     pub trait PgLoadingMode<B> {
         const USE_ROW_BY_ROW_MODE: bool;
         type Cursor<'conn, 'query>: Iterator<Item = QueryResult<Self::Row<'conn, 'query>>>;
-        type Row<'conn, 'query>: crate::row::Row<'conn, Pg>;
+        type Row<'conn, 'query>: crate::row::Row<'conn>;
 
         fn get_cursor<'query>(
             raw_connection: &mut ConnectionAndTransactionManager,

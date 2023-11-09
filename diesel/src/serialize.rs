@@ -34,7 +34,10 @@ pub enum IsNull {
 
 /// Wraps a buffer to be written by `ToSql` with additional backend specific
 /// utilities.
-pub struct Output<'a, 'b> {
+pub struct Output<'a, 'b>
+where
+    <DB as TypeMetadata>::MetadataLookup: 'a,
+{
     out: <<DB as Backend>::BindCollector<'a> as BindCollector<'a>>::Buffer,
     metadata_lookup: Option<&'b mut <DB as TypeMetadata>::MetadataLookup>,
 }
@@ -80,7 +83,7 @@ impl<'a, 'b> Output<'a, 'b> {
 impl<'a> Output<'a, 'static> {
     /// Returns a `Output` suitable for testing `ToSql` implementations.
     /// Unsafe to use for testing types which perform dynamic metadata lookup.
-    pub fn test(buffer: <DB::BindCollector<'a> as BindCollector<'a>>::Buffer) -> Self {
+    pub fn test(buffer: <<DB as Backend>::BindCollector<'a> as BindCollector<'a>>::Buffer) -> Self {
         Self {
             out: buffer,
             metadata_lookup: None,
@@ -121,7 +124,7 @@ impl<'a, 'b> Output<'a, 'b> {
         'a: 'c,
     {
         Output {
-            out: RawBytesBindCollector::<DB>::reborrow_buffer(&mut self.out),
+            out: RawBytesBindCollector::reborrow_buffer(&mut self.out),
             metadata_lookup: match &mut self.metadata_lookup {
                 None => None,
                 Some(m) => Some(&mut **m),
@@ -169,7 +172,6 @@ impl<'a, 'b> fmt::Debug for Output<'a, 'b> {
 /// ```rust
 /// # use diesel::backend::Backend;
 /// # use diesel::expression::AsExpression;
-/// # use diesel::query_builder::DB;
 /// # use diesel::sql_types::*;
 /// # use diesel::serialize::{self, ToSql, Output};
 /// # use std::io::Write;
@@ -186,7 +188,7 @@ impl<'a, 'b> fmt::Debug for Output<'a, 'b> {
 /// where
 ///     i32: ToSql<Integer>,
 /// {
-///     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, DB>) -> serialize::Result {
+///     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
 ///         match self {
 ///             MyEnum::A => 1.to_sql(out),
 ///             MyEnum::B => 2.to_sql(out),
@@ -224,7 +226,7 @@ impl<'a, 'b> fmt::Debug for Output<'a, 'b> {
 /// where
 ///     i32: ToSql<Integer>,
 /// {
-///     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, diesel::pg::Pg>) -> serialize::Result {
+///     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
 ///         let v = *self as i32;
 ///         <i32 as ToSql<Integer>::to_sql(&v, &mut out.reborrow())
 ///     }
@@ -256,7 +258,7 @@ impl<'a, 'b> fmt::Debug for Output<'a, 'b> {
 /// where
 ///     i32: ToSql<Integer>,
 /// {
-///     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, diesel::sqlite::Sqlite>) -> serialize::Result {
+///     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
 ///         out.set_value(*self as i32);
 ///         Ok(IsNull::No)
 ///     }

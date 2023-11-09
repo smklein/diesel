@@ -354,7 +354,7 @@ where
     Self: Sized,
 {
     /// Construct an instance of `Self` from the database row
-    fn build<'a>(row: &impl NamedRow<'a, DB>) -> Result<Self>;
+    fn build<'a>(row: &impl NamedRow<'a>) -> Result<Self>;
 }
 
 #[doc(inline)]
@@ -455,7 +455,7 @@ pub trait FromSql<A>: Sized {
 )]
 pub trait FromSqlRow<ST>: Sized {
     /// See the trait documentation.
-    fn build_from_row<'a>(row: &impl Row<'a, DB>) -> Result<Self>;
+    fn build_from_row<'a>(row: &impl Row<'a>) -> Result<Self>;
 }
 
 #[doc(inline)]
@@ -476,7 +476,7 @@ impl<T> FromSqlRow<Untyped> for T
 where
     T: QueryableByName,
 {
-    fn build_from_row<'a>(row: &impl Row<'a, DB>) -> Result<Self> {
+    fn build_from_row<'a>(row: &impl Row<'a>) -> Result<Self> {
         T::build(row)
     }
 }
@@ -497,7 +497,7 @@ where
 // implementing `Queryable`
 pub trait FromStaticSqlRow<ST>: Sized {
     /// See the trait documentation
-    fn build_from_row<'a>(row: &impl Row<'a, DB>) -> Result<Self>;
+    fn build_from_row<'a>(row: &impl Row<'a>) -> Result<Self>;
 }
 
 #[doc(hidden)]
@@ -521,7 +521,7 @@ where
     //
     // A plain inline attribute does not show similar improvements
     #[inline(always)]
-    fn build_from_row<'a>(row: &impl Row<'a, DB>) -> Result<Self> {
+    fn build_from_row<'a>(row: &impl Row<'a>) -> Result<Self> {
         let row = <T::Row as FromStaticSqlRow<ST>>::build_from_row(row)?;
         T::build(row)
     }
@@ -532,7 +532,7 @@ where
     T: FromSql<ST>,
     ST: SingleValue,
 {
-    fn build_from_row<'a>(row: &impl Row<'a, DB>) -> Result<Self> {
+    fn build_from_row<'a>(row: &impl Row<'a>) -> Result<Self> {
         use crate::row::Field;
 
         let field = row.get(0).ok_or(crate::result::UnexpectedEndOfRow)?;

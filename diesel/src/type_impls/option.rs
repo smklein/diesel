@@ -85,7 +85,7 @@ impl<T> QueryableByName for Option<T>
 where
     T: QueryableByName,
 {
-    fn build<'a>(row: &impl crate::row::NamedRow<'a, DB>) -> deserialize::Result<Self> {
+    fn build<'a>(row: &impl crate::row::NamedRow<'a>) -> deserialize::Result<Self> {
         match T::build(row) {
             Ok(v) => Ok(Some(v)),
             Err(e) if e.is::<crate::result::UnexpectedNullError>() => Ok(None),

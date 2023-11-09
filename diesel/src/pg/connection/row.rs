@@ -20,7 +20,7 @@ impl PgRow {
 
 impl RowSealed for PgRow {}
 
-impl<'a> Row<'a, Pg> for PgRow {
+impl<'a> Row<'a> for PgRow {
     type Field<'f> = PgField<'f> where 'a: 'f, Self: 'f;
     type InnerPartialRow = Self;
 
@@ -69,7 +69,7 @@ pub struct PgField<'a> {
     col_idx: usize,
 }
 
-impl<'a> Field<'a, Pg> for PgField<'a> {
+impl<'a> Field<'a> for PgField<'a> {
     fn field_name(&self) -> Option<&str> {
         self.db_result.column_name(self.col_idx)
     }

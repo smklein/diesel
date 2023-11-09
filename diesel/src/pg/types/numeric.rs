@@ -148,15 +148,15 @@ mod bigdecimal {
     }
 
     #[cfg(all(feature = "postgres_backend", feature = "bigdecimal"))]
-    impl ToSql<Numeric, Pg> for BigDecimal {
-        fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+    impl ToSql<Numeric> for BigDecimal {
+        fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
             let numeric = PgNumeric::from(self);
-            ToSql::<Numeric, Pg>::to_sql(&numeric, &mut out.reborrow())
+            ToSql::<Numeric>::to_sql(&numeric, &mut out.reborrow())
         }
     }
 
     #[cfg(all(feature = "postgres_backend", feature = "bigdecimal"))]
-    impl FromSql<Numeric, Pg> for BigDecimal {
+    impl FromSql<Numeric> for BigDecimal {
         fn from_sql(numeric: PgValue<'_>) -> deserialize::Result<Self> {
             PgNumeric::from_sql(numeric)?.try_into()
         }

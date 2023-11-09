@@ -112,16 +112,6 @@ where
     type BindCollector<'a>: crate::query_builder::bind_collector::BindCollector<'a> + 'a;
 }
 
-#[doc(hidden)]
-#[cfg(all(feature = "with-deprecated", not(feature = "without-deprecated")))]
-#[deprecated(note = "Use `Backend::RawValue` directly")]
-pub type RawValue<'a, DB> = <DB as Backend>::RawValue<'a>;
-
-#[doc(hidden)]
-#[cfg(all(feature = "with-deprecated", not(feature = "without-deprecated")))]
-#[deprecated(note = "Use `Backend::BindCollector` directly")]
-pub type BindCollector<'a, DB> = <DB as Backend>::BindCollector<'a>;
-
 /// This trait provides various options to configure the
 /// generated SQL for a specific backend.
 ///

@@ -1,5 +1,6 @@
 use super::{AstPass, DB, QueryFragment};
 use std::fmt::{self, Debug, Display};
+use crate::query_builder::QueryBuilder as _;
 
 /// A struct that implements `fmt::Display` and `fmt::Debug` to show the SQL
 /// representation of a query.
@@ -23,12 +24,14 @@ impl<'a, T> DebugQuery<'a, T> {
     }
 }
 
+type QueryBuilder = <DB as crate::query_builder::Backend>::QueryBuilder;
+
 impl<'a, T> Display for DebugQuery<'a, T>
 where
     T: QueryFragment,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut query_builder = DB::QueryBuilder::default();
+        let mut query_builder = QueryBuilder::default();
         let backend = DB::default();
         QueryFragment::to_sql(self.query, &mut query_builder, &backend)
             .map_err(|_| fmt::Error)?;
@@ -42,11 +45,11 @@ where
     T: QueryFragment,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut query_builder = DB::QueryBuilder::default();
+        let mut query_builder = QueryBuilder::default();
         let backend = DB::default();
         QueryFragment::to_sql(self.query, &mut query_builder, &backend)
             .map_err(|_| fmt::Error)?;
-        let debug_binds = DebugBinds::<_, DB>::new(self.query);
+        let debug_binds = DebugBinds::new(self.query);
         f.debug_struct("Query")
             .field("sql", &query_builder.finish())
             .field("binds", &debug_binds)

@@ -148,7 +148,7 @@ where
     str: ToSql<sql_types::Text>,
 {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
-        (self as &str).to_sql(out)
+        <str as ToSql<sql_types::Text>>::to_sql(self as &str, out)
     }
 }
 
@@ -170,7 +170,7 @@ where
     [u8]: ToSql<sql_types::Binary>,
 {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
-        (self as &[u8]).to_sql(out)
+        <[u8] as ToSql<sql_types::Binary>>::to_sql(self as &[u8], out)
     }
 }
 
@@ -179,7 +179,7 @@ where
     [u8]: ToSql<sql_types::Binary>,
 {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_>) -> serialize::Result {
-        self.as_slice().to_sql(out)
+        <[u8] as ToSql<sql_types::Binary>>::to_sql(self.as_slice(), out)
     }
 }
 

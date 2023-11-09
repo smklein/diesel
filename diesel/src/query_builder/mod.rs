@@ -195,10 +195,15 @@ pub trait SelectQuery {
     type SqlType;
 }
 
+/// The feature-selected backend type: Postgres
 #[cfg(feature = "postgres_backend")]
 pub type DB = crate::pg::Pg;
+
+/// The feature-selected backend type: Mysql
 #[cfg(feature = "mysql_backend")]
 pub type DB = crate::mysql::Mysql;
+
+/// The feature-selected backend type: Sqlite
 #[cfg(feature = "sqlite")]
 pub type DB = crate::sqlite::Sqlite;
 

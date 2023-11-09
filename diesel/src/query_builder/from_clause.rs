@@ -15,12 +15,14 @@ use crate::{QueryResult, QuerySource};
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct NoFromClause;
 
+type EmptyFromClauseSyntax = <DB as SqlDialect>::EmptyFromClauseSyntax;
+
 impl QueryFragment for NoFromClause
 where
-    Self: QueryFragment<<DB as SqlDialect>::EmptyFromClauseSyntax>,
+    Self: QueryFragment<EmptyFromClauseSyntax>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::EmptyFromClauseSyntax>>::walk_ast(self, pass)
+        <Self as QueryFragment<EmptyFromClauseSyntax>>::walk_ast(self, pass)
     }
 }
 

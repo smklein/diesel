@@ -130,24 +130,7 @@ impl<'a, ST, GB> BoxedSelectStatement<'a, ST, NoFromClause, GB> {
     }
 }
 
-// that's a trait to control who can access these methods
-#[doc(hidden)] // exported via internal::derives::multiconnection
-pub trait BoxedQueryHelper<'a, QS> {
-    fn build_query<'b, 'c>(
-        &'b self,
-        out: AstPass<'_, 'c>,
-        where_clause_handler: impl Fn(
-            &'b BoxedWhereClause<'a>,
-            AstPass<'_, 'c>,
-        ) -> QueryResult<()>,
-    ) -> QueryResult<()>
-    where
-        QS: QueryFragment,
-        BoxedLimitOffsetClause<'a>: QueryFragment,
-        'b: 'c;
-}
-
-impl<'a, ST, QS, GB> BoxedQueryHelper<'a, QS> for BoxedSelectStatement<'a, ST, QS, GB> {
+impl<'a, ST, QS, GB> BoxedSelectStatement<'a, ST, QS, GB> {
     fn build_query<'b, 'c>(
         &'b self,
         mut out: AstPass<'_, 'c>,
@@ -191,12 +174,14 @@ impl<'a, ST, QS, QS2, GB> ValidSubselect<QS2> for BoxedSelectStatement<'a, ST, Q
 {
 }
 
+type SelectStatementSyntax = <DB as SqlDialect>::SelectStatementSyntax;
+
 impl<'a, ST, QS, GB> QueryFragment for BoxedSelectStatement<'a, ST, QS, GB>
 where
-    Self: QueryFragment<<DB as SqlDialect>::SelectStatementSyntax>,
+    Self: QueryFragment<SelectStatementSyntax>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::SelectStatementSyntax>>::walk_ast(self, pass)
+        <Self as QueryFragment<SelectStatementSyntax>>::walk_ast(self, pass)
     }
 }
 
@@ -483,7 +468,7 @@ impl<'a, ST, QS, GB, Predicate> HavingDsl<Predicate>
 where
     GB: Expression,
     HavingClause: QueryFragment + Send + 'a,
-    Predicate: AppearsInQuery<QS>,
+    Predicate: AppearsInQuery<QS> + Send + QueryFragment + 'static,
     Predicate::SqlType: BoolOrNullableBool,
 {
     type Output = Self;

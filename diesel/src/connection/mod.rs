@@ -25,15 +25,6 @@ pub use self::transaction_manager::{
 )]
 pub(crate) use self::private::ConnectionSealed;
 
-#[cfg(feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes")]
-pub use self::private::MultiConnectionHelper;
-
-#[cfg(all(
-    not(feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes"),
-    any(feature = "sqlite", feature = "postgres", feature = "mysql")
-))]
-pub(crate) use self::private::MultiConnectionHelper;
-
 /// Perform simple operations on a backend.
 ///
 /// You should likely use [`Connection`] instead.
@@ -399,7 +390,7 @@ pub trait LoadConnection<B = DefaultLoadingMode>: Connection {
 
     /// The row type used as [`Iterator::Item`] for the iterator implementation
     /// of [`LoadConnection::Cursor`]
-    type Row<'conn, 'query>: crate::row::Row<'conn, Self::Backend>
+    type Row<'conn, 'query>: crate::row::Row<'conn>
     where
         Self: 'conn;
 
@@ -510,10 +501,6 @@ impl<DB: Backend + 'static> dyn BoxableConnection<DB> {
 // `ConnectionSealed` to control who can implement `Connection`,
 // so that we can later change the `Connection` trait
 //
-// `MultiConnectionHelper` is a workaround needed for the
-// `MultiConnection` derive. We might stabilize this trait with
-// the corresponding derive
-//
 // `ConnectionHelperType` as a workaround for the `LoadRowIter`
 // type def. That trait should not be used by any user outside of diesel,
 // it purely exists for backward compatibility reasons.
@@ -525,25 +512,6 @@ pub(crate) mod private {
         doc(cfg(feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes"))
     )]
     pub trait ConnectionSealed {}
-
-    /// This trait provides helper methods to convert a database lookup type
-    /// to/from an `std::any::Any` reference. This is used internally by the `#[derive(MultiConnection)]`
-    /// implementation
-    #[cfg_attr(
-        doc_cfg,
-        doc(cfg(feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes"))
-    )]
-    pub trait MultiConnectionHelper: super::Connection {
-        /// Convert the lookup type to any
-        fn to_any<'a>(
-            lookup: &mut <Self::Backend as crate::sql_types::TypeMetadata>::MetadataLookup,
-        ) -> &mut (dyn std::any::Any + 'a);
-
-        /// Get the lookup type from any
-        fn from_any(
-            lookup: &mut dyn std::any::Any,
-        ) -> Option<&mut <Self::Backend as crate::sql_types::TypeMetadata>::MetadataLookup>;
-    }
 
     // These impls are only there for backward compatibility reasons
     // Remove them on the next breaking release

@@ -3,7 +3,7 @@
 
 use crate::expression::subselect::ValidSubselect;
 use crate::query_builder::insert_statement::InsertFromSelect;
-use crate::query_builder::{AsQuery, AstPass, Query, QueryFragment, QueryId, SelectQuery};
+use crate::query_builder::{AsQuery, AstPass, DB, Query, QueryFragment, QueryId, SelectQuery};
 use crate::{CombineDsl, Insertable, QueryResult, RunQueryDsl, Table};
 
 #[derive(Debug, Clone, Copy, QueryId)]
@@ -140,6 +140,7 @@ impl<Combinator, Rule, Source, Rhs> QueryFragment
 where
     Combinator: QueryFragment,
     Rule: QueryFragment,
+    DB: SupportsCombinationClause<Combinator, Rule>,
     ParenthesisWrapper<Source>: QueryFragment,
     ParenthesisWrapper<Rhs>: QueryFragment,
 {
@@ -244,7 +245,7 @@ mod mysql {
     use crate::QueryResult;
 
     impl<T: QueryFragment> QueryFragment for ParenthesisWrapper<T> {
-        fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Mysql>) -> QueryResult<()> {
+        fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
             out.push_sql("(");
             self.0.walk_ast(out.reborrow())?;
             out.push_sql(")");
@@ -264,7 +265,7 @@ mod sqlite {
     use crate::QueryResult;
 
     impl<T: QueryFragment> QueryFragment for ParenthesisWrapper<T> {
-        fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Sqlite>) -> QueryResult<()> {
+        fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
             // SQLite does not support parenthesis around this clause
             // we can emulate this by construct a fake outer
             // SELECT * FROM (inner_query) statement

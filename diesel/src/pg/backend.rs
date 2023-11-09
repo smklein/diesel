@@ -1,7 +1,7 @@
 //! The PostgreSQL backend
 
 use super::query_builder::PgQueryBuilder;
-use super::{PgMetadataLookup, PgValue};
+use super::{PgConnection, PgValue};
 use crate::backend::*;
 use crate::deserialize::Queryable;
 use crate::pg::metadata_lookup::PgMetadataCacheKey;
@@ -115,12 +115,12 @@ impl PgTypeMetadata {
 impl Backend for Pg {
     type QueryBuilder = PgQueryBuilder;
     type RawValue<'a> = PgValue<'a>;
-    type BindCollector<'a> = RawBytesBindCollector<Pg>;
+    type BindCollector<'a> = RawBytesBindCollector;
 }
 
 impl TypeMetadata for Pg {
     type TypeMetadata = PgTypeMetadata;
-    type MetadataLookup = dyn PgMetadataLookup;
+    type MetadataLookup = PgConnection;
 }
 
 impl SqlDialect for Pg {

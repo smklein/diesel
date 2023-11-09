@@ -18,12 +18,14 @@ impl<T> DoNothing<T> {
     }
 }
 
+type OnConflictClause = <DB as SqlDialect>::OnConflictClause;
+
 impl<T> QueryFragment for DoNothing<T>
 where
-    Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
+    Self: QueryFragment<OnConflictClause>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
+        <Self as QueryFragment<OnConflictClause>>::walk_ast(self, pass)
     }
 }
 
@@ -56,10 +58,10 @@ impl<T, Tab> DoUpdate<T, Tab> {
 
 impl<T, Tab> QueryFragment for DoUpdate<T, Tab>
 where
-    Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
+    Self: QueryFragment<OnConflictClause>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
+        <Self as QueryFragment<OnConflictClause>>::walk_ast(self, pass)
     }
 }
 
@@ -93,10 +95,10 @@ impl<T> Excluded<T> {
 
 impl<T> QueryFragment for Excluded<T>
 where
-    Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
+    Self: QueryFragment<OnConflictClause>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
+        <Self as QueryFragment<OnConflictClause>>::walk_ast(self, pass)
     }
 }
 

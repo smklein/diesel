@@ -11,7 +11,6 @@ mod as_expression;
 mod associations;
 mod identifiable;
 mod insertable;
-mod multiconnection;
 mod queryable;
 mod queryable_by_name;
 mod selectable;

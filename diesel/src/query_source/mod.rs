@@ -9,7 +9,6 @@ pub(crate) mod joins;
 mod peano_numbers;
 
 use crate::AppearsInQuery;
-use crate::backend::{Backend, DieselReserveSpecialization};
 use crate::expression::{AsExpression, Expression, SelectableExpression};
 use crate::query_builder::*;
 use crate::result::QueryResult;

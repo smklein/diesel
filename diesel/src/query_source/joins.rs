@@ -1,5 +1,4 @@
 use super::{AppearsInFromClause, Plus, QuerySource};
-use crate::backend::Backend;
 use crate::expression::grouped::Grouped;
 use crate::expression::nullable::Nullable;
 use crate::expression::SelectableExpression;

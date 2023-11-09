@@ -6,6 +6,10 @@ use crate::result::QueryResult;
 use crate::serialize::ToSql;
 use crate::sql_types::{HasSqlType, TypeMetadata};
 
+type DbQueryBuilder = <DB as Backend>::QueryBuilder;
+type DbBindCollector<'a> = <DB as Backend>::BindCollector<'a>;
+type DbMetadataLookup = <DB as TypeMetadata>::MetadataLookup;
+
 #[allow(missing_debug_implementations)]
 /// The primary type used when walking a Diesel AST during query execution.
 ///
@@ -23,9 +27,8 @@ use crate::sql_types::{HasSqlType, TypeMetadata};
 /// to the current pass.
 pub struct AstPass<'a, 'b>
 where
-    <DB as Backend>::QueryBuilder: 'a,
-    <DB as TypeMetadata>::MetadataLookup: 'a,
     'b: 'a,
+    <DB as TypeMetadata>::MetadataLookup: 'a,
 {
     internals: AstPassInternals<'a, 'b>,
     backend: &'b DB,
@@ -36,7 +39,7 @@ where
     'b: 'a,
 {
     pub(crate) fn to_sql(
-        query_builder: &'a mut <DB as Backend>::QueryBuilder,
+        query_builder: &'a mut DbQueryBuilder,
         options: &'a mut AstPassToSqlOptions,
         backend: &'b DB,
     ) -> Self {
@@ -47,8 +50,8 @@ where
     }
 
     pub(crate) fn collect_binds(
-        collector: &'a mut <DB as Backend>::BindCollector<'b>,
-        metadata_lookup: &'a mut <DB as TypeMetadata>::MetadataLookup,
+        collector: &'a mut DbBindCollector<'b>,
+        metadata_lookup: &'a mut DbMetadataLookup,
         backend: &'b DB,
     ) -> Self {
         AstPass {
@@ -287,14 +290,14 @@ where
 /// `AstPass` were a trait.
 enum AstPassInternals<'a, 'b>
 where
-    <DB as Backend>::QueryBuilder: 'a,
-    <DB as TypeMetadata>::MetadataLookup: 'a,
     'b: 'a,
+    DbQueryBuilder: 'a,
+    DbMetadataLookup: 'a,
 {
-    ToSql(&'a mut <DB as Backend>::QueryBuilder, &'a mut AstPassToSqlOptions),
+    ToSql(&'a mut DbQueryBuilder, &'a mut AstPassToSqlOptions),
     CollectBinds {
-        collector: &'a mut <DB as Backend>::BindCollector<'b>,
-        metadata_lookup: &'a mut <DB as TypeMetadata>::MetadataLookup,
+        collector: &'a mut DbBindCollector<'b>,
+        metadata_lookup: &'a mut DbMetadataLookup,
     },
     IsSafeToCachePrepared(&'a mut bool),
     DebugBinds(&'a mut Vec<Box<dyn fmt::Debug + 'b>>),
@@ -311,36 +314,4 @@ where
 /// when rendering the sql string.
 pub(crate) struct AstPassToSqlOptions {
     skip_from: bool,
-}
-
-/// This is an internal extension trait with methods required for
-/// `#[derive(MultiConnection)]`
-pub trait AstPassHelper<'a, 'b>
-where
-    <DB as Backend>::QueryBuilder: 'a,
-    <DB as TypeMetadata>::MetadataLookup: 'a,
-    'b: 'a,
-{
-    /// This function allows to access the inner bind collector if
-    /// this `AstPass` represents a collect binds pass.
-    fn bind_collector(&mut self) -> Option<(&mut <DB as Backend>::BindCollector<'b>, &mut <DB as TypeMetadata>::MetadataLookup)>;
-}
-
-impl<'a, 'b> AstPassHelper<'a, 'b> for AstPass<'a, 'b>
-where
-    <DB as Backend>::QueryBuilder: 'a,
-    <DB as TypeMetadata>::MetadataLookup: 'a,
-    'b: 'a,
-{
-    fn bind_collector(&mut self) -> Option<(&mut <DB as Backend>::BindCollector<'b>, &mut <DB as TypeMetadata>::MetadataLookup)> {
-        if let AstPassInternals::CollectBinds {
-            collector,
-            metadata_lookup,
-        } = &mut self.internals
-        {
-            Some((collector, metadata_lookup))
-        } else {
-            None
-        }
-    }
 }

@@ -14,9 +14,6 @@ pub fn derive(item: DeriveInput) -> Result<TokenStream> {
     let (_, ty_generics, original_where_clause) = item.generics.split_for_impl();
 
     let mut generics = item.generics.clone();
-    generics
-        .params
-        .push(parse_quote!(__DB: diesel::backend::Backend));
 
     for embed_field in model.fields().iter().filter(|f| f.embed()) {
         let embed_ty = &embed_field.ty;
@@ -24,7 +21,7 @@ pub fn derive(item: DeriveInput) -> Result<TokenStream> {
             .where_clause
             .get_or_insert_with(|| parse_quote!(where))
             .predicates
-            .push(parse_quote!(#embed_ty: Selectable<__DB>));
+            .push(parse_quote!(#embed_ty: Selectable));
     }
 
     let (impl_generics, _, where_clause) = generics.split_for_impl();
@@ -81,7 +78,7 @@ pub fn derive(item: DeriveInput) -> Result<TokenStream> {
     Ok(wrap_in_dummy_mod(quote! {
         use diesel::expression::Selectable;
 
-        impl #impl_generics Selectable<__DB>
+        impl #impl_generics Selectable
             for #struct_name #ty_generics
         #where_clause
         {
@@ -148,7 +145,7 @@ fn field_column_ty(
         Ok(quote!(#ty))
     } else if field.embed() {
         let embed_ty = &field.ty;
-        Ok(quote!(<#embed_ty as Selectable<__DB>>::SelectExpression))
+        Ok(quote!(<#embed_ty as Selectable>::SelectExpression))
     } else {
         let table_name = &model.table_names()[0];
         let column_name = field.column_name()?;
@@ -162,7 +159,7 @@ fn field_column_inst(field: &Field, model: &Model) -> Result<TokenStream> {
         Ok(quote!(#expr))
     } else if field.embed() {
         let embed_ty = &field.ty;
-        Ok(quote!(<#embed_ty as Selectable<__DB>>::construct_selection()))
+        Ok(quote!(<#embed_ty as Selectable>::construct_selection()))
     } else {
         let table_name = &model.table_names()[0];
         let column_name = field.column_name()?;

@@ -24,12 +24,14 @@ impl QueryFragment for NoReturningClause {
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct ReturningClause<Expr>(pub Expr);
 
+type ReturningClauseSyntax = <DB as SqlDialect>::ReturningClause;
+
 impl<Expr> QueryFragment for ReturningClause<Expr>
 where
-    Self: QueryFragment<<DB as SqlDialect>::ReturningClause>,
+    Self: QueryFragment<ReturningClauseSyntax>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::ReturningClause>>::walk_ast(self, pass)
+        <Self as QueryFragment<ReturningClauseSyntax>>::walk_ast(self, pass)
     }
 }
 

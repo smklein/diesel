@@ -108,7 +108,6 @@ impl Backend {
     }
 }
 
-#[derive(diesel::MultiConnection)]
 pub enum InferConnection {
     #[cfg(feature = "postgres")]
     Pg(PgConnection),

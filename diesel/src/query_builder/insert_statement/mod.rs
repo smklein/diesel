@@ -381,17 +381,22 @@ impl<'a, Tab> Insertable<Tab> for &'a DefaultValues {
     }
 }
 
+type DefaultValueClauseForInsert = <DB as SqlDialect>::DefaultValueClauseForInsert;
+
 impl QueryFragment for DefaultValues
 where
-    Self: QueryFragment<<DB as SqlDialect>::DefaultValueClauseForInsert>,
+    Self: QueryFragment<DefaultValueClauseForInsert>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<<DB as SqlDialect>::DefaultValueClauseForInsert>>::walk_ast(self, pass)
+        <Self as QueryFragment<DefaultValueClauseForInsert>>::walk_ast(self, pass)
     }
 }
 
-impl QueryFragment<sql_dialect::default_value_clause::AnsiDefaultValueClause>
-    for DefaultValues
+impl QueryFragment<sql_dialect::default_value_clause::AnsiDefaultValueClause> for DefaultValues
+where
+    DB: SqlDialect<
+        DefaultValueClauseForInsert = sql_dialect::default_value_clause::AnsiDefaultValueClause,
+    >
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("DEFAULT VALUES");
@@ -446,7 +451,7 @@ where
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         if self.values.is_noop(out.backend())? {
-            DefaultValues.walk_ast(out)?;
+            <DefaultValues as QueryFragment>::walk_ast(&DefaultValues, out)?;
         } else {
             out.push_sql("(");
             self.values.column_names(out.reborrow())?;

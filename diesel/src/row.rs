@@ -2,6 +2,7 @@
 
 use crate::backend::Backend;
 use crate::deserialize;
+use crate::query_builder::DB;
 use deserialize::FromSql;
 use std::ops::Range;
 
@@ -30,14 +31,14 @@ pub trait RowIndex<I> {
 #[doc(hidden)]
 #[cfg(all(feature = "with-deprecated", not(feature = "without-deprecated")))]
 #[deprecated(note = "Use `Row::Field` directly instead")]
-pub type FieldRet<'a, R, DB> = <R as self::private::RowLifetimeHelper<DB>>::Field<'a>;
+pub type FieldRet<'a, R> = <R as self::private::RowLifetimeHelper>::Field<'a>;
 
 /// Represents a single database row.
 ///
 /// This trait is used as an argument to [`FromSqlRow`].
 ///
 /// [`FromSqlRow`]: crate::deserialize::FromSqlRow
-pub trait Row<'a, DB: Backend>:
+pub trait Row<'a>:
     RowIndex<usize> + for<'b> RowIndex<&'b str> + self::private::RowSealed + Sized
 {
     /// Field type returned by a `Row` implementation
@@ -47,7 +48,7 @@ pub trait Row<'a, DB: Backend>:
     ///
     /// * Crates implementing custom backends should provide their own type
     ///   meeting the required trait bounds
-    type Field<'f>: Field<'f, DB>
+    type Field<'f>: Field<'f>
     where
         'a: 'f,
         Self: 'f;
@@ -60,7 +61,7 @@ pub trait Row<'a, DB: Backend>:
         not(feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes"),
         doc(hidden)
     )]
-    type InnerPartialRow: Row<'a, DB>;
+    type InnerPartialRow: Row<'a>;
 
     /// Get the number of fields in the current row
     fn field_count(&self) -> usize;
@@ -96,7 +97,7 @@ pub trait Row<'a, DB: Backend>:
 ///
 /// This trait allows retrieving information on the name of the column and on the value of the
 /// field.
-pub trait Field<'a, DB: Backend> {
+pub trait Field<'a> {
     /// The name of the current field
     ///
     /// Returns `None` if it's an unnamed field
@@ -104,7 +105,7 @@ pub trait Field<'a, DB: Backend> {
 
     /// Get the value representing the current field in the raw representation
     /// as it is transmitted by the database
-    fn value(&self) -> Option<DB::RawValue<'_>>;
+    fn value(&self) -> Option<<DB as Backend>::RawValue<'_>>;
 
     /// Checks whether this field is null or not.
     fn is_null(&self) -> bool {
@@ -117,7 +118,7 @@ pub trait Field<'a, DB: Backend> {
 ///
 /// This trait is used by implementations of
 /// [`QueryableByName`](crate::deserialize::QueryableByName)
-pub trait NamedRow<'a, DB: Backend>: Row<'a, DB> {
+pub trait NamedRow<'a>: Row<'a> {
     /// Retrieve and deserialize a single value from the query
     ///
     /// Note that `ST` *must* be the exact type of the value with that name in
@@ -132,10 +133,9 @@ pub trait NamedRow<'a, DB: Backend>: Row<'a, DB> {
         T: FromSql<ST>;
 }
 
-impl<'a, R, DB> NamedRow<'a, DB> for R
+impl<'a, R> NamedRow<'a> for R
 where
-    R: Row<'a, DB>,
-    DB: Backend,
+    R: Row<'a>,
 {
     fn get<ST, T>(&self, column_name: &str) -> deserialize::Result<T>
     where
@@ -187,10 +187,9 @@ pub(crate) mod private {
         /// wrapper.
         ///
         /// See the documentation of [`PartialRow`] for details.
-        pub fn new<'b, DB>(inner: &'a R, range: Range<usize>) -> Self
+        pub fn new<'b>(inner: &'a R, range: Range<usize>) -> Self
         where
-            R: Row<'b, DB>,
-            DB: Backend,
+            R: Row<'b>,
         {
             let range_lower = std::cmp::min(range.start, inner.field_count());
             let range_upper = std::cmp::min(range.end, inner.field_count());
@@ -203,10 +202,9 @@ pub(crate) mod private {
 
     impl<'a, R> RowSealed for PartialRow<'a, R> {}
 
-    impl<'a, 'b, DB, R> Row<'a, DB> for PartialRow<'b, R>
+    impl<'a, 'b, R> Row<'a> for PartialRow<'b, R>
     where
-        DB: Backend,
-        R: Row<'a, DB>,
+        R: Row<'a>,
     {
         type Field<'f> = R::Field<'f> where 'a: 'f, R: 'f, Self: 'f;
         type InnerPartialRow = R;
@@ -265,21 +263,17 @@ pub(crate) mod private {
     // These impls are only there for backward compatibility reasons
     // Remove them on the next breaking release
     #[cfg(all(feature = "with-deprecated", not(feature = "without-deprecated")))]
-    pub trait RowLifetimeHelper<DB>: for<'a> super::Row<'a, DB>
-    where
-        DB: Backend,
-    {
+    pub trait RowLifetimeHelper: for<'a> super::Row<'a> {
         type Field<'f>
         where
             Self: 'f;
     }
 
     #[cfg(all(feature = "with-deprecated", not(feature = "without-deprecated")))]
-    impl<R, DB> RowLifetimeHelper<DB> for R
+    impl<R> RowLifetimeHelper for R
     where
-        DB: Backend,
-        for<'a> R: super::Row<'a, DB>,
+        for<'a> R: super::Row<'a>,
     {
-        type Field<'f> = <R as super::Row<'f, DB>>::Field<'f> where R: 'f;
+        type Field<'f> = <R as super::Row<'f>>::Field<'f> where R: 'f;
     }
 }

@@ -258,7 +258,7 @@ macro_rules! tuple_impls {
             {
 
                 #[allow(non_snake_case, unused_variables, unused_mut)]
-                fn build_from_row<'a>(row: &impl Row<'a, DB>)
+                fn build_from_row<'a>(row: &impl Row<'a>)
                                       -> deserialize::Result<Self>
                 {
                     match <__T as FromSqlRow<($($ST,)*)>>::build_from_row(row) {
@@ -316,7 +316,7 @@ macro_rules! tuple_impls {
             impl<$($T,)*> deserialize::QueryableByName for ($($T,)*)
             where $($T: deserialize::QueryableByName,)*
             {
-                fn build<'a>(row: &impl NamedRow<'a, DB>) -> deserialize::Result<Self> {
+                fn build<'a>(row: &impl NamedRow<'a>) -> deserialize::Result<Self> {
                     Ok(($(
                         <$T as deserialize::QueryableByName>::build(row)?,
                     )*))
@@ -356,7 +356,7 @@ macro_rules! impl_from_sql_row {
         {
 
             #[allow(non_snake_case, unused_variables, unused_mut)]
-            fn build_from_row<'a>(row: &impl Row<'a, DB>)
+            fn build_from_row<'a>(row: &impl Row<'a>)
                                                        -> deserialize::Result<Self>
             {
                 Ok(($T1::build_from_row(row)?,))
@@ -371,7 +371,7 @@ macro_rules! impl_from_sql_row {
         )*
         {
             #[allow(non_snake_case, unused_variables, unused_mut)]
-            fn build_from_row<'a>(full_row: &impl Row<'a, DB>)
+            fn build_from_row<'a>(full_row: &impl Row<'a>)
                 -> deserialize::Result<Self>
             {
                 let field_count = full_row.field_count();
@@ -400,7 +400,7 @@ macro_rules! impl_from_sql_row {
         {
 
             #[allow(non_snake_case, unused_variables, unused_mut)]
-            fn build_from_row<'a>(full_row: &impl Row<'a, DB>)
+            fn build_from_row<'a>(full_row: &impl Row<'a>)
                 -> deserialize::Result<Self>
             {
                 let field_count = full_row.field_count();

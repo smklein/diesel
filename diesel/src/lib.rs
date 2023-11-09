@@ -314,8 +314,6 @@ pub use diesel_derives::{
     Insertable, QueryId, Queryable, QueryableByName, SqlType,
 };
 
-pub use diesel_derives::MultiConnection;
-
 #[allow(unknown_lints, ambiguous_glob_reexports)]
 pub mod dsl {
     //! Includes various helper types and bare functions which are named too

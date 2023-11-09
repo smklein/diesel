@@ -1,6 +1,5 @@
 //! Types related to managing bind parameters during query construction.
 
-use crate::backend::Backend;
 use crate::query_builder::DB;
 use crate::result::Error::SerializationError;
 use crate::result::QueryResult;
@@ -12,6 +11,9 @@ use crate::sql_types::{HasSqlType, TypeMetadata};
     feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes"
 )]
 pub(crate) use self::private::ByteWrapper;
+
+type DbMetadataLookup = <DB as TypeMetadata>::MetadataLookup;
+type DbTypeMetadata = <DB as TypeMetadata>::TypeMetadata;
 
 /// A type which manages serializing bind parameters during query construction.
 ///
@@ -28,7 +30,7 @@ pub trait BindCollector<'a>: Sized {
     fn push_bound_value<T, U>(
         &mut self,
         bind: &'a U,
-        metadata_lookup: &mut <DB as TypeMetadata>::MetadataLookup,
+        metadata_lookup: &mut DbMetadataLookup,
     ) -> QueryResult<()>
     where
         DB: HasSqlType<T>,
@@ -45,25 +47,25 @@ pub trait BindCollector<'a>: Sized {
     feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes",
     public_fields(metadata, binds)
 )]
-pub struct RawBytesBindCollector<DB: Backend + TypeMetadata> {
+pub struct RawBytesBindCollector {
     /// The metadata associated with each bind parameter.
     ///
     /// This vec is guaranteed to be the same length as `binds`.
-    pub(crate) metadata: Vec<DB::TypeMetadata>,
+    pub(crate) metadata: Vec<DbTypeMetadata>,
     /// The serialized bytes for each bind parameter.
     ///
     /// This vec is guaranteed to be the same length as `metadata`.
     pub(crate) binds: Vec<Option<Vec<u8>>>,
 }
 
-impl<DB: Backend + TypeMetadata> Default for RawBytesBindCollector<DB> {
+impl Default for RawBytesBindCollector {
     fn default() -> Self {
         Self::new()
     }
 }
 
 #[allow(clippy::new_without_default)]
-impl<DB: Backend + TypeMetadata> RawBytesBindCollector<DB> {
+impl RawBytesBindCollector {
     /// Construct an empty `RawBytesBindCollector`
     pub fn new() -> Self {
         RawBytesBindCollector {
@@ -77,16 +79,13 @@ impl<DB: Backend + TypeMetadata> RawBytesBindCollector<DB> {
     }
 }
 
-impl<'a> BindCollector<'a> for RawBytesBindCollector<DB>
-where
-    for<'b> DB: Backend<BindCollector<'b> = Self> + TypeMetadata,
-{
+impl<'a> BindCollector<'a> for RawBytesBindCollector {
     type Buffer = ByteWrapper<'a>;
 
     fn push_bound_value<T, U>(
         &mut self,
         bind: &U,
-        metadata_lookup: &mut <DB as TypeMetadata>::MetadataLookup,
+        metadata_lookup: &mut DbMetadataLookup,
     ) -> QueryResult<()>
     where
         DB: HasSqlType<T>,

@@ -74,13 +74,15 @@ impl<T> CanInsertInSingleQuery for Vec<T> {
     }
 }
 
+type BatchInsertSupport = <DB as SqlDialect>:: BatchInsertSupport;
+
 impl<Tab, V, QId, const HAS_STATIC_QUERY_ID: bool> QueryFragment
     for BatchInsert<V, Tab, QId, HAS_STATIC_QUERY_ID>
 where
-    Self: QueryFragment<<DB as SqlDialect>::BatchInsertSupport>,
+    Self: QueryFragment<BatchInsertSupport>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::BatchInsertSupport>>::walk_ast(self, pass)
+        <Self as QueryFragment<BatchInsertSupport>>::walk_ast(self, pass)
     }
 }
 

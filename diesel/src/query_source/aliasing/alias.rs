@@ -84,13 +84,15 @@ where
     }
 }
 
+type AliasSyntax = <DB as SqlDialect>::AliasSyntax;
+
 impl<S> QueryFragment for Alias<S>
 where
     S: AliasSource,
-    Self: QueryFragment<<DB as SqlDialect>::AliasSyntax>,
+    Self: QueryFragment<AliasSyntax>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::AliasSyntax>>::walk_ast(self, pass)
+        <Self as QueryFragment<AliasSyntax>>::walk_ast(self, pass)
     }
 }
 

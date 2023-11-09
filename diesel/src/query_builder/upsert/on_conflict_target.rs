@@ -23,12 +23,14 @@ impl<Table> OnConflictTarget<Table> for NoConflictTarget {}
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct ConflictTarget<T>(pub T);
 
+type OnConflictClause = <DB as SqlDialect>::OnConflictClause;
+
 impl<T> QueryFragment for ConflictTarget<T>
 where
-    Self: QueryFragment<<DB as SqlDialect>::OnConflictClause>,
+    Self: QueryFragment<OnConflictClause>,
 {
     fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<DB::OnConflictClause>>::walk_ast(self, pass)
+        <Self as QueryFragment<OnConflictClause>>::walk_ast(self, pass)
     }
 }
 
