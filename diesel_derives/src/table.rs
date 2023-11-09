@@ -289,6 +289,42 @@ pub(crate) fn expand(input: TableDecl) -> TokenStream {
                 type Count = diesel::query_source::Once;
             }
 
+            // impl<S: AliasSource<Table=table>> AppearsInFromClause<table> for Alias<S>
+            impl<S> diesel::internal::table_macro::AliasAppearsInFromClause<S, table> for table
+            where S: diesel::query_source::AliasSource<Target=table>,
+            {
+                type Count = diesel::query_source::Never;
+            }
+
+            // impl<S1: AliasSource<Table=table>, S2: AliasSource<Table=table>> AppearsInFromClause<Alias<S1>> for Alias<S2>
+            // Those are specified by the `alias!` macro, but this impl will allow it to implement this trait even in downstream
+            // crates from the schema
+            impl<S1, S2> diesel::internal::table_macro::AliasAliasAppearsInFromClause<table, S2, S1> for table
+            where S1: diesel::query_source::AliasSource<Target=table>,
+                  S2: diesel::query_source::AliasSource<Target=table>,
+                  S1: diesel::internal::table_macro::AliasAliasAppearsInFromClauseSameTable<S2, table>,
+            {
+                type Count = <S1 as diesel::internal::table_macro::AliasAliasAppearsInFromClauseSameTable<S2, table>>::Count;
+            }
+
+            impl<S> diesel::query_source::AppearsInFromClause<diesel::query_source::Alias<S>> for table
+            where S: diesel::query_source::AliasSource,
+            {
+                type Count = diesel::query_source::Never;
+            }
+
+            impl<S, C> diesel::internal::table_macro::FieldAliasMapperAssociatedTypesDisjointnessTrick<table, S, C> for table
+            where
+                S: diesel::query_source::AliasSource<Target = table> + ::std::clone::Clone,
+                C: diesel::query_source::Column<Table = table>,
+            {
+                type Out = diesel::query_source::AliasedField<S, C>;
+
+                fn map(__diesel_internal_column: C, __diesel_internal_alias: &diesel::query_source::Alias<S>) -> Self::Out {
+                    __diesel_internal_alias.field(__diesel_internal_column)
+                }
+            }
+
             impl diesel::query_source::AppearsInFromClause<table> for diesel::internal::table_macro::NoFromClause {
                 type Count = diesel::query_source::Never;
             }
