@@ -633,9 +633,12 @@ fn expand_column_def(column_def: &ColumnDef) -> TokenStream {
             fn walk_ast(&self, mut __diesel_internal_out: diesel::query_builder::AstPass<'_, '_>) -> diesel::result::QueryResult<()>
             {
                 use diesel::query_builder::QueryFragment;
+                // TODO: This needs more work? I'm concerned that
+                // INSERT from SELECT (as a composed join of many tables)
+                // may not be safe without some renaming shenanigans.
 
-                <super::table as diesel::internal::table_macro::StaticQueryFragment>::STATIC_COMPONENT.walk_ast(__diesel_internal_out.reborrow())?;
-                __diesel_internal_out.push_sql(".");
+//                <super::table as diesel::internal::table_macro::StaticQueryFragment>::STATIC_COMPONENT.walk_ast(__diesel_internal_out.reborrow())?;
+//                __diesel_internal_out.push_sql(".");
                 __diesel_internal_out.push_identifier(#sql_name)
             }
         }
