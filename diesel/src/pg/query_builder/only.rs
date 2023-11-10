@@ -53,7 +53,7 @@ where
     <S as QuerySource>::DefaultSelection: SelectableExpression<Only<S>>,
 {
     type SqlType = <<Self as QuerySource>::DefaultSelection as Expression>::SqlType;
-    type Query = SelectStatement<FromClause<Self>>;
+    type Query = SelectStatement<'static, FromClause<Self>>;
 
     fn as_query(self) -> Self::Query {
         SelectStatement::simple(self)

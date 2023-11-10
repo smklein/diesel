@@ -23,12 +23,12 @@ pub trait BoxedDsl<'a> {
 
 impl<'a, T> BoxedDsl<'a> for T
 where
-    T: Table + AsQuery<Query = SelectStatement<FromClause<T>>>,
-    SelectStatement<FromClause<T>>: BoxedDsl<'a>,
+    T: Table + AsQuery<Query = SelectStatement<'a, FromClause<T>>>,
+    SelectStatement<'a, FromClause<T>>: BoxedDsl<'a>,
     T::DefaultSelection: Expression<SqlType = T::SqlType>,
     T::SqlType: TypedExpressionType,
 {
-    type Output = dsl::IntoBoxed<'a, SelectStatement<FromClause<T>>>;
+    type Output = dsl::IntoBoxed<'a, SelectStatement<'a, FromClause<T>>>;
 
     fn internal_into_boxed(self) -> Self::Output {
         self.as_query().internal_into_boxed()

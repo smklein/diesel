@@ -63,13 +63,13 @@ where
 
 impl<'a, S> BoxedDsl<'a> for Alias<S>
 where
-    Alias<S>: QuerySource + AsQuery<Query = SelectStatement<FromClause<Alias<S>>>>,
-    SelectStatement<FromClause<Alias<S>>>: BoxedDsl<'a>,
+    Alias<S>: QuerySource + AsQuery<Query = SelectStatement<'a, FromClause<Alias<S>>>>,
+    SelectStatement<'a, FromClause<Alias<S>>>: BoxedDsl<'a>,
     <Alias<S> as QuerySource>::DefaultSelection:
         Expression<SqlType = <Alias<S> as AsQuery>::SqlType>,
     <Alias<S> as AsQuery>::SqlType: TypedExpressionType,
 {
-    type Output = dsl::IntoBoxed<'a, SelectStatement<FromClause<Alias<S>>>>;
+    type Output = dsl::IntoBoxed<'a, SelectStatement<'a, FromClause<Alias<S>>>>;
 
     fn internal_into_boxed(self) -> Self::Output {
         self.as_query().internal_into_boxed()
@@ -157,17 +157,17 @@ where S: AliasSource,
 }
 
 #[cfg(feature = "postgres_backend")]
-impl<S, Selection> DistinctOnDsl<Selection> for Alias<S>
+impl<'a, S, Selection> DistinctOnDsl<Selection> for Alias<S>
 where
     S: AliasSource,
     Selection: SelectableExpression<Self>,
-    Self: QuerySource + AsQuery<Query = SelectStatement<FromClause<Self>>>,
-    SelectStatement<FromClause<Self>>: DistinctOnDsl<Selection>,
+    Self: QuerySource + AsQuery<Query = SelectStatement<'a, FromClause<Self>>>,
+    SelectStatement<'a, FromClause<Self>>: DistinctOnDsl<Selection>,
     <Self as QuerySource>::DefaultSelection:
         Expression<SqlType = <Self as AsQuery>::SqlType>,
     <Self as AsQuery>::SqlType: TypedExpressionType,
 {
-    type Output = dsl::DistinctOn<SelectStatement<FromClause<Self>>, Selection>;
+    type Output = dsl::DistinctOn<SelectStatement<'a, FromClause<Self>>, Selection>;
 
     fn distinct_on(self, selection: Selection) -> dsl::DistinctOn<Self, Selection> {
         DistinctOnDsl::distinct_on(self.as_query(), selection)
@@ -198,13 +198,13 @@ where
     }
 }
 
-impl<S> LockingDsl for Alias<S>
+impl<'a, S> LockingDsl for Alias<S>
 where
-    Self: QuerySource + AsQuery<Query = SelectStatement<FromClause<Self>>>,
+    Self: QuerySource + AsQuery<Query = SelectStatement<'a, FromClause<Self>>>,
     <Self as QuerySource>::DefaultSelection: Expression<SqlType = <Self as AsQuery>::SqlType>,
     <Self as AsQuery>::SqlType: TypedExpressionType,
 {
-    type Output = <SelectStatement<FromClause<Self>> as LockingDsl>::Output;
+    type Output = <SelectStatement<'a, FromClause<Self>> as LockingDsl>::Output;
 
     fn with_lock(self, lock: AllLockingClauses) -> Self::Output {
         crate::query_dsl::QueryDsl::with_lock(self.as_query(), lock)

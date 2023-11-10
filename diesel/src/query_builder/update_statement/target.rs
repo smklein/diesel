@@ -1,13 +1,13 @@
 use crate::associations::{HasTable, Identifiable};
 use crate::dsl::Find;
 use crate::query_dsl::methods::FindDsl;
+use crate::query_builder::where_clause::BoxedWhereClause;
 use crate::query_source::Table;
 
 #[doc(hidden)]
-#[derive(Debug)]
-pub struct UpdateTarget<Table, WhereClause> {
+pub struct UpdateTarget<Table> {
     pub table: Table,
-    pub where_clause: WhereClause,
+    pub where_clause: BoxedWhereClause<'static>,
 }
 
 /// A type which can be passed to [`update`] or [`delete`].
@@ -26,22 +26,17 @@ pub struct UpdateTarget<Table, WhereClause> {
 /// [`delete`]: crate::delete()
 /// [`filter`]: crate::query_builder::UpdateStatement::filter()
 pub trait IntoUpdateTarget: HasTable {
-    /// What is the `WHERE` clause of this target?
-    type WhereClause;
-
     /// Decomposes `self` into the table and where clause.
-    fn into_update_target(self) -> UpdateTarget<Self::Table, Self::WhereClause>;
+    fn into_update_target(self) -> UpdateTarget<Self::Table>;
 }
 
-impl<T, Tab, V> IntoUpdateTarget for T
+impl<T, Tab> IntoUpdateTarget for T
 where
     T: Identifiable<Table = Tab>,
     Tab: Table + FindDsl<T::Id>,
-    Find<Tab, T::Id>: IntoUpdateTarget<Table = Tab, WhereClause = V>,
+    Find<Tab, T::Id>: IntoUpdateTarget<Table = Tab>,
 {
-    type WhereClause = V;
-
-    fn into_update_target(self) -> UpdateTarget<Self::Table, Self::WhereClause> {
+    fn into_update_target(self) -> UpdateTarget<Self::Table> {
         T::table().find(self.id()).into_update_target()
     }
 }

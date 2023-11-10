@@ -16,8 +16,8 @@ use crate::result::Error::QueryBuilderError;
 use crate::result::QueryResult;
 use crate::{query_builder::*, QuerySource};
 
-impl<T: QuerySource, U> UpdateStatement<T, U, SetNotCalled> {
-    pub(crate) fn new(target: UpdateTarget<T, U>) -> Self {
+impl<T: QuerySource> UpdateStatement<T, SetNotCalled> {
+    pub(crate) fn new(target: UpdateTarget<T>) -> Self {
         UpdateStatement {
             from_clause: target.table.from_clause(),
             where_clause: target.where_clause,
@@ -31,11 +31,11 @@ impl<T: QuerySource, U> UpdateStatement<T, U, SetNotCalled> {
     /// See [`update`](crate::update()) for usage examples, or [the update
     /// guide](https://diesel.rs/guides/all-about-updates/) for a more exhaustive
     /// set of examples.
-    pub fn set<V>(self, values: V) -> UpdateStatement<T, U, V::Changeset>
+    pub fn set<V>(self, values: V) -> UpdateStatement<T, V::Changeset>
     where
         T: Table,
         V: changeset::AsChangeset<Target = T>,
-        UpdateStatement<T, U, V::Changeset>: AsQuery,
+        UpdateStatement<T, V::Changeset>: AsQuery,
     {
         UpdateStatement {
             from_clause: self.from_clause,
@@ -46,25 +46,24 @@ impl<T: QuerySource, U> UpdateStatement<T, U, SetNotCalled> {
     }
 }
 
-#[derive(Clone, Debug)]
 #[must_use = "Queries are only executed when calling `load`, `get_result` or similar."]
 /// Represents a complete `UPDATE` statement.
 ///
 /// See [`update`](crate::update()) for usage examples, or [the update
 /// guide](https://diesel.rs/guides/all-about-updates/) for a more exhaustive
 /// set of examples.
-pub struct UpdateStatement<T: QuerySource, U, V = SetNotCalled, Ret = NoReturningClause> {
+pub struct UpdateStatement<T: QuerySource, V = SetNotCalled, Ret = NoReturningClause> {
     from_clause: T::FromClause,
-    where_clause: U,
+    where_clause: BoxedWhereClause<'static>,
     values: V,
     returning: Ret,
 }
 
 /// An `UPDATE` statement with a boxed `WHERE` clause.
-pub type BoxedUpdateStatement<'a, T, V = SetNotCalled, Ret = NoReturningClause> =
-    UpdateStatement<T, BoxedWhereClause<'a>, V, Ret>;
+pub type BoxedUpdateStatement<T, V = SetNotCalled, Ret = NoReturningClause> =
+    UpdateStatement<T, V, Ret>;
 
-impl<T: QuerySource, U, V, Ret> UpdateStatement<T, U, V, Ret> {
+impl<T: QuerySource, V, Ret> UpdateStatement<T, V, Ret> {
     /// Adds the given predicate to the `WHERE` clause of the statement being
     /// constructed.
     ///
@@ -151,13 +150,13 @@ impl<T: QuerySource, U, V, Ret> UpdateStatement<T, U, V, Ret> {
     }
 }
 
-impl<T, U, V, Ret, Predicate> FilterDsl<Predicate> for UpdateStatement<T, U, V, Ret>
+impl<T, V, Ret, Predicate> FilterDsl<Predicate> for UpdateStatement<T, V, Ret>
 where
     T: QuerySource,
-    U: WhereAnd<Predicate>,
+    BoxedWhereClause<'static>: WhereAnd<Predicate, Output = BoxedWhereClause<'static>>,
     Predicate: AppearsInQuery<T>,
 {
-    type Output = UpdateStatement<T, U::Output, V, Ret>;
+    type Output = UpdateStatement<T, V, Ret>;
 
     fn filter(self, predicate: Predicate) -> Self::Output {
         UpdateStatement {
@@ -169,28 +168,26 @@ where
     }
 }
 
-impl<'a, T, U, V, Ret> BoxedDsl<'a> for UpdateStatement<T, U, V, Ret>
+impl<'a, T, V, Ret> BoxedDsl<'a> for UpdateStatement<T, V, Ret>
 where
     T: QuerySource,
-    U: Into<BoxedWhereClause<'a>>,
 {
-    type Output = BoxedUpdateStatement<'a, T, V, Ret>;
+    type Output = BoxedUpdateStatement<T, V, Ret>;
 
     fn internal_into_boxed(self) -> Self::Output {
         UpdateStatement {
             from_clause: self.from_clause,
-            where_clause: self.where_clause.into(),
+            where_clause: self.where_clause,
             values: self.values,
             returning: self.returning,
         }
     }
 }
 
-impl<T, U, V, Ret> QueryFragment for UpdateStatement<T, U, V, Ret>
+impl<T, V, Ret> QueryFragment for UpdateStatement<T, V, Ret>
 where
     T: Table,
     T::FromClause: QueryFragment,
-    U: QueryFragment,
     V: QueryFragment,
     Ret: QueryFragment,
 {
@@ -212,7 +209,7 @@ where
     }
 }
 
-impl<T, U, V, Ret> QueryId for UpdateStatement<T, U, V, Ret>
+impl<T, V, Ret> QueryId for UpdateStatement<T, V, Ret>
 where
     T: QuerySource,
 {
@@ -221,20 +218,20 @@ where
     const HAS_STATIC_QUERY_ID: bool = false;
 }
 
-impl<T, U, V> AsQuery for UpdateStatement<T, U, V, NoReturningClause>
+impl<T, V> AsQuery for UpdateStatement<T, V, NoReturningClause>
 where
     T: Table,
-    UpdateStatement<T, U, V, ReturningClause<T::AllColumns>>: Query,
+    UpdateStatement<T, V, ReturningClause<T::AllColumns>>: Query,
 {
     type SqlType = <Self::Query as Query>::SqlType;
-    type Query = UpdateStatement<T, U, V, ReturningClause<T::AllColumns>>;
+    type Query = UpdateStatement<T, V, ReturningClause<T::AllColumns>>;
 
     fn as_query(self) -> Self::Query {
         self.returning(T::all_columns())
     }
 }
 
-impl<T, U, V, Ret> Query for UpdateStatement<T, U, V, ReturningClause<Ret>>
+impl<T, V, Ret> Query for UpdateStatement<T, V, ReturningClause<Ret>>
 where
     T: Table,
     Ret: Expression + SelectableExpression<T>,
@@ -242,9 +239,9 @@ where
     type SqlType = Ret::SqlType;
 }
 
-impl<T: QuerySource, U, V, Ret, Conn> RunQueryDsl<Conn> for UpdateStatement<T, U, V, Ret> {}
+impl<T: QuerySource, V, Ret, Conn> RunQueryDsl<Conn> for UpdateStatement<T, V, Ret> {}
 
-impl<T: QuerySource, U, V> UpdateStatement<T, U, V, NoReturningClause> {
+impl<T: QuerySource, V> UpdateStatement<T, V, NoReturningClause> {
     /// Specify what expression is returned after execution of the `update`.
     /// # Examples
     ///
@@ -266,10 +263,10 @@ impl<T: QuerySource, U, V> UpdateStatement<T, U, V, NoReturningClause> {
     /// # #[cfg(not(feature = "postgres"))]
     /// # fn main() {}
     /// ```
-    pub fn returning<E>(self, returns: E) -> UpdateStatement<T, U, V, ReturningClause<E>>
+    pub fn returning<E>(self, returns: E) -> UpdateStatement<T, V, ReturningClause<E>>
     where
         T: Table,
-        UpdateStatement<T, U, V, ReturningClause<E>>: Query,
+        UpdateStatement<T, V, ReturningClause<E>>: Query,
     {
         UpdateStatement {
             from_clause: self.from_clause,

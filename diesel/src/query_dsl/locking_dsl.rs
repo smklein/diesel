@@ -24,13 +24,13 @@ pub trait LockingDsl {
     fn with_lock(self, lock: AllLockingClauses) -> Self::Output;
 }
 
-impl<T> LockingDsl for T
+impl<'a, T> LockingDsl for T
 where
-    T: Table + AsQuery<Query = SelectStatement<FromClause<T>>>,
+    T: Table + AsQuery<Query = SelectStatement<'a, FromClause<T>>>,
     T::DefaultSelection: Expression<SqlType = T::SqlType>,
     T::SqlType: TypedExpressionType,
 {
-    type Output = <SelectStatement<FromClause<T>> as LockingDsl>::Output;
+    type Output = <SelectStatement<'a, FromClause<T>> as LockingDsl>::Output;
 
     fn with_lock(self, lock: AllLockingClauses) -> Self::Output {
         self.as_query().with_lock(lock)

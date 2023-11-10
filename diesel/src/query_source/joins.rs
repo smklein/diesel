@@ -450,12 +450,12 @@ where
     type InnerJoin = JoinOn<Join::InnerJoin, On>;
 }
 
-impl<From> ToInnerJoin for SelectStatement<FromClause<From>>
+impl<'a, From> ToInnerJoin for SelectStatement<'a, FromClause<From>>
 where
     From: ToInnerJoin + QuerySource,
     From::InnerJoin: QuerySource,
 {
-    type InnerJoin = SelectStatement<FromClause<From::InnerJoin>>;
+    type InnerJoin = SelectStatement<'a, FromClause<From::InnerJoin>>;
 }
 
 impl<T: Table> ToInnerJoin for T {

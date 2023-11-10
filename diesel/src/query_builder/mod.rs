@@ -43,7 +43,7 @@ pub use self::bind_collector::BindCollector;
 #[doc(inline)]
 pub use self::debug_query::DebugQuery;
 #[doc(inline)]
-pub use self::delete_statement::{BoxedDeleteStatement, DeleteStatement};
+pub use self::delete_statement::DeleteStatement;
 #[doc(inline)]
 pub use self::insert_statement::{
     IncompleteInsertOrIgnoreStatement, IncompleteInsertStatement, IncompleteReplaceStatement,

@@ -69,9 +69,9 @@ where
 }
 
 // FIXME: Remove this when overlapping marker traits are stable
-impl<From, S, C> SelectableExpression<SelectStatement<FromClause<From>>> for AliasedField<S, C>
+impl<'a, From, S, C> SelectableExpression<SelectStatement<'a, FromClause<From>>> for AliasedField<S, C>
 where
-    Self: SelectableExpression<From> + AppearsInQuery<SelectStatement<FromClause<From>>>,
+    Self: SelectableExpression<From> + AppearsInQuery<SelectStatement<'a, FromClause<From>>>,
     From: QuerySource,
 {
 }

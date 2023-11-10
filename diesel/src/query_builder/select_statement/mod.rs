@@ -3,12 +3,10 @@
 //! F: From Clause
 //! S: Select Clause
 //! D: Distinct Clause
-//! W: Where Clause
 //! O: Order By Clause
 //! L: Limit Clause
 //! Of: Offset Clause
 //! G: Group By Clause
-//! H: Having clause
 
 pub(crate) mod boxed;
 mod dsl_impls;
@@ -58,13 +56,12 @@ use crate::result::QueryResult;
         locking
     )
 )]
-#[derive(QueryId)]
 #[must_use = "Queries are only executed when calling `load`, `get_result` or similar."]
 pub struct SelectStatement<
+    'a,
     From,
     Select = DefaultSelectClause<From>,
     Distinct = NoDistinctClause,
-    Where = NoWhereClause,
     Order = NoOrderClause,
     LimitOffset = LimitOffsetClause<NoLimitClause, NoOffsetClause>,
     GroupBy = NoGroupByClause,
@@ -76,7 +73,7 @@ pub struct SelectStatement<
     /// The distinct clause of the query
     pub(crate) distinct: Distinct,
     /// The where clause of the query
-    pub(crate) where_clause: Where,
+    pub(crate) where_clause: BoxedWhereClause<'a>,
     /// The order clause of the query
     pub(crate) order: Order,
     /// The combined limit/offset clause of the query
@@ -89,13 +86,19 @@ pub struct SelectStatement<
     pub(crate) locking: AllLockingClauses,
 }
 
-impl<F, S, D, W, O, LOf, G> SelectStatement<F, S, D, W, O, LOf, G> {
+impl<'a, F, S, D, O, LOf, G> QueryId for SelectStatement<'a, F, S, D, O, LOf, G> {
+    type QueryId = ();
+
+    const HAS_STATIC_QUERY_ID: bool = false;
+}
+
+impl<'a, F, S, D, O, LOf, G> SelectStatement<'a, F, S, D, O, LOf, G> {
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         select: S,
         from: F,
         distinct: D,
-        where_clause: W,
+        where_clause: BoxedWhereClause<'a>,
         order: O,
         limit_offset: LOf,
         group_by: G,
@@ -116,7 +119,7 @@ impl<F, S, D, W, O, LOf, G> SelectStatement<F, S, D, W, O, LOf, G> {
     }
 }
 
-impl<F: QuerySource> SelectStatement<FromClause<F>> {
+impl<'a, F: QuerySource> SelectStatement<'a, FromClause<F>> {
     // This is used by the `table!` macro
     #[doc(hidden)]
     pub fn simple(from: F) -> Self {
@@ -125,7 +128,7 @@ impl<F: QuerySource> SelectStatement<FromClause<F>> {
             DefaultSelectClause::new(&from),
             from,
             NoDistinctClause,
-            NoWhereClause,
+            BoxedWhereClause::None,
             NoOrderClause,
             LimitOffsetClause {
                 limit_clause: NoLimitClause,
@@ -138,16 +141,15 @@ impl<F: QuerySource> SelectStatement<FromClause<F>> {
     }
 }
 
-impl<F, S, D, W, O, LOf, G> Query for SelectStatement<F, S, D, W, O, LOf, G>
+impl<'a, F, S, D, O, LOf, G> Query for SelectStatement<'a, F, S, D, O, LOf, G>
 where
     G: ValidGroupByClause,
     S: SelectClauseExpression<F>,
-    W: ValidWhereClause<F>,
 {
     type SqlType = S::SelectClauseSqlType;
 }
 
-impl<F, S, D, W, O, LOf, G> SelectQuery for SelectStatement<F, S, D, W, O, LOf, G>
+impl<'a, F, S, D, O, LOf, G> SelectQuery for SelectStatement<'a, F, S, D, O, LOf, G>
 where
     S: SelectClauseExpression<F>,
     O: ValidOrderingForDistinct<D>,
@@ -157,8 +159,8 @@ where
 
 type SelectStatementSyntax = <DB as SqlDialect>::SelectStatementSyntax;
 
-impl<F, S, D, W, O, LOf, G> QueryFragment
-    for SelectStatement<F, S, D, W, O, LOf, G>
+impl<'a, F, S, D, O, LOf, G> QueryFragment
+    for SelectStatement<'a, F, S, D, O, LOf, G>
 where
     Self: QueryFragment<SelectStatementSyntax>,
 {
@@ -167,14 +169,13 @@ where
     }
 }
 
-impl<F, S, D, W, O, LOf, G>
+impl<'a, F, S, D, O, LOf, G>
     QueryFragment<sql_dialect::select_statement_syntax::AnsiSqlSelectStatement>
-    for SelectStatement<F, S, D, W, O, LOf, G>
+    for SelectStatement<'a, F, S, D, O, LOf, G>
 where
     S: QueryFragment,
     F: QueryFragment,
     D: QueryFragment,
-    W: QueryFragment,
     O: QueryFragment,
     LOf: QueryFragment,
     G: QueryFragment,
@@ -194,46 +195,42 @@ where
     }
 }
 
-impl<S, F, D, W, O, LOf, G, QS> ValidSubselect<QS>
-    for SelectStatement<FromClause<F>, S, D, W, O, LOf, G>
+impl<'a, S, F, D, O, LOf, G, QS> ValidSubselect<QS>
+    for SelectStatement<'a, FromClause<F>, S, D, O, LOf, G>
 where
     Self: SelectQuery,
     F: QuerySource,
     QS: QuerySource,
     Join<F, QS, Inner>: QuerySource,
-    W: ValidWhereClause<FromClause<Join<F, QS, Inner>>>,
 {
 }
 
-impl<S, D, W, O, LOf, G> ValidSubselect<NoFromClause>
-    for SelectStatement<NoFromClause, S, D, W, O, LOf, G>
+impl<'a, S, D, O, LOf, G> ValidSubselect<NoFromClause>
+    for SelectStatement<'a, NoFromClause, S, D, O, LOf, G>
 where
     Self: SelectQuery,
-    W: ValidWhereClause<NoFromClause>,
 {
 }
 
-impl<S, F, D, W, O, LOf, G> ValidSubselect<NoFromClause>
-    for SelectStatement<FromClause<F>, S, D, W, O, LOf, G>
+impl<'a, S, F, D, O, LOf, G> ValidSubselect<NoFromClause>
+    for SelectStatement<'a, FromClause<F>, S, D, O, LOf, G>
 where
     Self: SelectQuery,
     F: QuerySource,
-    W: ValidWhereClause<FromClause<F>>,
 {
 }
 
-impl<S, D, W, O, LOf, G, QS> ValidSubselect<QS>
-    for SelectStatement<NoFromClause, S, D, W, O, LOf, G>
+impl<'a, S, D, O, LOf, G, QS> ValidSubselect<QS>
+    for SelectStatement<'a, NoFromClause, S, D, O, LOf, G>
 where
     Self: SelectQuery,
     QS: QuerySource,
-    W: ValidWhereClause<NoFromClause>,
 {
 }
 
-/// Allow `SelectStatement<From>` to act as if it were `From` as long as
+/// Allow `SelectStatement<'a, From>` to act as if it were `From` as long as
 /// no other query methods have been called on it
-impl<From, T> AppearsInFromClause<T> for SelectStatement<From>
+impl<'a, From, T> AppearsInFromClause<T> for SelectStatement<'a, From>
 where
     From: AsQuerySource,
     From::QuerySource: AppearsInFromClause<T> + QuerySource,
@@ -241,7 +238,7 @@ where
     type Count = <From::QuerySource as AppearsInFromClause<T>>::Count;
 }
 
-impl<From> QuerySource for SelectStatement<From>
+impl<'a, From> QuerySource for SelectStatement<'a, From>
 where
     From: AsQuerySource,
     <From::QuerySource as QuerySource>::DefaultSelection: SelectableExpression<Self>,
@@ -258,7 +255,7 @@ where
     }
 }
 
-impl<From, Selection> AppendSelection<Selection> for SelectStatement<From>
+impl<'a, From, Selection> AppendSelection<Selection> for SelectStatement<'a, From>
 where
     From: AsQuerySource,
     From::QuerySource: AppendSelection<Selection>,

@@ -19,14 +19,14 @@ pub trait GroupByDsl<Expr: Expression> {
     fn group_by(self, expr: Expr) -> dsl::GroupBy<Self, Expr>;
 }
 
-impl<T, Expr> GroupByDsl<Expr> for T
+impl<'a, T, Expr> GroupByDsl<Expr> for T
 where
     Expr: Expression,
     T: Table,
-    T: AsQuery<Query = SelectStatement<FromClause<T>>>,
+    T: AsQuery<Query = SelectStatement<'a, FromClause<T>>>,
     T::Query: GroupByDsl<Expr>,
 {
-    type Output = dsl::GroupBy<SelectStatement<FromClause<T>>, Expr>;
+    type Output = dsl::GroupBy<SelectStatement<'a, FromClause<T>>, Expr>;
 
     fn group_by(self, expr: Expr) -> dsl::GroupBy<Self, Expr> {
         self.as_query().group_by(expr)

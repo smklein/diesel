@@ -275,17 +275,17 @@ where
     }
 }
 
-impl<ST, F, S, D, W, O, LOf, G, Selection> DistinctOnDsl<Selection>
-    for SelectStatement<FromClause<F>, S, D, W, O, LOf, G>
+impl<'a, ST, F, S, D, O, LOf, G, Selection> DistinctOnDsl<Selection>
+    for SelectStatement<'a, FromClause<F>, S, D, O, LOf, G>
 where
     F: QuerySource,
     Selection: SelectableExpression<F>,
     Self: SelectQuery<SqlType = ST>,
     O: ValidOrderingForDistinct<DistinctOnClause<Selection>>,
-    SelectStatement<FromClause<F>, S, DistinctOnClause<Selection>, W, O, LOf, G>:
+    SelectStatement<'a, FromClause<F>, S, DistinctOnClause<Selection>, O, LOf, G>:
         SelectQuery<SqlType = ST>,
 {
-    type Output = SelectStatement<FromClause<F>, S, DistinctOnClause<Selection>, W, O, LOf, G>;
+    type Output = SelectStatement<'a, FromClause<F>, S, DistinctOnClause<Selection>, O, LOf, G>;
 
     fn distinct_on(self, selection: Selection) -> Self::Output {
         SelectStatement::new(

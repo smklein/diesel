@@ -35,11 +35,11 @@ impl<V, Tab, QId, const STATIC_QUERY_ID: bool> IntoConflictValueClause
     }
 }
 
-impl<F, S, D, W, O, LOf, G, Columns> IntoConflictValueClause
-    for InsertFromSelect<SelectStatement<F, S, D, W, O, LOf, G>, Columns>
+impl<'a, F, S, D, O, LOf, G, Columns> IntoConflictValueClause
+    for InsertFromSelect<SelectStatement<'a, F, S, D, O, LOf, G>, Columns>
 {
     type ValueClause = InsertFromSelect<
-        OnConflictSelectWrapper<SelectStatement<F, S, D, W, O, LOf, G>>,
+        OnConflictSelectWrapper<SelectStatement<'a, F, S, D, O, LOf, G>>,
         Columns,
     >;
 

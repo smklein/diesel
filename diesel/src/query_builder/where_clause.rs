@@ -120,7 +120,7 @@ where
 
 /// Marker trait indicating that a `WHERE` clause is valid for a given query
 /// source.
-pub trait ValidWhereClause<QS> {}
+trait ValidWhereClause<QS> {}
 
 impl<QS> ValidWhereClause<QS> for NoWhereClause {}
 

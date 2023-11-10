@@ -77,7 +77,7 @@ use crate::Table;
 /// # #[cfg(not(feature = "postgres"))]
 /// # fn main() {}
 /// ```
-pub fn update<T: IntoUpdateTarget>(source: T) -> UpdateStatement<T::Table, T::WhereClause> {
+pub fn update<T: IntoUpdateTarget>(source: T) -> UpdateStatement<T::Table> {
     UpdateStatement::new(source.into_update_target())
 }
 
@@ -129,7 +129,7 @@ pub fn update<T: IntoUpdateTarget>(source: T) -> UpdateStatement<T::Table, T::Wh
 /// # Ok(())
 /// # }
 /// ```
-pub fn delete<T: IntoUpdateTarget>(source: T) -> DeleteStatement<T::Table, T::WhereClause> {
+pub fn delete<T: IntoUpdateTarget>(source: T) -> DeleteStatement<T::Table> {
     let target = source.into_update_target();
     DeleteStatement::new(target.table, target.where_clause)
 }
@@ -460,16 +460,16 @@ pub fn insert_or_ignore_into<T: Table>(target: T) -> IncompleteInsertOrIgnoreSta
 /// Creates a bare select statement, with no from clause. Primarily used for
 /// testing diesel itself, but likely useful for third party crates as well. The
 /// given expressions must be selectable from anywhere.
-pub fn select<T>(expression: T) -> crate::dsl::BareSelect<T>
+pub fn select<'a, T>(expression: T) -> crate::dsl::BareSelect<'a, T>
 where
     T: Expression,
-    crate::dsl::BareSelect<T>: AsQuery,
+    crate::dsl::BareSelect<'a, T>: AsQuery,
 {
     SelectStatement::new(
         SelectClause(expression),
         super::NoFromClause,
         NoDistinctClause,
-        super::where_clause::NoWhereClause,
+        super::where_clause::BoxedWhereClause::None,
         super::order_clause::NoOrderClause,
         super::limit_offset_clause::LimitOffsetClause {
             limit_clause: super::limit_clause::NoLimitClause,

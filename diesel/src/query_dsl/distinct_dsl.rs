@@ -22,15 +22,15 @@ pub trait DistinctDsl {
     fn distinct(self) -> dsl::Distinct<Self>;
 }
 
-impl<T> DistinctDsl for T
+impl<'a, T> DistinctDsl for T
 where
-    T: Table + AsQuery<Query = SelectStatement<FromClause<T>>>,
+    T: Table + AsQuery<Query = SelectStatement<'a, FromClause<T>>>,
     T::DefaultSelection: Expression<SqlType = T::SqlType>,
     T::SqlType: TypedExpressionType,
 {
-    type Output = dsl::Distinct<SelectStatement<FromClause<T>>>;
+    type Output = dsl::Distinct<SelectStatement<'a, FromClause<T>>>;
 
-    fn distinct(self) -> dsl::Distinct<SelectStatement<FromClause<T>>> {
+    fn distinct(self) -> dsl::Distinct<SelectStatement<'a, FromClause<T>>> {
         self.as_query().distinct()
     }
 }
@@ -52,15 +52,15 @@ pub trait DistinctOnDsl<Selection> {
 }
 
 #[cfg(feature = "postgres_backend")]
-impl<T, Selection> DistinctOnDsl<Selection> for T
+impl<'a, T, Selection> DistinctOnDsl<Selection> for T
 where
     Selection: SelectableExpression<T>,
-    T: Table + AsQuery<Query = SelectStatement<FromClause<T>>>,
-    SelectStatement<FromClause<T>>: DistinctOnDsl<Selection>,
+    T: Table + AsQuery<Query = SelectStatement<'a, FromClause<T>>>,
+    SelectStatement<'a, FromClause<T>>: DistinctOnDsl<Selection>,
     T::DefaultSelection: Expression<SqlType = T::SqlType>,
     T::SqlType: TypedExpressionType,
 {
-    type Output = dsl::DistinctOn<SelectStatement<FromClause<T>>, Selection>;
+    type Output = dsl::DistinctOn<SelectStatement<'a, FromClause<T>>, Selection>;
 
     fn distinct_on(self, selection: Selection) -> dsl::DistinctOn<Self, Selection> {
         self.as_query().distinct_on(selection)

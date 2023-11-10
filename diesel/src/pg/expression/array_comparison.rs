@@ -150,8 +150,8 @@ where
     }
 }
 
-impl<ST, F, S, D, W, O, LOf, G> AsArrayExpression<ST>
-    for SelectStatement<F, S, D, W, O, LOf, G>
+impl<ST, F, S, D, O, LOf, G> AsArrayExpression<ST>
+    for SelectStatement<'_, F, S, D, O, LOf, G>
 where
     ST: 'static,
     Self: SelectQuery<SqlType = ST>,

@@ -230,7 +230,6 @@
 // Built-in Lints
 #![warn(
     unreachable_pub,
-    missing_debug_implementations,
     missing_copy_implementations,
     elided_lifetimes_in_paths,
     missing_docs
@@ -359,7 +358,8 @@ pub mod helper_types {
     pub type Select<Source, Selection> = <Source as SelectDsl<Selection>>::Output;
 
     /// Represents the return type of [`diesel::select(selection)`](crate::select)
-    pub type BareSelect<Selection> = crate::query_builder::SelectStatement<
+    pub type BareSelect<'a, Selection> = crate::query_builder::SelectStatement<
+        'a,
         crate::query_builder::NoFromClause,
         SelectClause<Selection>,
     >;
@@ -416,12 +416,11 @@ pub mod helper_types {
     pub type On<Source, On> = joins::OnClauseWrapper<Source, On>;
 
     use super::associations::HasTable;
-    use super::query_builder::{AsChangeset, IntoUpdateTarget, UpdateStatement};
+    use super::query_builder::{AsChangeset, UpdateStatement};
 
     /// Represents the return type of [`update(lhs).set(rhs)`](crate::query_builder::UpdateStatement::set)
     pub type Update<Target, Changes> = UpdateStatement<
         <Target as HasTable>::Table,
-        <Target as IntoUpdateTarget>::WhereClause,
         <Changes as AsChangeset>::Changeset,
     >;
 
