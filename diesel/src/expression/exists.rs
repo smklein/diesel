@@ -1,7 +1,6 @@
 //! This module contains the query dsl node definition
 //! for `EXISTS` expressions
 
-use crate::backend::{sql_dialect, SqlDialect};
 use crate::expression::subselect::Subselect;
 use crate::expression::{AppearsInQuery, Expression, SelectableExpression};
 use crate::helper_types::exists;
@@ -60,15 +59,6 @@ where
 }
 
 impl<T> QueryFragment for Exists<T>
-where
-    Self: QueryFragment<<DB as SqlDialect>::ExistsSyntax>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<<DB as SqlDialect>::ExistsSyntax>>::walk_ast(self, pass)
-    }
-}
-
-impl<T> QueryFragment<sql_dialect::exists_syntax::AnsiSqlExistsSyntax> for Exists<T>
 where
     T: QueryFragment,
 {

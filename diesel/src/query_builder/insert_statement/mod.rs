@@ -385,18 +385,7 @@ type DefaultValueClauseForInsert = <DB as SqlDialect>::DefaultValueClauseForInse
 
 impl QueryFragment for DefaultValues
 where
-    Self: QueryFragment<DefaultValueClauseForInsert>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<DefaultValueClauseForInsert>>::walk_ast(self, pass)
-    }
-}
-
-impl QueryFragment<sql_dialect::default_value_clause::AnsiDefaultValueClause> for DefaultValues
-where
-    DB: SqlDialect<
-        DefaultValueClauseForInsert = sql_dialect::default_value_clause::AnsiDefaultValueClause,
-    >
+    DefaultValueClauseForInsert: sql_dialect::default_value_clause::SupportsDefaultValues,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("DEFAULT VALUES");

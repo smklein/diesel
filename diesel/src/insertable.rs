@@ -174,17 +174,11 @@ where
     }
 }
 
+type InsertWithDefaultKeyword = <DB as SqlDialect>::InsertWithDefaultKeyword;
+
 impl<Expr> QueryFragment for DefaultableColumnInsertValue<Expr>
 where
-    Self: QueryFragment<<DB as SqlDialect>::InsertWithDefaultKeyword>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<<DB as SqlDialect>::InsertWithDefaultKeyword>>::walk_ast(self, pass)
-    }
-}
-
-impl<Expr> QueryFragment<sql_dialect::default_keyword_for_insert::IsoSqlDefaultKeyword> for DefaultableColumnInsertValue<Expr>
-where
+    InsertWithDefaultKeyword: sql_dialect::default_keyword_for_insert::SupportsDefaultKeyword,
     Expr: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
@@ -225,10 +219,9 @@ where
 
 #[cfg(feature = "sqlite")]
 impl<Col, Expr>
-    QueryFragment<
-        crate::backend::sql_dialect::default_keyword_for_insert::DoesNotSupportDefaultKeyword,
-    > for DefaultableColumnInsertValue<ColumnInsertValue<Col, Expr>>
+    QueryFragment for DefaultableColumnInsertValue<ColumnInsertValue<Col, Expr>>
 where
+    InsertWithDefaultKeyword: sql_dialect::default_keyword_for_insert::NoDefaultKeyword,
     Expr: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, crate::sqlite::Sqlite>) -> QueryResult<()> {

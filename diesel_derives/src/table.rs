@@ -247,7 +247,7 @@ pub(crate) fn expand(input: TableDecl) -> TokenStream {
 
             impl diesel::query_builder::AsQuery for table {
                 type SqlType = SqlType;
-                type Query = diesel::internal::table_macro::SelectStatement<diesel::internal::table_macro::FromClause<Self>>;
+                type Query = diesel::internal::table_macro::SelectStatement<'static, diesel::internal::table_macro::FromClause<Self>>;
 
                 fn as_query(self) -> Self::Query {
                     diesel::internal::table_macro::SelectStatement::simple(self)
@@ -276,11 +276,9 @@ pub(crate) fn expand(input: TableDecl) -> TokenStream {
             }
 
             impl diesel::query_builder::IntoUpdateTarget for table {
-                type WhereClause = <<Self as diesel::query_builder::AsQuery>::Query as diesel::query_builder::IntoUpdateTarget>::WhereClause;
-
-                fn into_update_target(self) -> diesel::query_builder::UpdateTarget<Self::Table, Self::WhereClause> {
+               fn into_update_target(self) -> diesel::query_builder::UpdateTarget<Self::Table> {
                     use diesel::query_builder::AsQuery;
-                    let q: diesel::internal::table_macro::SelectStatement<diesel::internal::table_macro::FromClause<table>> = self.as_query();
+                    let q: diesel::internal::table_macro::SelectStatement<'static, diesel::internal::table_macro::FromClause<table>> = self.as_query();
                     q.into_update_target()
                 }
             }

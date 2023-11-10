@@ -7,11 +7,6 @@ use std::marker::PhantomData;
 
 /// This type represents a batch insert clause, which allows
 /// to insert multiple rows at once.
-///
-/// Custom backends can specialize the [`QueryFragment`]
-/// implementation via [`SqlDialect::BatchInsertSupport`]
-/// or provide fully custom [`ExecuteDsl`](crate::query_dsl::methods::ExecuteDsl)
-/// and [`LoadQuery`](crate::query_dsl::methods::LoadQuery) implementations
 #[cfg_attr(
     feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes",
     cfg(feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes")
@@ -76,20 +71,9 @@ impl<T> CanInsertInSingleQuery for Vec<T> {
 
 type BatchInsertSupport = <DB as SqlDialect>:: BatchInsertSupport;
 
-impl<Tab, V, QId, const HAS_STATIC_QUERY_ID: bool> QueryFragment
-    for BatchInsert<V, Tab, QId, HAS_STATIC_QUERY_ID>
+impl<Tab, V, QId, const HAS_STATIC_QUERY_ID: bool> QueryFragment for BatchInsert<Vec<ValuesClause<V, Tab>>, Tab, QId, HAS_STATIC_QUERY_ID>
 where
-    Self: QueryFragment<BatchInsertSupport>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<BatchInsertSupport>>::walk_ast(self, pass)
-    }
-}
-
-impl<Tab, V, QId, const HAS_STATIC_QUERY_ID: bool>
-    QueryFragment<sql_dialect::batch_insert_support::PostgresLikeBatchInsertSupport>
-    for BatchInsert<Vec<ValuesClause<V, Tab>>, Tab, QId, HAS_STATIC_QUERY_ID>
-where
+    BatchInsertSupport: sql_dialect::batch_insert_support::SupportsBatchInsert,
     ValuesClause<V, Tab>: QueryFragment,
     V: QueryFragment,
 {

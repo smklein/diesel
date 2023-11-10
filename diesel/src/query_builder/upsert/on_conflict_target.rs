@@ -1,4 +1,4 @@
-use crate::backend::{sql_dialect, Backend, SqlDialect};
+use crate::backend::{sql_dialect, SqlDialect};
 use crate::expression::SqlLiteral;
 use crate::query_builder::*;
 use crate::query_source::Column;
@@ -27,17 +27,7 @@ type OnConflictClause = <DB as SqlDialect>::OnConflictClause;
 
 impl<T> QueryFragment for ConflictTarget<T>
 where
-    Self: QueryFragment<OnConflictClause>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<OnConflictClause>>::walk_ast(self, pass)
-    }
-}
-
-impl<T, SP> QueryFragment<SP> for ConflictTarget<T>
-where
-    DB: Backend<OnConflictClause = SP>,
-    SP: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
+    OnConflictClause: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
     T: Column,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
@@ -50,10 +40,9 @@ where
 
 impl<T> OnConflictTarget<T::Table> for ConflictTarget<T> where T: Column {}
 
-impl<ST, SP> QueryFragment<SP> for ConflictTarget<SqlLiteral<ST>>
+impl<ST> QueryFragment for ConflictTarget<SqlLiteral<ST>>
 where
-    DB: Backend<OnConflictClause = SP>,
-    SP: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
+    OnConflictClause: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
     SqlLiteral<ST>: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
@@ -65,10 +54,9 @@ where
 
 impl<Tab, ST> OnConflictTarget<Tab> for ConflictTarget<SqlLiteral<ST>> {}
 
-impl<T, SP> QueryFragment<SP> for ConflictTarget<(T,)>
+impl<T> QueryFragment for ConflictTarget<(T,)>
 where
-    DB: Backend<OnConflictClause = SP>,
-    SP: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
+    OnConflictClause: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
     T: Column,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
@@ -88,9 +76,8 @@ macro_rules! on_conflict_tuples {
         }
     )+) => {
         $(
-            impl<_T, _SP, $($T),*> QueryFragment<_SP> for ConflictTarget<(_T, $($T),*)> where
-                DB: Backend<OnConflictClause = _SP>,
-                _SP: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
+            impl<_T, $($T),*> QueryFragment for ConflictTarget<(_T, $($T),*)> where
+                OnConflictClause: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
                 _T: Column,
                 $($T: Column<Table=_T::Table>,)*
             {

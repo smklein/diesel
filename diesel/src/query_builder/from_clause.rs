@@ -1,13 +1,8 @@
-use super::{AstPass, DB, QueryFragment, QueryId};
-use crate::backend::SqlDialect;
+use super::{AstPass, QueryFragment, QueryId};
 use crate::query_source::AppearsInFromClause;
 use crate::{QueryResult, QuerySource};
 
 /// This type represents a not existing from clause
-///
-/// Custom backends can provide a custom [`QueryFragment`]
-/// impl by specializing the implementation via
-/// [`SqlDialect::EmptyFromClauseSyntax`](crate::backend::SqlDialect::EmptyFromClauseSyntax)
 #[cfg_attr(
     feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes",
     cfg(feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes")
@@ -15,19 +10,7 @@ use crate::{QueryResult, QuerySource};
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct NoFromClause;
 
-type EmptyFromClauseSyntax = <DB as SqlDialect>::EmptyFromClauseSyntax;
-
 impl QueryFragment for NoFromClause
-where
-    Self: QueryFragment<EmptyFromClauseSyntax>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<EmptyFromClauseSyntax>>::walk_ast(self, pass)
-    }
-}
-
-impl QueryFragment<crate::backend::sql_dialect::from_clause_syntax::AnsiSqlFromClauseSyntax>
-    for NoFromClause
 {
     fn walk_ast<'b>(&'b self, _pass: AstPass<'_, 'b>) -> QueryResult<()> {
         Ok(())

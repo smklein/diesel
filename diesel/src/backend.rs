@@ -119,17 +119,6 @@ where
 /// public API. Implementing this trait is not considered to be part of
 /// diesel's public API, as future versions of diesel may add additional
 /// associated constants here.
-///
-/// Each associated type is used to configure the behaviour
-/// of one or more [`QueryFragment`](crate::query_builder::QueryFragment)
-/// implementations by providing
-/// a custom `QueryFragment<YourSpecialSyntaxType>` implementation
-/// to specialize on generic `QueryFragment<DB::AssociatedType>` implementations.
-///
-#[cfg_attr(
-    feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes",
-    doc = "See the [`sql_dialect`] module for options provided by diesel out of the box."
-)]
 pub trait SqlDialect: self::private::TrustedBackend {
     /// Configures how this backend supports `RETURNING` clauses
     ///
@@ -398,6 +387,9 @@ pub(crate) mod sql_dialect {
         /// behaviour.
         pub trait SupportsDefaultKeyword {}
 
+        /// Opposite of `SupportsDefaultKeyword`.
+        pub trait NoDefaultKeyword {}
+
         /// Indicates that a backend support `DEFAULT` value expressions
         /// for `INSERT INTO` statements based on the ISO SQL standard
         #[derive(Debug, Copy, Clone)]
@@ -409,6 +401,7 @@ pub(crate) mod sql_dialect {
         pub struct DoesNotSupportDefaultKeyword;
 
         impl SupportsDefaultKeyword for IsoSqlDefaultKeyword {}
+        impl NoDefaultKeyword for DoesNotSupportDefaultKeyword {}
     }
 
     /// This module contains all reusable options to configure
@@ -448,6 +441,11 @@ pub(crate) mod sql_dialect {
         /// of two variables or strings
         #[derive(Debug, Clone, Copy)]
         pub struct ConcatWithPipesClause;
+
+        /// Implemented by `ConcatWithPipesClause`.
+        pub trait SupportsConcatWithPipes {}
+
+        impl SupportsConcatWithPipes for ConcatWithPipesClause {}
     }
 
     /// This module contains all reusable options to configure
@@ -463,6 +461,11 @@ pub(crate) mod sql_dialect {
         /// values should be inserted
         #[derive(Debug, Clone, Copy)]
         pub struct AnsiDefaultValueClause;
+
+        /// Is `DEFAULT VALUES` used?
+        pub trait SupportsDefaultValues {}
+
+        impl SupportsDefaultValues for AnsiDefaultValueClause {}
     }
 
     /// This module contains all reusable options to configure
@@ -504,6 +507,14 @@ pub(crate) mod sql_dialect {
         /// per array element in `IN()` and `NOT IN()` expression
         #[derive(Debug, Copy, Clone)]
         pub struct AnsiSqlArrayComparison;
+
+        /// Identifies taht the backend uses `IN` to describe arrays.
+        pub trait SupportsArrayComparisonWithIn {}
+
+        impl SupportsArrayComparisonWithIn for AnsiSqlArrayComparison {}
+
+        /// Identifies taht the backend uses `ANY` to describe arrays.
+        pub trait SupportsArrayComparisonWithAny {}
     }
 
     /// This module contains all reusable options to configure

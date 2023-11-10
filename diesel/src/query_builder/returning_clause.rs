@@ -1,5 +1,5 @@
 use super::{AstPass, DB, QueryFragment};
-use crate::backend::SqlDialect;
+use crate::backend::{sql_dialect, SqlDialect};
 use crate::query_builder::QueryId;
 use crate::result::QueryResult;
 
@@ -13,10 +13,6 @@ impl QueryFragment for NoReturningClause {
 }
 
 /// This type represents a SQL `Returning` clause
-///
-/// Custom backends can specialize the [`QueryFragment`]
-/// implementation via
-/// [`SqlDialect::ReturningClause`](crate::backend::SqlDialect::ReturningClause)
 #[cfg_attr(
     feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes",
     cfg(feature = "i-implement-a-third-party-backend-and-opt-into-breaking-changes")
@@ -28,17 +24,7 @@ type ReturningClauseSyntax = <DB as SqlDialect>::ReturningClause;
 
 impl<Expr> QueryFragment for ReturningClause<Expr>
 where
-    Self: QueryFragment<ReturningClauseSyntax>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<ReturningClauseSyntax>>::walk_ast(self, pass)
-    }
-}
-
-impl<Expr>
-    QueryFragment<crate::backend::sql_dialect::returning_clause::PgLikeReturningClause>
-    for ReturningClause<Expr>
-where
+    ReturningClauseSyntax: sql_dialect::returning_clause::SupportsReturningClause,
     Expr: QueryFragment,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {

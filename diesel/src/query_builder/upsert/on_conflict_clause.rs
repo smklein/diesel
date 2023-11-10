@@ -1,7 +1,6 @@
 use super::on_conflict_actions::*;
 use super::on_conflict_target::*;
 use crate::backend::sql_dialect;
-use crate::backend::Backend;
 use crate::backend::SqlDialect;
 use crate::insertable::*;
 use crate::query_builder::where_clause::{NoWhereClause, WhereClause};
@@ -73,18 +72,7 @@ type OnConflictClause = <DB as SqlDialect>::OnConflictClause;
 impl<Values, Target, Action> QueryFragment
     for OnConflictValues<Values, Target, Action, NoWhereClause>
 where
-    Self: QueryFragment<OnConflictClause>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<OnConflictClause>>::walk_ast(self, pass)
-    }
-}
-
-impl<Values, Target, Action, SD> QueryFragment<SD>
-    for OnConflictValues<Values, Target, Action, NoWhereClause>
-where
-    DB: Backend<OnConflictClause = SD>,
-    SD: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
+    OnConflictClause: sql_dialect::on_conflict_clause::PgLikeOnConflictClause,
     Values: QueryFragment,
     Target: QueryFragment,
     Action: QueryFragment,
@@ -101,6 +89,8 @@ where
 impl<Values, Target, Action, Expr> QueryFragment
     for OnConflictValues<Values, Target, Action, WhereClause<Expr>>
 where
+    OnConflictClause: sql_dialect::on_conflict_clause::SupportsOnConflictClause,
+    OnConflictClause: sql_dialect::on_conflict_clause::SupportsOnConflictClauseWhere,
     Values: QueryFragment,
     Target: QueryFragment,
     Action: QueryFragment,

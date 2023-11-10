@@ -1,10 +1,9 @@
 use super::field_alias_mapper::FieldAliasMapper;
 use super::{AliasSource, AliasedField};
 
-use crate::backend::{sql_dialect, SqlDialect};
 use crate::expression::{Expression, SelectableExpression};
 use crate::helper_types::AliasedFields;
-use crate::query_builder::{AsQuery, AstPass, DB, FromClause, QueryFragment, QueryId, SelectStatement};
+use crate::query_builder::{AsQuery, AstPass, FromClause, QueryFragment, QueryId, SelectStatement};
 use crate::query_source::{AppearsInFromClause, Column, Never, QuerySource, Table, TableNotEqual};
 use crate::result::QueryResult;
 
@@ -84,19 +83,7 @@ where
     }
 }
 
-type AliasSyntax = <DB as SqlDialect>::AliasSyntax;
-
 impl<S> QueryFragment for Alias<S>
-where
-    S: AliasSource,
-    Self: QueryFragment<AliasSyntax>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<AliasSyntax>>::walk_ast(self, pass)
-    }
-}
-
-impl<S> QueryFragment<sql_dialect::alias_syntax::AsAliasSyntax> for Alias<S>
 where
     S: AliasSource,
     S::Target: QueryFragment,

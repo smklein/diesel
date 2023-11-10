@@ -26,8 +26,7 @@ use super::order_clause::NoOrderClause;
 use super::select_clause::*;
 use super::where_clause::*;
 use super::NoFromClause;
-use super::{AstPass, DB, Query, QueryFragment};
-use crate::backend::{sql_dialect, SqlDialect};
+use super::{AstPass, Query, QueryFragment};
 use crate::expression::subselect::ValidSubselect;
 use crate::expression::*;
 use crate::query_builder::having_clause::HavingClause;
@@ -157,21 +156,7 @@ where
     type SqlType = S::SelectClauseSqlType;
 }
 
-type SelectStatementSyntax = <DB as SqlDialect>::SelectStatementSyntax;
-
-impl<'a, F, S, D, O, LOf, G> QueryFragment
-    for SelectStatement<'a, F, S, D, O, LOf, G>
-where
-    Self: QueryFragment<SelectStatementSyntax>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<SelectStatementSyntax>>::walk_ast(self, pass)
-    }
-}
-
-impl<'a, F, S, D, O, LOf, G>
-    QueryFragment<sql_dialect::select_statement_syntax::AnsiSqlSelectStatement>
-    for SelectStatement<'a, F, S, D, O, LOf, G>
+impl<'a, F, S, D, O, LOf, G> QueryFragment for SelectStatement<'a, F, S, D, O, LOf, G>
 where
     S: QueryFragment,
     F: QueryFragment,

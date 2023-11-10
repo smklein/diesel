@@ -550,7 +550,7 @@ postfix_operator!(
 
 prefix_operator!(Not, " NOT ");
 
-use crate::backend::{sql_dialect, Backend, SqlDialect};
+use crate::backend::{sql_dialect, SqlDialect};
 use crate::expression::TypedExpressionType;
 use crate::insertable::{ColumnInsertValue, Insertable};
 use crate::query_builder::{DB, QueryFragment, QueryId, ValuesClause};
@@ -612,21 +612,9 @@ impl_selectable_expression!(Concat<L, R>);
 
 impl<L, R> QueryFragment for Concat<L, R>
 where
-    Self: QueryFragment<<DB as SqlDialect>::ConcatClause>,
-{
-    fn walk_ast<'b>(
-        &'b self,
-        pass: crate::query_builder::AstPass<'_, 'b>,
-    ) -> crate::result::QueryResult<()> {
-        <Self as QueryFragment<<DB as SqlDialect>::ConcatClause>>::walk_ast(self, pass)
-    }
-}
-
-impl<L, R> QueryFragment<sql_dialect::concat_clause::ConcatWithPipesClause> for Concat<L, R>
-where
     L: QueryFragment,
     R: QueryFragment,
-    DB: Backend + SqlDialect<ConcatClause = sql_dialect::concat_clause::ConcatWithPipesClause>,
+    <DB as SqlDialect>::ConcatClause: sql_dialect::concat_clause::SupportsConcatWithPipes,
 {
     fn walk_ast<'b>(
         &'b self,

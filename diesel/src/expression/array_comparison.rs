@@ -1,20 +1,14 @@
 //! This module contains the query dsl node definitions
 //! for array comparison operations like `IN` and `NOT IN`
 
-use crate::backend::sql_dialect;
-use crate::backend::Backend;
-use crate::backend::SqlDialect;
 use crate::expression::subselect::Subselect;
 use crate::expression::{
     AppearsInQuery, AsExpression, Expression, SelectableExpression, TypedExpressionType,
 };
 use crate::query_builder::combination_clause::CombinationClause;
 use crate::query_builder::{
-    AstPass, BoxedSelectStatement, DB, QueryFragment, QueryId, SelectQuery, SelectStatement,
+    BoxedSelectStatement, QueryId, SelectQuery, SelectStatement,
 };
-use crate::result::QueryResult;
-use crate::serialize::ToSql;
-use crate::sql_types::HasSqlType;
 use crate::sql_types::{Bool, SingleValue, SqlType};
 use std::marker::PhantomData;
 
@@ -86,58 +80,78 @@ where
     type SqlType = Bool;
 }
 
-impl<T, U> QueryFragment for In<T, U>
-where
-    Self: QueryFragment<<DB as SqlDialect>::ArrayComparison>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<<DB as SqlDialect>::ArrayComparison>>::walk_ast(self, pass)
-    }
-}
+#[cfg(not(feature = "postgres_backend"))]
+mod not_postgres {
+    use super::*;
 
-impl<T, U> QueryFragment<sql_dialect::array_comparison::AnsiSqlArrayComparison> for In<T, U>
-where
-    T: QueryFragment,
-    U: QueryFragment + MaybeEmpty,
-{
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
-        if self.values.is_empty() {
-            out.push_sql("1=0");
-        } else {
-            self.left.walk_ast(out.reborrow())?;
-            out.push_sql(" IN (");
-            self.values.walk_ast(out.reborrow())?;
-            out.push_sql(")");
+    use crate::backend::SqlDialect;
+    use crate::query_builder::{
+        AstPass, DB,
+    };
+    use crate::result::QueryResult;
+    use crate::serialize::ToSql;
+    use crate::sql_types::HasSqlType;
+
+    type ArrayComparison = <DB as SqlDialect>::ArrayComparison;
+
+    impl<T, U> QueryFragment for In<T, U>
+    where
+        ArrayComparison: sql_dialect::array_comparison::SupportsArrayComparisonWithIn,
+        T: QueryFragment,
+        U: QueryFragment + MaybeEmpty,
+    {
+        fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
+            if self.values.is_empty() {
+                out.push_sql("1=0");
+            } else {
+                self.left.walk_ast(out.reborrow())?;
+                out.push_sql(" IN (");
+                self.values.walk_ast(out.reborrow())?;
+                out.push_sql(")");
+            }
+            Ok(())
         }
-        Ok(())
     }
-}
 
-impl<T, U> QueryFragment for NotIn<T, U>
-where
-    Self: QueryFragment<<DB as SqlDialect>::ArrayComparison>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<<DB as SqlDialect>::ArrayComparison>>::walk_ast(self, pass)
-    }
-}
-
-impl<T, U> QueryFragment<sql_dialect::array_comparison::AnsiSqlArrayComparison>
-    for NotIn<T, U>
-where
-    T: QueryFragment,
-    U: QueryFragment + MaybeEmpty,
-{
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
-        if self.values.is_empty() {
-            out.push_sql("1=1");
-        } else {
-            self.left.walk_ast(out.reborrow())?;
-            out.push_sql(" NOT IN (");
-            self.values.walk_ast(out.reborrow())?;
-            out.push_sql(")");
+    impl<T, U> QueryFragment for NotIn<T, U>
+    where
+        ArrayComparison: sql_dialect::array_comparison::SupportsArrayComparisonWithIn,
+        T: QueryFragment,
+        U: QueryFragment + MaybeEmpty,
+    {
+        fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
+            if self.values.is_empty() {
+                out.push_sql("1=1");
+            } else {
+                self.left.walk_ast(out.reborrow())?;
+                out.push_sql(" NOT IN (");
+                self.values.walk_ast(out.reborrow())?;
+                out.push_sql(")");
+            }
+            Ok(())
         }
-        Ok(())
+    }
+
+    impl<ST, I> QueryFragment for Many<ST, I>
+    where
+        ArrayComparison: sql_dialect::array_comparison::SupportsArrayComparisonWithIn,
+        DB: HasSqlType<ST>,
+        ST: SingleValue,
+        I: ToSql<ST>,
+    {
+        fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
+            out.unsafe_to_cache_prepared();
+            let mut first = true;
+            for value in &self.values {
+                if first {
+                    first = false;
+                } else {
+                    out.push_sql(", ");
+                }
+                out.push_bind_param(value)?;
+            }
+            Ok(())
+        }
     }
 }
 
@@ -284,38 +298,6 @@ where
     ST: SingleValue,
     <I as AsExpression<ST>>::Expression: SelectableExpression<QS>,
 {
-}
-
-impl<ST, I> QueryFragment for Many<ST, I>
-where
-    Self: QueryFragment<<DB as SqlDialect>::ArrayComparison>,
-    DB: Backend,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<<DB as SqlDialect>::ArrayComparison>>::walk_ast(self, pass)
-    }
-}
-
-impl<ST, I> QueryFragment<sql_dialect::array_comparison::AnsiSqlArrayComparison>
-    for Many<ST, I>
-where
-    DB: HasSqlType<ST>,
-    ST: SingleValue,
-    I: ToSql<ST>,
-{
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
-        out.unsafe_to_cache_prepared();
-        let mut first = true;
-        for value in &self.values {
-            if first {
-                first = false;
-            } else {
-                out.push_sql(", ");
-            }
-            out.push_bind_param(value)?;
-        }
-        Ok(())
-    }
 }
 
 impl<ST, I> QueryId for Many<ST, I> {

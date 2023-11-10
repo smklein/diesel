@@ -1,6 +1,5 @@
 use std::marker::PhantomData;
 
-use crate::backend::{sql_dialect, SqlDialect};
 use crate::dsl::AsExprOf;
 use crate::expression::subselect::ValidSubselect;
 use crate::expression::*;
@@ -26,9 +25,6 @@ use crate::sql_types::{BigInt, BoolOrNullableBool, IntoNullable};
 
 // This is used by the table macro internally
 /// This type represents a boxed select query
-///
-/// Using this type directly is only meaningful for custom backends
-/// that need to provide a custom [`QueryFragment`] implementation
 #[allow(missing_debug_implementations)]
 #[must_use = "Queries are only executed when calling `load`, `get_result` or similar."]
 #[diesel_derives::__diesel_public_if(
@@ -174,20 +170,7 @@ impl<'a, ST, QS, QS2, GB> ValidSubselect<QS2> for BoxedSelectStatement<'a, ST, Q
 {
 }
 
-type SelectStatementSyntax = <DB as SqlDialect>::SelectStatementSyntax;
-
 impl<'a, ST, QS, GB> QueryFragment for BoxedSelectStatement<'a, ST, QS, GB>
-where
-    Self: QueryFragment<SelectStatementSyntax>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<SelectStatementSyntax>>::walk_ast(self, pass)
-    }
-}
-
-impl<'a, ST, QS, GB>
-    QueryFragment<sql_dialect::select_statement_syntax::AnsiSqlSelectStatement>
-    for BoxedSelectStatement<'a, ST, QS, GB>
 where
     QS: QueryFragment,
     BoxedLimitOffsetClause<'a>: QueryFragment,

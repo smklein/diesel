@@ -1,8 +1,6 @@
-use crate::backend::SqlDialect;
 use crate::expression::Expression;
 use crate::query_builder::upsert::on_conflict_target::{ConflictTarget, NoConflictTarget};
 use crate::query_builder::where_clause::{NoWhereClause, WhereAnd, WhereClause};
-use crate::query_builder::{AstPass, DB, QueryFragment, QueryResult};
 use crate::sql_types::BoolOrNullableBool;
 
 pub trait UndecoratedConflictTarget {}
@@ -54,16 +52,5 @@ where
             target: self.target,
             where_clause: self.where_clause.and(predicate),
         }
-    }
-}
-
-type OnConflictClause = <DB as SqlDialect>::OnConflictClause;
-
-impl<T, U> QueryFragment for DecoratedConflictTarget<T, U>
-where
-    Self: QueryFragment<OnConflictClause>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<OnConflictClause>>::walk_ast(self, pass)
     }
 }

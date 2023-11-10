@@ -1,7 +1,6 @@
 use std::marker::PhantomData;
 
 use crate::backend::sql_dialect::on_conflict_clause;
-use crate::backend::Backend;
 use crate::backend::SqlDialect;
 use crate::expression::{AppearsInQuery, Expression};
 use crate::query_builder::*;
@@ -22,17 +21,7 @@ type OnConflictClause = <DB as SqlDialect>::OnConflictClause;
 
 impl<T> QueryFragment for DoNothing<T>
 where
-    Self: QueryFragment<OnConflictClause>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<OnConflictClause>>::walk_ast(self, pass)
-    }
-}
-
-impl<T, SD> QueryFragment<SD> for DoNothing<T>
-where
-    DB: Backend<OnConflictClause = SD>,
-    SD: on_conflict_clause::PgLikeOnConflictClause,
+    OnConflictClause: on_conflict_clause::PgLikeOnConflictClause,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql(" DO NOTHING");
@@ -58,18 +47,8 @@ impl<T, Tab> DoUpdate<T, Tab> {
 
 impl<T, Tab> QueryFragment for DoUpdate<T, Tab>
 where
-    Self: QueryFragment<OnConflictClause>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<OnConflictClause>>::walk_ast(self, pass)
-    }
-}
-
-impl<T, Tab, SD> QueryFragment<SD> for DoUpdate<T, Tab>
-where
-    DB: Backend<OnConflictClause = SD>,
     T: QueryFragment,
-    SD: on_conflict_clause::PgLikeOnConflictClause,
+    OnConflictClause: on_conflict_clause::PgLikeOnConflictClause,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();
@@ -95,18 +74,8 @@ impl<T> Excluded<T> {
 
 impl<T> QueryFragment for Excluded<T>
 where
-    Self: QueryFragment<OnConflictClause>,
-{
-    fn walk_ast<'b>(&'b self, pass: AstPass<'_, 'b>) -> QueryResult<()> {
-        <Self as QueryFragment<OnConflictClause>>::walk_ast(self, pass)
-    }
-}
-
-impl<T, SD> QueryFragment<SD> for Excluded<T>
-where
-    DB: Backend<OnConflictClause = SD>,
     T: Column,
-    SD: on_conflict_clause::PgLikeOnConflictClause,
+    OnConflictClause: on_conflict_clause::PgLikeOnConflictClause,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.push_sql("excluded.");

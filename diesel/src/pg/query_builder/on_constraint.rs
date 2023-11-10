@@ -58,8 +58,7 @@ impl<'a> QueryId for OnConstraint<'a> {
     const HAS_STATIC_QUERY_ID: bool = false;
 }
 
-impl<'a> QueryFragment<crate::pg::backend::PgOnConflictClause>
-    for ConflictTarget<OnConstraint<'a>>
+impl<'a> QueryFragment for ConflictTarget<OnConstraint<'a>>
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b>) -> QueryResult<()> {
         out.unsafe_to_cache_prepared();

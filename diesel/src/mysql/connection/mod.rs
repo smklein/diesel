@@ -159,7 +159,7 @@ impl Connection for MysqlConnection {
 
     fn execute_returning_count<T>(&mut self, source: &T) -> QueryResult<usize>
     where
-        T: QueryFragment<Self::Backend> + QueryId,
+        T: QueryFragment + QueryId,
     {
         #[allow(unsafe_code)] // call to unsafe function
         update_transaction_manager_status(
@@ -202,7 +202,7 @@ impl LoadConnection<DefaultLoadingMode> for MysqlConnection {
         source: T,
     ) -> QueryResult<Self::Cursor<'conn, 'query>>
     where
-        T: Query + QueryFragment<Self::Backend> + QueryId + 'query,
+        T: Query + QueryFragment + QueryId + 'query,
         Self::Backend: QueryMetadata<T::SqlType>,
     {
         update_transaction_manager_status(
@@ -229,7 +229,7 @@ impl crate::r2d2::R2D2Connection for MysqlConnection {
     }
 }
 
-fn prepared_query<'a, T: QueryFragment<Mysql> + QueryId>(
+fn prepared_query<'a, T: QueryFragment + QueryId>(
     source: &'_ T,
     statement_cache: &'a mut StatementCache<Mysql, Statement>,
     raw_connection: &'a mut RawConnection,

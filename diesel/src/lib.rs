@@ -120,14 +120,6 @@
 //!    model structs:
 //!    This error indicates a type mismatch between the field you are trying to update and the actual
 //!    database type. Double check your type mapping.
-//! * `the trait bound SomeLargeType: QueryFragment<SomeMarkerType> is not satisfied` while
-//!    trying to execute a query.
-//!    This error message indicates that a given query is not supported by your backend. This usually
-//!    means that you are trying to use SQL features from one SQL dialect on a different database
-//!    system. Double check your query that everything required is supported by the selected
-//!    backend. If that's the case double check that the relevant feature flags are enabled
-//!    (for example, `returning_clauses_for_sqlite_3_35` for enabling support for returning clauses in newer
-//!    sqlite versions)
 //! * `the trait bound posts::title: SelectableExpression<users::table> is not satisfied` while
 //!    executing a query:
 //!    This error message indicates that you're trying to select a field from a table

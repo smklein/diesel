@@ -1,7 +1,8 @@
+use crate::backend::{sql_dialect, SqlDialect};
 use crate::expression::array_comparison::{In, Many, MaybeEmpty, NotIn};
-use crate::pg::backend::PgStyleArrayComparison;
 use crate::pg::types::sql_types::Array;
 use crate::pg::Pg;
+use crate::query_builder::DB;
 use crate::query_builder::upsert::into_conflict_clause::OnConflictSelectWrapper;
 use crate::query_builder::upsert::on_conflict_target_decorations::DecoratedConflictTarget;
 use crate::query_builder::{AstPass, QueryFragment};
@@ -9,8 +10,11 @@ use crate::result::QueryResult;
 use crate::serialize::ToSql;
 use crate::sql_types::{HasSqlType, SingleValue};
 
-impl<T, U> QueryFragment<PgStyleArrayComparison> for In<T, U>
+type ArrayComparison = <DB as SqlDialect>::ArrayComparison;
+
+impl<T, U> QueryFragment for In<T, U>
 where
+    ArrayComparison: sql_dialect::array_comparison::SupportsArrayComparisonWithAny,
     T: QueryFragment,
     U: QueryFragment + MaybeEmpty,
 {
@@ -23,8 +27,9 @@ where
     }
 }
 
-impl<T, U> QueryFragment<PgStyleArrayComparison> for NotIn<T, U>
+impl<T, U> QueryFragment for NotIn<T, U>
 where
+    ArrayComparison: sql_dialect::array_comparison::SupportsArrayComparisonWithAny,
     T: QueryFragment,
     U: QueryFragment + MaybeEmpty,
 {
@@ -37,8 +42,9 @@ where
     }
 }
 
-impl<ST, I> QueryFragment<PgStyleArrayComparison> for Many<ST, I>
+impl<ST, I> QueryFragment for Many<ST, I>
 where
+    ArrayComparison: sql_dialect::array_comparison::SupportsArrayComparisonWithAny,
     ST: SingleValue,
     Vec<I>: ToSql<Array<ST>>,
     Pg: HasSqlType<ST>,
@@ -48,9 +54,11 @@ where
     }
 }
 
-impl<T, U> QueryFragment<crate::pg::backend::PgOnConflictClause>
-    for DecoratedConflictTarget<T, U>
+type OnConflictClause = <DB as SqlDialect>::OnConflictClause;
+
+impl<T, U> QueryFragment for DecoratedConflictTarget<T, U>
 where
+    OnConflictClause: sql_dialect::on_conflict_clause::SupportsOnConflictClauseWhere,
     T: QueryFragment,
     U: QueryFragment,
 {

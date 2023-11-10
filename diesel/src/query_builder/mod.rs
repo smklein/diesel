@@ -216,7 +216,7 @@ pub type DB = crate::sqlite::Sqlite;
 ///
 /// [`ExecuteDsl`]: crate::query_dsl::methods::ExecuteDsl
 /// [`LoadQuery`]: crate::query_dsl::methods::LoadQuery
-pub trait QueryFragment<SP = self::private::NotSpecialized> {
+pub trait QueryFragment {
     /// Walk over this `QueryFragment` for all passes.
     ///
     /// This method is where the actual behavior of an AST node is implemented.
@@ -388,7 +388,7 @@ impl<T: Query> AsQuery for T {
 /// #
 /// # fn main() {
 /// #   use schema::users::dsl::*;
-/// let sql = debug_query::<DB, _>(&users.count()).to_string();
+/// let sql = debug_query(&users.count()).to_string();
 /// # if cfg!(feature = "postgres") {
 /// #     assert_eq!(sql, r#"SELECT COUNT(*) FROM "users" -- binds: []"#);
 /// # } else {
@@ -396,7 +396,7 @@ impl<T: Query> AsQuery for T {
 /// # }
 ///
 /// let query = users.find(1);
-/// let debug = debug_query::<DB, _>(&query);
+/// let debug = debug_query(&query);
 /// # if cfg!(feature = "postgres") {
 /// #     assert_eq!(debug.to_string(), "SELECT \"users\".\"id\", \"users\".\"name\" \
 /// #         FROM \"users\" WHERE (\"users\".\"id\" = $1) -- binds: [1]");
@@ -418,9 +418,4 @@ impl<T: Query> AsQuery for T {
 /// ```
 pub fn debug_query<T>(query: &T) -> DebugQuery<'_, T> {
     DebugQuery::new(query)
-}
-
-mod private {
-    #[allow(missing_debug_implementations, missing_copy_implementations)]
-    pub struct NotSpecialized;
 }

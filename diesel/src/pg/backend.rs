@@ -154,3 +154,5 @@ impl sql_dialect::on_conflict_clause::PgLikeOnConflictClause for PgOnConflictCla
 
 #[derive(Debug, Copy, Clone)]
 pub struct PgStyleArrayComparison;
+
+impl sql_dialect::array_comparison::SupportsArrayComparisonWithAny for PgStyleArrayComparison {}
