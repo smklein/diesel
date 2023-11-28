@@ -22,7 +22,7 @@ use super::group_by_clause::*;
 use super::limit_clause::NoLimitClause;
 use super::locking_clause::AllLockingClauses;
 use super::offset_clause::NoOffsetClause;
-use super::order_clause::NoOrderClause;
+use super::order_clause::*;
 use super::select_clause::*;
 use super::where_clause::*;
 use super::NoFromClause;
@@ -32,7 +32,6 @@ use crate::expression::*;
 use crate::query_builder::having_clause::HavingClause;
 use crate::query_builder::limit_offset_clause::LimitOffsetClause;
 use crate::query_builder::{QueryId, SelectQuery};
-use crate::query_dsl::order_dsl::ValidOrderingForDistinct;
 use crate::query_source::joins::{AppendSelection, Inner, Join};
 use crate::query_source::*;
 use crate::result::QueryResult;
@@ -61,7 +60,6 @@ pub struct SelectStatement<
     From,
     Select = DefaultSelectClause<From>,
     Distinct = NoDistinctClause,
-    Order = NoOrderClause,
     LimitOffset = LimitOffsetClause<NoLimitClause, NoOffsetClause>,
     GroupBy = NoGroupByClause,
 > {
@@ -74,7 +72,7 @@ pub struct SelectStatement<
     /// The where clause of the query
     pub(crate) where_clause: BoxedWhereClause<'a>,
     /// The order clause of the query
-    pub(crate) order: Order,
+    pub(crate) order: BoxedOrderClause<'a>,
     /// The combined limit/offset clause of the query
     pub(crate) limit_offset: LimitOffset,
     /// The group by clause of the query
@@ -85,20 +83,20 @@ pub struct SelectStatement<
     pub(crate) locking: AllLockingClauses,
 }
 
-impl<'a, F, S, D, O, LOf, G> QueryId for SelectStatement<'a, F, S, D, O, LOf, G> {
+impl<'a, F, S, D, LOf, G> QueryId for SelectStatement<'a, F, S, D, LOf, G> {
     type QueryId = ();
 
     const HAS_STATIC_QUERY_ID: bool = false;
 }
 
-impl<'a, F, S, D, O, LOf, G> SelectStatement<'a, F, S, D, O, LOf, G> {
+impl<'a, F, S, D, LOf, G> SelectStatement<'a, F, S, D, LOf, G> {
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         select: S,
         from: F,
         distinct: D,
         where_clause: BoxedWhereClause<'a>,
-        order: O,
+        order: BoxedOrderClause<'a>,
         limit_offset: LOf,
         group_by: G,
         having: HavingClause,
@@ -128,7 +126,7 @@ impl<'a, F: QuerySource> SelectStatement<'a, FromClause<F>> {
             from,
             NoDistinctClause,
             BoxedWhereClause::None,
-            NoOrderClause,
+            BoxedOrderClause::None,
             LimitOffsetClause {
                 limit_clause: NoLimitClause,
                 offset_clause: NoOffsetClause,
@@ -140,7 +138,7 @@ impl<'a, F: QuerySource> SelectStatement<'a, FromClause<F>> {
     }
 }
 
-impl<'a, F, S, D, O, LOf, G> Query for SelectStatement<'a, F, S, D, O, LOf, G>
+impl<'a, F, S, D, LOf, G> Query for SelectStatement<'a, F, S, D, LOf, G>
 where
     G: ValidGroupByClause,
     S: SelectClauseExpression<F>,
@@ -148,20 +146,18 @@ where
     type SqlType = S::SelectClauseSqlType;
 }
 
-impl<'a, F, S, D, O, LOf, G> SelectQuery for SelectStatement<'a, F, S, D, O, LOf, G>
+impl<'a, F, S, D, LOf, G> SelectQuery for SelectStatement<'a, F, S, D, LOf, G>
 where
     S: SelectClauseExpression<F>,
-    O: ValidOrderingForDistinct<D>,
 {
     type SqlType = S::SelectClauseSqlType;
 }
 
-impl<'a, F, S, D, O, LOf, G> QueryFragment for SelectStatement<'a, F, S, D, O, LOf, G>
+impl<'a, F, S, D, LOf, G> QueryFragment for SelectStatement<'a, F, S, D, LOf, G>
 where
     S: QueryFragment,
     F: QueryFragment,
     D: QueryFragment,
-    O: QueryFragment,
     LOf: QueryFragment,
     G: QueryFragment,
 {
@@ -180,8 +176,8 @@ where
     }
 }
 
-impl<'a, S, F, D, O, LOf, G, QS> ValidSubselect<QS>
-    for SelectStatement<'a, FromClause<F>, S, D, O, LOf, G>
+impl<'a, S, F, D, LOf, G, QS> ValidSubselect<QS>
+    for SelectStatement<'a, FromClause<F>, S, D, LOf, G>
 where
     Self: SelectQuery,
     F: QuerySource,
@@ -190,23 +186,23 @@ where
 {
 }
 
-impl<'a, S, D, O, LOf, G> ValidSubselect<NoFromClause>
-    for SelectStatement<'a, NoFromClause, S, D, O, LOf, G>
+impl<'a, S, D, LOf, G> ValidSubselect<NoFromClause>
+    for SelectStatement<'a, NoFromClause, S, D, LOf, G>
 where
     Self: SelectQuery,
 {
 }
 
-impl<'a, S, F, D, O, LOf, G> ValidSubselect<NoFromClause>
-    for SelectStatement<'a, FromClause<F>, S, D, O, LOf, G>
+impl<'a, S, F, D, LOf, G> ValidSubselect<NoFromClause>
+    for SelectStatement<'a, FromClause<F>, S, D, LOf, G>
 where
     Self: SelectQuery,
     F: QuerySource,
 {
 }
 
-impl<'a, S, D, O, LOf, G, QS> ValidSubselect<QS>
-    for SelectStatement<'a, NoFromClause, S, D, O, LOf, G>
+impl<'a, S, D, LOf, G, QS> ValidSubselect<QS>
+    for SelectStatement<'a, NoFromClause, S, D, LOf, G>
 where
     Self: SelectQuery,
     QS: QuerySource,

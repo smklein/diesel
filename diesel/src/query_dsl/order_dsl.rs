@@ -56,5 +56,3 @@ where
         self.as_query().then_order_by(expr)
     }
 }
-
-pub trait ValidOrderingForDistinct<D> {}

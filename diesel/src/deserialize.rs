@@ -547,10 +547,9 @@ where
 // that will likely not happen in practice.
 // If we get negative trait impls at some point in time
 // it should be possible to make this work.
-/*impl<T, ST, DB> Queryable<ST, DB> for T
+/*impl<T, ST> Queryable<ST> for T
 where
-    DB: Backend,
-    T: FromStaticSqlRow<ST, DB>,
+    T: FromStaticSqlRow<ST>,
     ST: SingleValue,
 {
     type Row = Self;

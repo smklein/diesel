@@ -1,5 +1,4 @@
 use crate::query_builder::*;
-use crate::query_dsl::order_dsl::ValidOrderingForDistinct;
 use crate::result::QueryResult;
 
 #[derive(Debug, Clone, Copy, QueryId)]
@@ -19,9 +18,6 @@ impl QueryFragment for DistinctClause {
         Ok(())
     }
 }
-
-impl<O> ValidOrderingForDistinct<NoDistinctClause> for O {}
-impl<O> ValidOrderingForDistinct<DistinctClause> for O {}
 
 // This is rexported from another location
 #[allow(unreachable_pub)]

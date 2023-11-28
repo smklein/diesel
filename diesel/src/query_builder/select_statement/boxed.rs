@@ -13,7 +13,7 @@ use crate::query_builder::insert_statement::InsertFromSelect;
 use crate::query_builder::limit_clause::LimitClause;
 use crate::query_builder::limit_offset_clause::BoxedLimitOffsetClause;
 use crate::query_builder::offset_clause::OffsetClause;
-use crate::query_builder::order_clause::OrderClause;
+use crate::query_builder::order_clause::BoxedOrderClause;
 use crate::query_builder::where_clause::{BoxedWhereClause, WhereAnd, WhereOr};
 use crate::query_builder::*;
 use crate::query_dsl::methods::*;
@@ -50,7 +50,7 @@ pub struct BoxedSelectStatement<'a, ST, QS, GB = ()> {
     /// The where clause of the query
     where_clause: BoxedWhereClause<'a>,
     /// The order clause of the query
-    order: Option<Box<dyn QueryFragment + Send + 'a>>,
+    order: BoxedOrderClause<'a>,
     /// The combined limit/offset clause of the query
     limit_offset: BoxedLimitOffsetClause<'a>,
     /// The group by clause of the query
@@ -67,7 +67,7 @@ impl<'a, ST, QS: QuerySource, GB> BoxedSelectStatement<'a, ST, FromClause<QS>, G
         from: FromClause<QS>,
         distinct: Box<dyn QueryFragment + Send + 'a>,
         where_clause: BoxedWhereClause<'a>,
-        order: Option<Box<dyn QueryFragment + Send + 'a>>,
+        order: BoxedOrderClause<'a>,
         limit_offset: BoxedLimitOffsetClause<'a>,
         group_by: G,
         having: HavingClause,
@@ -100,7 +100,7 @@ impl<'a, ST, GB> BoxedSelectStatement<'a, ST, NoFromClause, GB> {
         from: NoFromClause,
         distinct: Box<dyn QueryFragment + Send + 'a>,
         where_clause: BoxedWhereClause<'a>,
-        order: Option<Box<dyn QueryFragment + Send + 'a>>,
+        order: BoxedOrderClause<'a>,
         limit_offset: BoxedLimitOffsetClause<'a>,
         group_by: G,
         having: HavingClause,
@@ -147,11 +147,7 @@ impl<'a, ST, QS, GB> BoxedSelectStatement<'a, ST, QS, GB> {
         where_clause_handler(&self.where_clause, out.reborrow())?;
         self.group_by.walk_ast(out.reborrow())?;
         self.having.walk_ast(out.reborrow())?;
-
-        if let Some(ref order) = self.order {
-            out.push_sql(" ORDER BY ");
-            order.walk_ast(out.reborrow())?;
-        }
+        self.order.walk_ast(out.reborrow())?;
         self.limit_offset.walk_ast(out.reborrow())?;
         Ok(())
     }
@@ -363,7 +359,7 @@ where
     type Output = Self;
 
     fn order(mut self, order: Order) -> Self::Output {
-        self.order = OrderClause(order).into();
+        self.order = BoxedOrderClause::Order(Box::new(order));
         self
     }
 }
@@ -378,8 +374,8 @@ where
 
     fn then_order_by(mut self, order: Order) -> Self::Output {
         self.order = match self.order {
-            Some(old) => Some(Box::new((old, order))),
-            None => Some(Box::new(order)),
+            BoxedOrderClause::Order(old) => BoxedOrderClause::Order(Box::new((old, order))),
+            BoxedOrderClause::None => BoxedOrderClause::Order(Box::new(order)),
         };
         self
     }

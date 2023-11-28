@@ -470,7 +470,7 @@ where
         super::NoFromClause,
         NoDistinctClause,
         super::where_clause::BoxedWhereClause::None,
-        super::order_clause::NoOrderClause,
+        super::order_clause::BoxedOrderClause::None,
         super::limit_offset_clause::LimitOffsetClause {
             limit_clause: super::limit_clause::NoLimitClause,
             offset_clause: super::offset_clause::NoOffsetClause,
